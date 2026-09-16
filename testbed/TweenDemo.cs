@@ -5,7 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Godot;
-using GodotWeens;
+using godotweens;
 
 namespace testbed;
 

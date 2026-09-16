@@ -4,7 +4,7 @@
 using Godot;
 using System.Runtime.CompilerServices;
 
-namespace GodotWeens;
+namespace godotweens;
 
 /// <summary>Automatic per-tree runtime. No autoload or 2dog host changes are needed.</summary>
 public static class TweenRuntime

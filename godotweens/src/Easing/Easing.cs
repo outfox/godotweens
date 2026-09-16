@@ -6,7 +6,7 @@
 using System;
 using Godot;
 
-namespace GodotWeens {
+namespace godotweens {
   public static class Easing {
     public static float Evaluate(EaseType ease, float progress) => GetFunction(ease)(Math.Clamp(progress, 0, 1));
 

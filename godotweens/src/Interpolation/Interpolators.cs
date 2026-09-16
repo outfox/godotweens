@@ -3,7 +3,7 @@
 
 using Godot;
 
-namespace GodotWeens;
+namespace godotweens;
 
 /// <summary>Unclamped value interpolation, preserving back/elastic overshoot.</summary>
 public static class Interpolators

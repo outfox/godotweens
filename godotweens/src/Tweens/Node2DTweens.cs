@@ -3,7 +3,7 @@
 
 using Godot;
 
-namespace GodotWeens;
+namespace godotweens;
 
 /// <summary>Animates Node2D Position2D; values use Godot property units.</summary>
 public sealed class Position2DTween() : PropertyTween<Node2D, Vector2>(
