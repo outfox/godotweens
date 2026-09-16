@@ -26,7 +26,7 @@ Create a tween from `_Ready` or later on a node inside the tree:
 
 ```csharp
 using Godot;
-using GodotWeens;
+using godotweens;
 
 var movement = sprite.Tween(new Position2DTween
 {
@@ -152,6 +152,11 @@ The reusable definition/instance design and easing math are retained. Properties
 Unity coroutine APIs, the editor inspector, component lookup, and Unity-specific audio spatial-blend/priority/reverb/pan controls are not ported. Global quaternion conversion, sequence DSLs, automatic overwrite arbitration, and pooling are deferred. Use local `Quaternion3DTween`, explicit Euler adapters, async composition, and custom property definitions where appropriate.
 
 ## Validation and known limits
+
+GitHub Actions builds and tests the solution, verifies the `godotweens` NuGet package,
+and uploads package artifacts. Version tags create GitHub releases with package and
+symbol downloads. See [Releasing godotweens](docs/RELEASING.md) for the release process
+and NuGet trusted-publishing setup.
 
 Tests cover deterministic playback, easing and overshoot, callback mutation/faults, snapshots, async completion, main-thread continuation, node lifetime/pause, adapter families, the demo, and scheduler steady-state allocations. The desktop testbed has been rendered with the OpenGL compatibility renderer. The library is packaged independently of its testbed and the gitignored Unity reference.
 

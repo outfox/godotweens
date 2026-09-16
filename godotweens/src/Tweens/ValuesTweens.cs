@@ -3,7 +3,7 @@
 
 using Godot;
 
-namespace GodotWeens;
+namespace godotweens;
 
 /// <summary>Animates Node Float; values use Godot property units.</summary>
 public sealed class FloatTween() : PropertyTween<Node, float>(

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 // SPDX-FileCopyrightText: 2026 Moritz Voss
 
-namespace GodotWeens;
+namespace godotweens;
 
 /// <summary>Samples elapsed real time once per process frame, including frames where tweens pause.</summary>
 internal sealed class MonotonicClock(Func<ulong> readMicroseconds)

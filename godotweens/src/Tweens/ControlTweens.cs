@@ -3,7 +3,7 @@
 
 using Godot;
 
-namespace GodotWeens;
+namespace godotweens;
 
 /// <summary>Animates Control ControlPosition; values use Godot property units.</summary>
 public sealed class ControlPositionTween() : PropertyTween<Control, Vector2>(

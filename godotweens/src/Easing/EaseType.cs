@@ -2,7 +2,7 @@
 // SPDX-FileCopyrightText: 2026 Moritz Voss
 // SPDX-FileCopyrightText: 2020 Jeffrey Lanters
 
-namespace GodotWeens {
+namespace godotweens {
   public enum EaseType {
     Linear = 0,
     SineIn = 10,

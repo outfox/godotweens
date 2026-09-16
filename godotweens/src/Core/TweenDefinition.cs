@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 // SPDX-FileCopyrightText: 2026 Moritz Voss
 
-namespace GodotWeens;
+namespace godotweens;
 
 /// <summary>A reusable typed definition. Override the three property operations for custom tweens.</summary>
 public abstract class TweenDefinition<TTarget, TValue> : TweenOptions

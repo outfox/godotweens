@@ -3,7 +3,7 @@
 
 using Godot;
 
-namespace GodotWeens;
+namespace godotweens;
 
 /// <summary>Animates CanvasItem Modulate; values use Godot property units.</summary>
 public sealed class ModulateTween() : PropertyTween<CanvasItem, Color>(

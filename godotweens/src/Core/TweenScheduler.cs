@@ -3,7 +3,7 @@
 
 using Godot;
 
-namespace GodotWeens;
+namespace godotweens;
 
 /// <summary>A manually driven scheduler, also used by the automatic Godot runner.</summary>
 public sealed class TweenScheduler : IDisposable

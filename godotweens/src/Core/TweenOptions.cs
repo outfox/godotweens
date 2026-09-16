@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 // SPDX-FileCopyrightText: 2026 Moritz Voss
 
-namespace GodotWeens;
+namespace godotweens;
 
 [Flags]
 public enum FillMode

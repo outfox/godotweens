@@ -3,7 +3,7 @@
 
 using Godot;
 
-namespace GodotWeens;
+namespace godotweens;
 
 /// <summary>A single playback. Mutating operations belong to its scheduler's thread.</summary>
 public abstract class TweenInstance

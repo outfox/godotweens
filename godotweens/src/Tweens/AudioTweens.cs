@@ -3,7 +3,7 @@
 
 using Godot;
 
-namespace GodotWeens;
+namespace godotweens;
 
 /// <summary>Animates AudioStreamPlayer AudioVolumeDb; values use Godot property units.</summary>
 public sealed class AudioVolumeDbTween() : PropertyTween<AudioStreamPlayer, float>(

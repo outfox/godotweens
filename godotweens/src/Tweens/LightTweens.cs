@@ -3,7 +3,7 @@
 
 using Godot;
 
-namespace GodotWeens;
+namespace godotweens;
 
 /// <summary>Animates Light2D LightColor2D; values use Godot property units.</summary>
 public sealed class LightColor2DTween() : PropertyTween<Light2D, Color>(

@@ -1,0 +1,100 @@
+# SPDX-License-Identifier: MIT
+# SPDX-FileCopyrightText: 2026 Moritz Voss
+
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  version:
+    name: Validate release tag
+    runs-on: windows-latest
+    timeout-minutes: 5
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      prerelease: ${{ steps.version.outputs.prerelease }}
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - name: Validate version
+        id: version
+        shell: pwsh
+        env:
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: ./.github/scripts/Get-ReleaseVersion.ps1 -Tag $env:RELEASE_TAG
+
+  build:
+    needs: version
+    uses: ./.github/workflows/ci.yml
+    with:
+      package-version: ${{ needs.version.outputs.version }}
+
+  github-release:
+    name: Upload GitHub release packages
+    needs: [version, build]
+    runs-on: windows-latest
+    timeout-minutes: 5
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: godotweens-packages
+          path: packages
+      - name: Create or update release
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RELEASE_TAG: ${{ github.ref_name }}
+          PRERELEASE: ${{ needs.version.outputs.prerelease }}
+        run: |
+          $packages = @(Get-ChildItem packages -File | ForEach-Object FullName)
+          gh release view $env:RELEASE_TAG --json tagName 2>$null
+          if ($LASTEXITCODE -eq 0) {
+            gh release upload $env:RELEASE_TAG @packages --clobber
+          } else {
+            $options = @('--verify-tag', '--generate-notes', '--title', "godotweens $env:RELEASE_TAG")
+            if ($env:PRERELEASE -eq 'true') { $options += '--prerelease' }
+            gh release create $env:RELEASE_TAG @packages @options
+          }
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+  nuget:
+    name: Publish to NuGet
+    needs: github-release
+    if: vars.NUGET_PUBLISH_ENABLED == 'true'
+    runs-on: windows-latest
+    timeout-minutes: 5
+    environment: nuget
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: godotweens-packages
+          path: packages
+      - uses: actions/setup-dotnet@26b0ec14cb23fa6904739307f278c14f94c95bf1 # v5
+        with:
+          dotnet-version: 10.0.x
+      - name: Obtain a short-lived NuGet API key
+        uses: NuGet/login@8d196754b4036150537f80ac539e15c2f1028841 # v1
+        id: login
+        with:
+          user: thygrrr
+      - name: Publish package and symbols
+        shell: pwsh
+        env:
+          NUGET_API_KEY: ${{ steps.login.outputs.NUGET_API_KEY }}
+        run: dotnet nuget push 'packages/*.nupkg' --api-key $env:NUGET_API_KEY --source https://api.nuget.org/v3/index.json --skip-duplicate

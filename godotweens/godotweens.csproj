@@ -5,11 +5,23 @@
         <Configurations>Debug;Editor;Release</Configurations>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
-        <RootNamespace>GodotWeens</RootNamespace>
+        <RootNamespace>godotweens</RootNamespace>
         <GenerateDocumentationFile>true</GenerateDocumentationFile>
         <NoWarn>$(NoWarn);CS1591</NoWarn>
         <Description>Typed C# tweens for GodotSharp and 2dog.</Description>
+        <PackageId>godotweens</PackageId>
+        <Authors>Moritz Voss</Authors>
+        <Copyright>Copyright (c) 2026 Moritz Voss</Copyright>
+        <PackageLicenseExpression>MIT</PackageLicenseExpression>
+        <PackageProjectUrl>https://github.com/outfox/godotweens</PackageProjectUrl>
+        <RepositoryUrl>https://github.com/outfox/godotweens</RepositoryUrl>
+        <RepositoryType>git</RepositoryType>
+        <PublishRepositoryUrl>true</PublishRepositoryUrl>
+        <PackageTags>godot;godotsharp;2dog;tween;animation</PackageTags>
         <PackageReadmeFile>README.md</PackageReadmeFile>
+        <IncludeSymbols>true</IncludeSymbols>
+        <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+        <EmbedUntrackedSources>true</EmbedUntrackedSources>
         <Version>0.1.0</Version>
         <!-- This assembly contains code-created nodes, not res:// scene scripts. -->
         <GodotDisabledSourceGenerators>ScriptPathAttribute</GodotDisabledSourceGenerators>
@@ -19,6 +31,7 @@
         <PackageReference Include="Godot.SourceGenerators" Version="4.7.2" PrivateAssets="all" />
         <InternalsVisibleTo Include="testbed.tests" />
         <None Include="../README.md" Pack="true" PackagePath="/" />
+        <None Include="../LICENSE" Pack="true" PackagePath="/" />
         <None Include="../THIRD-PARTY-NOTICES.md" Pack="true" PackagePath="/" />
     </ItemGroup>
 </Project>

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 // SPDX-FileCopyrightText: 2026 Moritz Voss
 
-using GodotWeens;
+using godotweens;
 
 namespace testbed.Tests;
 
