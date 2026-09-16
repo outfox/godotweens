@@ -1,0 +1,167 @@
+# godotweens
+
+A typed C# tween library for GodotSharp and 2dog, inspired by Jeffrey Lanters' **unity-tweens**. Reuse definitions, control independent playback handles, and compose animations with `async`/`await`.
+
+Targets **.NET 10 / GodotSharp 4.7.2**. The included testbed uses **2dog 4.7.2.84**. The library has no dependency on 2dog, native engine packages, or editor assemblies; your application supplies the engine. Use matching GodotSharp/engine versions. Other Godot versions and trimmed/AOT/web exports have not been validated.
+
+## Run the testbed
+
+```powershell
+dotnet build godotweens.slnx
+dotnet test testbed/testbed.tests/testbed.tests.csproj
+dotnet run --project testbed/testbed.2dog
+```
+
+The demo shows movement, scale/rotation, color/opacity, and an awaited sequence. Change easing and duration, pause/resume, cancel, or restart. From `testbed/`, `dotnet test` and `dotnet run --project testbed.2dog` also work.
+
+## Use the library
+
+Add a project reference to `godotweens/godotweens.csproj` (as the testbed does), or consume a locally built package:
+
+```powershell
+dotnet pack godotweens/godotweens.csproj -c Release -o artifacts/packages
+```
+
+Create a tween from `_Ready` or later on a node inside the tree:
+
+```csharp
+using Godot;
+using GodotWeens;
+
+var movement = sprite.Tween(new Position2DTween
+{
+    To = new Vector2(400, 180),
+    Duration = 0.6,
+    Ease = EaseType.CubicOut,
+});
+
+var reason = await movement.Completion;
+if (reason == TweenCompletionReason.Completed)
+    GD.Print("Arrived");
+```
+
+The first tween installs one internal runner under the SceneTree root through deferred attachment. No autoload, scene script file, or special host-loop code is required. Definitions and handles are managed objects, and property adapters use typed getters/setters rather than reflection or string property paths.
+
+### Reuse and control
+
+```csharp
+var fade = new ModulateAlphaTween { To = 0, Duration = 0.3 };
+var first = sprite.Tween(fade);
+var second = label.Tween(fade);
+first.Pause();
+first.Resume();
+second.Cancel();
+sprite.CancelTweens(includeChildren: true);
+```
+
+Each addition snapshots options, endpoints, callbacks, and custom definition fields. Omitted `From`/`To` use the property's value captured once at addition. Editing the definition afterward does not alter a running tween. Custom reference-valued fields and objects captured by delegates are shared, just as ordinary C# closures are; keep them immutable if independent playback is required. Godot Curves are duplicated for each instance.
+
+Multiple tweens on the same property are allowed: the last application in insertion order wins. Axis and alpha adapters read the other components at application time so independent component tweens compose correctly.
+
+### Async completion
+
+`Completion` is a lazily allocated, shared `Task<TweenCompletionReason>`. Multiple callers can await it, including after the tween ends. Reasons are `Completed`, `Cancelled`, `TargetFreed`, `OwnerExited`, and `RunnerDisposed`. A direct `Free()` may be observed as `OwnerExited` because Godot emits tree-exit before invalidating the native instance; `QueueFree()` is identified as `TargetFreed`.
+
+```csharp
+await sprite.Tween(new Position2DTween { To = destination, Duration = 0.5 }).Completion;
+await sprite.Tween(new ModulateAlphaTween { To = 0, Duration = 0.2 }).Completion;
+
+await Task.WhenAll(first.Completion, second.Completion);
+await first.AwaitDecommissionAsync(cancellationToken);
+```
+
+The wait token cancels **only that wait**. Call `Cancel()` to cancel playback. Check completion reasons before starting a follow-up animation when cancellation should stop a sequence (see `TweenDemo.RunChain`). Errors in interpolation, easing, setters, or callbacks fault the completion task and are reported through `TweenScheduler.UnhandledException`; the automatic runner reports them with `GD.PushError`. Other tweens continue. Terminal callbacks and `OnFinally` run at most once, with cleanup and task settlement even when callbacks fail. Multiple failures are retained in an `AggregateException`.
+
+Create/control tweens on Godot's main thread. Completion is settled from that thread; normal Godot async callers retain their synchronization context. Do not use `.Wait()`, `.Result`, `Task.Run`, or `ConfigureAwait(false)` around engine access. No coroutine API is provided. Use Godot's `ToSignal` for unrelated engine-signal waits.
+
+### Timing and lifetime
+
+| Option | Behavior |
+| --- | --- |
+| `Duration` | Seconds per leg, stored as double. Zero duration completes on the first eligible update. |
+| `Delay` | Initial wait before starting; only unused delta advances playback. |
+| `LoopCount` | Total cycles including the first, default 1. Must be positive. |
+| `IsInfinite` | Repeats indefinitely; a fully zero-time infinite cycle is rejected. |
+| `UsePingPong` | Forward and backward legs form one cycle. |
+| `PingPongInterval` | Wait at the far endpoint before returning. |
+| `RepeatInterval` | Wait between cycles, never after the final cycle. |
+| `Offset` | Starting seconds into the first forward leg, within `[0, Duration]`. Delay still comes first. |
+| `Ease` | All 31 upstream ease functions. Back/elastic overshoot remains unclamped. |
+| `EaseFunction` / `Curve` | One custom source may override `Ease`; specifying both is rejected. Curve samples use normalized time 0–1. |
+| `ProcessMode` | `Process` by default; `Physics` opts into physics updates. |
+| `PauseMode` | `Bound` follows owner `CanProcess()`, `SceneTree` follows tree pause only, `Always` ignores both. Instance pause always wins. |
+| `UseUnscaledTime` | Process mode uses monotonic engine ticks; physics uses `1 / PhysicsTicksPerSecond` per tick. This does not change pause policy. |
+
+Negative/non-finite timing is rejected. Large deltas skip directly to the correct phase, including across multiple cycles; time is not discarded at boundaries. `OnUpdate` samples once per eligible tick, plus delay fill/restoration when applicable: skipped cycles do not synthesize callbacks for every intermediate boundary. Long frames catch up in full; no hidden time clamp is imposed. Unscaled physics uses fixed simulation ticks, not wall-clock duration during catch-up.
+
+`FillMode` flags are `ApplyFromDuringDelay`, `RetainFinalValue`, `Both`, and `None`. Default is `RetainFinalValue`. Without retention, natural completion restores the captured initial property value. Cancellation keeps the most recently applied value. A ping-pong tween's final value is its starting endpoint.
+
+Callback order: `OnAdd`, optional delay-fill `OnUpdate`, `OnStart` once, updates, then `OnEnd` and `OnFinally`. Cancellation substitutes `OnCancel` for `OnEnd`; faults run `OnFinally`. Terminal state is visible before terminal callbacks. New tweens created by update callbacks begin on the next eligible update. `Progress` is the current leg's normalized position, reversing during ping-pong; it is not overall progress through all cycles.
+
+The runner uses process/physics priority **1000**, after default-priority node updates. It is not an exact Unity LateUpdate equivalent. A node's `SetProcess(false)` does not disable bound tweens; `ProcessMode` and tree pause determine `CanProcess()`.
+
+Owner tree exit cancels playback immediately, including removal/reparenting. Freed/queued-for-deletion targets are never written. Destroying a paused owner still settles completion. Runner/tree teardown cancels and releases remaining work. `SuppressCallbacksWhenTargetInvalid` can suppress callbacks while still settling completion. Handles retain their `Target` for inspection; release handles you no longer need.
+
+### Built-in adapters
+
+| Family | Definitions |
+| --- | --- |
+| Callback values | `FloatTween`, `DoubleTween`, `Vector2Tween`, `Vector3Tween`, `Vector4Tween`, `ColorTween`, `QuaternionTween`, `Rect2Tween` |
+| Node2D | `Position2DTween`, `GlobalPosition2DTween`, `Scale2DTween`, X/Y variants; `Rotation2DTween`, `GlobalRotation2DTween` |
+| Node3D | `Position3DTween`, `GlobalPosition3DTween`, `Scale3DTween`, `Rotation3DTween`, `GlobalRotation3DTween`, X/Y/Z variants; `Quaternion3DTween` |
+| Control | `ControlPositionTween`, `ControlGlobalPositionTween`, `ControlSizeTween`, `ControlScaleTween`, X/Y variants; `ControlRotationTween`, `ControlAnchorMinTween`, `ControlAnchorMaxTween`, `ControlOffsetsTween` |
+| Color/opacity | `ModulateTween`, `SelfModulateTween`, `ModulateAlphaTween`, `SelfModulateAlphaTween` on CanvasItem |
+| Range | `RangeValueTween` on ProgressBar, TextureProgressBar, sliders, and other Range nodes |
+| Audio | `AudioVolumeDbTween`, `AudioVolumeLinearTween`, `AudioPitchScaleTween`, plus `2D`/`3D` suffix variants |
+| Lights | `LightColor2DTween`, `LightEnergy2DTween`, `LightColor3DTween`, `LightEnergy3DTween`, `OmniRangeTween`, `SpotRangeTween`, `SpotAngleTween` |
+
+Axis suffixes follow the dimension, e.g. `Position3DXTween`. Scalar and Euler rotations use **radians**; quaternion interpolation normalizes endpoints and uses shortest-path spherical interpolation. Spot angle uses Godot's **degrees**. Linear audio volume is an amplitude multiplier, `VolumeDb` is decibels, pitch is a ratio. Engine setters may clamp constrained properties (e.g. Range, audio pitch, and anchors).
+
+Control anchors are fractions; offsets and positions are pixels. Anchor adapters use Godot's push-opposite behavior when moving an edge past its opposite edge. `ControlOffsetsTween` uses Vector4 `(left, top, right, bottom)`. Containers can overwrite child position/size; animate a free-layout child when necessary. Range values use the node's configured min/max/step rather than assuming a 0–1 fraction. Light and audio nodes require suitable scene resources to render light or play sound; tweening their property does not create those resources.
+
+### Custom properties and values
+
+```csharp
+var healthTween = new PropertyTween<MyEnemy, float>(
+    enemy => enemy.Health,
+    (enemy, value) => enemy.Health = value,
+    Interpolators.Float)
+{
+    To = 0,
+    Duration = 0.5,
+};
+enemy.Tween(healthTween); // MyEnemy derives from Node.
+
+owner.Tween(new FloatTween
+{
+    From = 10,
+    To = 100,
+    Duration = 1,
+    OnUpdate = (_, value) => customObject.Amount = value,
+});
+```
+
+Value tweens are owned by a Node and deliver results through `OnUpdate`. Their omitted endpoints default to zero/transparent black/identity as appropriate. You may also derive from `TweenDefinition<TTarget, TValue>` and override protected `Read`, `Write`, and `Interpolate` methods. Definition snapshots are shallow; custom overrides should avoid changing definition state during playback.
+
+For deterministic tests or non-node managed targets, use `TweenScheduler.Add(target, definition)` and `Update(delta, unscaledDelta, mode)`. The scheduler must be driven/disposed on its creating thread. Adding actual Nodes still requires Godot's main thread and an in-tree owner. Dispose manual schedulers to release their work. Automatic `CancelTweens` operates on the per-tree runner, not separately created manual schedulers.
+
+## Differences from unity-tweens
+
+The reusable definition/instance design and easing math are retained. Properties use PascalCase and Godot types. `LoopCount` explicitly means total cycles. Fill flags describe behavior instead of retaining upstream's reversed Forwards/Backwards terminology. Native `Nullable<T>` replaces the custom nullable wrapper. Timing carries remaining delta across phase boundaries, zero duration is explicit, and terminal callbacks are idempotent.
+
+Unity coroutine APIs, the editor inspector, component lookup, and Unity-specific audio spatial-blend/priority/reverb/pan controls are not ported. Global quaternion conversion, sequence DSLs, automatic overwrite arbitration, and pooling are deferred. Use local `Quaternion3DTween`, explicit Euler adapters, async composition, and custom property definitions where appropriate.
+
+## Validation and known limits
+
+Tests cover deterministic playback, easing and overshoot, callback mutation/faults, snapshots, async completion, main-thread continuation, node lifetime/pause, adapter families, the demo, and scheduler steady-state allocations. The desktop testbed has been rendered with the OpenGL compatibility renderer. The library is packaged independently of its testbed and the gitignored Unity reference.
+
+The testbed's trimming checks report IL2125 for unannotated GodotSharp bindings and this library; trimmed/AOT export support is not promised. An isolated two-engine 2dog restart smoke run succeeds but the second engine emits an upstream `gui/common/default_scroll_deadzone` setting warning when creating OptionButton. This is separate from tween playback and is not suppressed here.
+
+Developer-only capture/restart checks:
+
+```powershell
+dotnet run --project testbed/testbed.2dog -- --snapshot artifacts/demo.png --rendering-method gl_compatibility
+dotnet run --project testbed/testbed.2dog -- --headless --quit-after 12 --restart-check
+```
+
+The math and API inspiration are attributed in [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md), including the original MIT notice.
