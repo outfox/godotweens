@@ -10,6 +10,16 @@ $symbols = Join-Path $packageDirectory "godotweens.$Version.snupkg"
 if (!(Test-Path $symbols)) { throw "Missing symbol package: $symbols" }
 
 Add-Type -AssemblyName System.IO.Compression.FileSystem
+$symbolArchive = [System.IO.Compression.ZipFile]::OpenRead($symbols)
+try {
+    $pdbPath = 'lib/net10.0/godotweens.pdb'
+    $pdb = $symbolArchive.GetEntry($pdbPath)
+    if (!$pdb) { throw "Symbol package is missing $pdbPath" }
+    if ($pdb.Length -eq 0) { throw "Symbol package contains an empty $pdbPath" }
+} finally {
+    $symbolArchive.Dispose()
+}
+
 $archive = [System.IO.Compression.ZipFile]::OpenRead($package)
 try {
     foreach ($path in @('LICENSE', 'README.md', 'THIRD-PARTY-NOTICES.md', 'lib/net10.0/godotweens.dll', 'lib/net10.0/godotweens.xml')) {

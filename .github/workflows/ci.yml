@@ -48,6 +48,8 @@ jobs:
           "PACKAGE_VERSION=$version" >> $env:GITHUB_ENV
       - name: Restore
         run: dotnet restore godotweens.slnx -p:Configuration=Release
+      - name: Check release failure handling
+        run: ./.github/scripts/Test-ReleasePublishing.ps1
       - name: Build
         run: dotnet build godotweens.slnx -c Release --no-restore -p:ContinuousIntegrationBuild=true -p:Version=$env:PACKAGE_VERSION
       - name: Test

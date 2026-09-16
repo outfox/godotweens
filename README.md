@@ -155,7 +155,7 @@ Unity coroutine APIs, the editor inspector, component lookup, and Unity-specific
 
 GitHub Actions builds and tests the solution, verifies the `godotweens` NuGet package,
 and uploads package artifacts. Version tags create GitHub releases with package and
-symbol downloads. See [Releasing godotweens](docs/RELEASING.md) for the release process
+symbol downloads. See [Releasing godotweens](https://github.com/outfox/godotweens/blob/main/docs/RELEASING.md) for the release process
 and NuGet trusted-publishing setup.
 
 Tests cover deterministic playback, easing and overshoot, callback mutation/faults, snapshots, async completion, main-thread continuation, node lifetime/pause, adapter families, the demo, and scheduler steady-state allocations. The desktop testbed has been rendered with the OpenGL compatibility renderer. The library is packaged independently of its testbed and the gitignored Unity reference.
