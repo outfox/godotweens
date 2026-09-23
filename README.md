@@ -2,7 +2,7 @@
 
 A typed C# tween library for GodotSharp and 2dog, inspired by Jeffrey Lanters' **unity-tweens**. Reuse definitions, control independent playback handles, and compose animations with `async`/`await`.
 
-Targets **.NET 10 / GodotSharp 4.7.2**. The included testbed uses **2dog 4.7.2.84**. The library has no dependency on 2dog, native engine packages, or editor assemblies; your application supplies the engine. Use matching GodotSharp/engine versions. Other Godot versions and trimmed/AOT/web exports have not been validated.
+Targets **.NET 10 / GodotSharp 4.7.2**. The included testbed uses a floating `2dog 4.7.2.*` package version. The library has no dependency on 2dog, native engine packages, or editor assemblies; your application supplies the engine. Use matching GodotSharp/engine versions. Other Godot versions and trimmed/AOT/web exports have not been validated.
 
 ## Run the testbed
 
@@ -119,6 +119,32 @@ Axis suffixes follow the dimension, e.g. `Position3DXTween`. Scalar and Euler ro
 
 Control anchors are fractions; offsets and positions are pixels. Anchor adapters use Godot's push-opposite behavior when moving an edge past its opposite edge. `ControlOffsetsTween` uses Vector4 `(left, top, right, bottom)`. Containers can overwrite child position/size; animate a free-layout child when necessary. Range values use the node's configured min/max/step rather than assuming a 0–1 fraction. Light and audio nodes require suitable scene resources to render light or play sound; tweening their property does not create those resources.
 
+### Property convenience methods
+
+Every built-in definition also has a typed extension method:
+
+```csharp
+sprite.TweenPosition(destination, 0.5, options => options.Ease = EaseType.CubicOut);
+camera.TweenZoom(new Vector2(2, 2), 0.4);
+label.TweenVisibleRatio(1, 1.5, options => options.From = 0);
+audio.TweenVolumeDb(-20, 1);
+```
+
+The catalog now also covers cameras, paths, 3D appearance, Control pivots and offset transforms, drawing, canvas/parallax, spatial audio, additional lights, animation, particles, decals, fog volumes, spring arms and integer frame/scroll/text properties. See the [complete node/extension catalog](docs/NODE-TWEENS.md) for definitions, units and constraints, and [material and shader tweens](docs/MATERIAL-TWEENS.md) for resource properties and typed uniforms.
+
+### Materials and shader uniforms
+
+Material tweens update the supplied resource directly, including shared resources. Choose a SceneTree context, or bind playback to an owner node:
+
+```csharp
+material.TweenAlbedoAlpha(0, 0.5, GetTree());
+material.TweenRoughness(0.2f, 1, mesh);
+shaderMaterial.TweenShaderParameter("dissolve", 1f, 0.5, GetTree());
+mesh.TweenInstanceShaderParameter("pulse", 1f, 0.5);
+```
+
+Includes 25 BaseMaterial3D adapters and float/double, int, vector and color shader uniforms. Defaults and explicit override state are preserved during non-retaining completion. See [material lifetime, rendering prerequisites and examples](docs/MATERIAL-TWEENS.md).
+
 ### Custom properties and values
 
 ```csharp
@@ -141,7 +167,7 @@ owner.Tween(new FloatTween
 });
 ```
 
-Value tweens are owned by a Node and deliver results through `OnUpdate`. Their omitted endpoints default to zero/transparent black/identity as appropriate. You may also derive from `TweenDefinition<TTarget, TValue>` and override protected `Read`, `Write`, and `Interpolate` methods. Definition snapshots are shallow; custom overrides should avoid changing definition state during playback.
+Value tweens are owned by a Node and deliver results through `OnUpdate`. Their omitted endpoints default to zero/transparent black/identity as appropriate. You may also derive from `TweenDefinition<TTarget, TValue>` and override protected `Read`, `Write`, and `Interpolate` methods. Definition snapshots are shallow; reference-valued configuration remains shared. Advanced definitions can override `Prepare`, `Restore`, and `Release` to manage per-playback bindings on the snapshot; cleanup also runs after failed preparation and must release only snapshot-owned resources.
 
 For deterministic tests or non-node managed targets, use `TweenScheduler.Add(target, definition)` and `Update(delta, unscaledDelta, mode)`. The scheduler must be driven/disposed on its creating thread. Adding actual Nodes still requires Godot's main thread and an in-tree owner. Dispose manual schedulers to release their work. Automatic `CancelTweens` operates on the per-tree runner, not separately created manual schedulers.
 
@@ -149,7 +175,7 @@ For deterministic tests or non-node managed targets, use `TweenScheduler.Add(tar
 
 The reusable definition/instance design and easing math are retained. Properties use PascalCase and Godot types. `LoopCount` explicitly means total cycles. Fill flags describe behavior instead of retaining upstream's reversed Forwards/Backwards terminology. Native `Nullable<T>` replaces the custom nullable wrapper. Timing carries remaining delta across phase boundaries, zero duration is explicit, and terminal callbacks are idempotent.
 
-Unity coroutine APIs, the editor inspector, component lookup, and Unity-specific audio spatial-blend/priority/reverb/pan controls are not ported. Global quaternion conversion, sequence DSLs, automatic overwrite arbitration, and pooling are deferred. Use local `Quaternion3DTween`, explicit Euler adapters, async composition, and custom property definitions where appropriate.
+Unity coroutine APIs, the editor inspector, component lookup, and Unity-specific audio spatial-blend/priority/reverb/pan controls are not ported. Sequence DSLs, automatic overwrite arbitration, and pooling are deferred. Global quaternion rotation is available through `GlobalQuaternion3DTween` / `TweenGlobalQuaternion`; it follows Godot global-rotation scale/shear semantics. Use async composition and custom property definitions where appropriate.
 
 ## Validation and known limits
 
@@ -158,7 +184,7 @@ and uploads package artifacts. Version tags create GitHub releases with package 
 symbol downloads. See [Releasing godotweens](https://github.com/outfox/godotweens/blob/main/docs/RELEASING.md) for the release process
 and NuGet trusted-publishing setup.
 
-Tests cover deterministic playback, easing and overshoot, callback mutation/faults, snapshots, async completion, main-thread continuation, node lifetime/pause, adapter families, the demo, and scheduler steady-state allocations. The desktop testbed has been rendered with the OpenGL compatibility renderer. The library is packaged independently of its testbed and the gitignored Unity reference.
+Tests cover deterministic playback, easing and overshoot, callback mutation/faults, snapshots, async completion, main-thread continuation, node lifetime/pause, adapter families, the demo, and scheduler steady-state allocations. Material tests cover shared-resource ownership, disposal and all property/context overloads. Run `dotnet test testbed/testbed.tests/testbed.tests.csproj -c Release -p:RenderingTests=true` separately for shader contracts and rendered pixel checks (requires graphics/display). The desktop testbed has also been rendered with the OpenGL compatibility renderer. The library is packaged independently of its testbed and the gitignored Unity reference.
 
 The testbed's trimming checks report IL2125 for unannotated GodotSharp bindings and this library; trimmed/AOT export support is not promised. An isolated two-engine 2dog restart smoke run succeeds but the second engine emits an upstream `gui/common/default_scroll_deadzone` setting warning when creating OptionButton. This is separate from tween playback and is not suppressed here.
 

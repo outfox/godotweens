@@ -26,17 +26,49 @@ public sealed class TweenScheduler : IDisposable
 
     public TweenInstance<TTarget, TValue> Add<TTarget, TValue>(TTarget target,
         TweenDefinition<TTarget, TValue> definition) where TTarget : class where TValue : struct
+        => AddCore(target, definition, target as Node, null);
+
+    /// <summary>Animate a separate target, binding playback to an in-tree owner node.</summary>
+    public TweenInstance<TTarget, TValue> Add<TTarget, TValue>(TTarget target,
+        TweenDefinition<TTarget, TValue> definition, Node owner) where TTarget : class where TValue : struct
+    {
+        ArgumentNullException.ThrowIfNull(owner);
+        return AddCore(target, definition, owner, null);
+    }
+
+    internal TweenInstance<TTarget, TValue> AddCore<TTarget, TValue>(TTarget target,
+        TweenDefinition<TTarget, TValue> definition, Node? owner, SceneTree? tree)
+        where TTarget : class where TValue : struct
     {
         EnsureThread();
         ObjectDisposedException.ThrowIf(disposed, this);
         ArgumentNullException.ThrowIfNull(target);
         ArgumentNullException.ThrowIfNull(definition);
-        var owner = target as Node;
+        if (target is GodotObject native)
+        {
+            TweenRuntime.EnsureMainThread();
+            if (!GodotObject.IsInstanceValid(native))
+                throw new ArgumentException("The tween target has been disposed.", nameof(target));
+        }
+        if (target is Node node && !ReferenceEquals(node, owner))
+            throw new ArgumentException("Node targets must use their own node lifetime.", nameof(owner));
         if (owner is not null) TweenRuntime.ValidateOwner(owner);
-        var instance = new TweenInstance<TTarget, TValue>(this, target, definition, owner);
+        if (tree is not null) TweenRuntime.ValidateTree(tree);
+        if (owner is not null && tree is not null && owner.GetTree() != tree)
+            throw new ArgumentException("The owner must belong to the supplied scene tree.", nameof(owner));
+        var instance = new TweenInstance<TTarget, TValue>(this, target, definition, owner, tree);
+        if (disposed)
+        {
+            instance.Finish(TweenCompletionReason.RunnerDisposed);
+            return instance;
+        }
+        // A custom getter may remove/dispose an owner or target. Observe this before binding signals.
         instances.Add(instance);
-        instance.BindLifetime();
-        instance.Initialize();
+        if (instance.CheckTarget())
+        {
+            instance.BindLifetime();
+            instance.Initialize();
+        }
         return instance;
     }
 

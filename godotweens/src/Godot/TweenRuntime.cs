@@ -12,10 +12,24 @@ public static class TweenRuntime
     private static readonly Dictionary<SceneTree, TweenRunner> runners = new();
     private static readonly ConditionalWeakTable<SceneTree, object> closingTrees = new();
 
-    internal static void ValidateOwner(Node owner)
+    internal static void EnsureMainThread()
     {
         if (OS.GetThreadCallerId() != OS.GetMainThreadId())
-            throw new InvalidOperationException("Node tweens must be created on Godot's main thread.");
+            throw new InvalidOperationException("Godot tweens must be created on Godot's main thread.");
+    }
+
+    internal static void ValidateTree(SceneTree tree)
+    {
+        EnsureMainThread();
+        if (!GodotObject.IsInstanceValid(tree) || !GodotObject.IsInstanceValid(tree.Root) || !tree.Root.IsInsideTree())
+            throw new ArgumentException("The scene tree must be live and initialized.", nameof(tree));
+        if (closingTrees.TryGetValue(tree, out _))
+            throw new InvalidOperationException("Cannot start a tween while the scene tree is shutting down.");
+    }
+
+    internal static void ValidateOwner(Node owner)
+    {
+        EnsureMainThread();
         if (!GodotObject.IsInstanceValid(owner) || owner.IsQueuedForDeletion() || !owner.IsInsideTree())
             throw new ArgumentException("The owner must be a valid node inside the scene tree.", nameof(owner));
     }
@@ -23,9 +37,12 @@ public static class TweenRuntime
     internal static TweenRunner GetRunner(Node owner)
     {
         ValidateOwner(owner);
-        var tree = owner.GetTree();
-        if (closingTrees.TryGetValue(tree, out _))
-            throw new InvalidOperationException("Cannot start a tween while the scene tree is shutting down.");
+        return GetRunner(owner.GetTree());
+    }
+
+    internal static TweenRunner GetRunner(SceneTree tree)
+    {
+        ValidateTree(tree);
         if (runners.TryGetValue(tree, out var existing)) return existing;
         var runner = new TweenRunner();
         runner.Initialize(tree);
@@ -60,7 +77,7 @@ public static class TweenRuntime
     }
 }
 
-public static class TweenExtensions
+public static partial class TweenExtensions
 {
     /// <summary>Start a typed tween, automatically owned by the target's scene-tree lifetime.</summary>
     public static TweenInstance<TTarget, TValue> Tween<TTarget, TValue>(this TTarget target,

@@ -54,4 +54,12 @@
     <ItemGroup Condition="'$(Configuration)' == 'Editor'">
         <PackageReference Include="GodotSharpEditor" Version="$(TwoDogGodotVersion)" />
     </ItemGroup>
+    <!-- Rendered shader contracts run in a separate process from the headless fixture. -->
+    <ItemGroup Condition="'$(RenderingTests)' != 'true'">
+        <Compile Remove="Integration/ShaderTweenTests.cs;Integration/MaterialRenderingTests.cs" />
+    </ItemGroup>
+    <ItemGroup Condition="'$(RenderingTests)' == 'true'">
+        <Compile Remove="BasicTests.cs;Core/**/*.cs;Integration/**/*.cs" />
+        <Compile Include="Integration/ShaderTweenTests.cs;Integration/MaterialRenderingTests.cs" />
+    </ItemGroup>
 </Project>

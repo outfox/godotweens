@@ -20,6 +20,17 @@ public abstract class TweenDefinition<TTarget, TValue> : TweenOptions
     protected abstract void Write(TTarget target, TValue value);
     protected abstract TValue Interpolate(TValue from, TValue to, float weight);
 
+    /// <summary>Prepare per-playback bindings on the private snapshot, before its initial read.</summary>
+    protected virtual void Prepare(TTarget target) { }
+    /// <summary>Restore captured state at non-retaining completion. May remove an override instead of writing a value.</summary>
+    protected virtual void Restore(TTarget target, TValue initial) => Write(target, initial);
+    /// <summary>Release only resources owned by this playback snapshot, including after failed preparation.</summary>
+    protected virtual void Release() { }
+
+    internal void PrepareTarget(TTarget target) => Prepare(target);
+    internal void RestoreValue(TTarget target, TValue initial) => Restore(target, initial);
+    internal void ReleaseSnapshot() => Release();
+
     // Clone custom configuration as well, so subsequent property edits do not change bindings.
     internal TweenDefinition<TTarget, TValue> Snapshot() => (TweenDefinition<TTarget, TValue>)MemberwiseClone();
     internal TValue ReadValue(TTarget target) => Read(target);

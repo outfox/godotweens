@@ -5,9 +5,17 @@ using Godot;
 
 namespace godotweens;
 
-/// <summary>Unclamped value interpolation, preserving back/elastic overshoot.</summary>
+/// <summary>Value interpolation preserving easing overshoot; integer results saturate at Int32 limits.</summary>
 public static class Interpolators
 {
+    /// <summary>Rounds to nearest with ties away from zero; overshoot saturates at Int32 limits.</summary>
+    public static int Int(int from, int to, float weight)
+    {
+        if (!float.IsFinite(weight)) throw new ArgumentOutOfRangeException(nameof(weight));
+        var value = from + ((double)to - from) * weight;
+        return (int)Math.Clamp(Math.Round(value, MidpointRounding.AwayFromZero), int.MinValue, int.MaxValue);
+    }
+
     public static float Float(float from, float to, float weight) => from + (to - from) * weight;
     public static double Double(double from, double to, float weight) => from + (to - from) * weight;
     public static Vector2 Vector2(Vector2 from, Vector2 to, float weight) => from.Lerp(to, weight);
