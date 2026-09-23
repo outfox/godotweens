@@ -15,17 +15,21 @@ internal static class Program
         var forwarded = new List<string>();
         string? snapshot = null;
         var restartCheck = false;
+        string? gallerySnapshots = null;
+        var galleryPage = 0;
         for (var i = 0; i < args.Length; i++)
         {
             if (args[i] == "--snapshot" && i + 1 < args.Length) snapshot = Path.GetFullPath(args[++i]);
+            else if (args[i] == "--gallery-snapshots" && i + 1 < args.Length) gallerySnapshots = Path.GetFullPath(args[++i]);
+            else if (args[i] == "--gallery-page" && i + 1 < args.Length) galleryPage = int.Parse(args[++i]);
             else if (args[i] == "--restart-check") restartCheck = true;
             else forwarded.Add(args[i]);
         }
-        Run(forwarded.ToArray(), snapshot);
-        if (restartCheck) Run(forwarded.ToArray(), null);
+        Run(forwarded.ToArray(), snapshot, gallerySnapshots, galleryPage);
+        if (restartCheck) Run(forwarded.ToArray(), null, null, galleryPage);
     }
 
-    private static void Run(string[] args, string? snapshot)
+    private static void Run(string[] args, string? snapshot, string? gallerySnapshots, int galleryPage)
     {
         // The default constructor finds raw project content during development
         // and the exe-adjacent .pck after publish. Arguments are forwarded to Godot.
@@ -38,11 +42,16 @@ internal static class Program
             GD.Print("2dog is running (no run/main_scene set in project.godot).");
         Console.WriteLine("Close the window to quit.");
 
+        var gallery = engine.Tree.CurrentScene as testbed.TweenDemo;
+        gallery?.SelectPage(gallerySnapshots is null ? galleryPage : 0);
+        var capturedPages = 0;
+
         // Iteration() returns true when Godot wants to quit.
         var frame = 0;
         while (!engine.Iteration())
         {
-            if (++frame == 20 && snapshot is not null)
+            frame++;
+            if (frame == 20 && snapshot is not null)
             {
                 using var image = engine.Tree.Root.GetTexture().GetImage();
                 if (image.IsEmpty()) throw new InvalidOperationException("Screenshot requires a rendering display driver.");
@@ -51,6 +60,18 @@ internal static class Program
                 if (result != Error.Ok) throw new IOException($"Screenshot failed: {result}");
                 Console.WriteLine($"Saved {snapshot}");
                 engine.Tree.Quit();
+            }
+            if (gallerySnapshots is not null && frame % 60 == 0 && gallery is not null)
+            {
+                if (gallery.CurrentPage?.Error is { } error) throw new InvalidOperationException(error);
+                using var image = engine.Tree.Root.GetTexture().GetImage();
+                if (image.IsEmpty()) throw new InvalidOperationException("Gallery capture requires a renderer.");
+                Directory.CreateDirectory(gallerySnapshots);
+                var target = Path.Combine(gallerySnapshots, $"{capturedPages + 1:00}.png");
+                if (image.SavePng(target) != Error.Ok) throw new IOException("Could not save " + target);
+                Console.WriteLine($"Captured {testbed.TweenDemo.PageNames[capturedPages]} ({gallery.DemoTweenCount} tweens)");
+                if (++capturedPages == testbed.TweenDemo.PageNames.Length) engine.Tree.Quit();
+                else gallery.SelectPage(capturedPages);
             }
         }
 

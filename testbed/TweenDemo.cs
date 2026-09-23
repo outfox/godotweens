@@ -6,186 +6,135 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Godot;
 using godotweens;
-
 namespace testbed;
 
-/// <summary>Interactive consumer of the library; all motion is driven by godotweens.</summary>
+/// <summary>Gallery shell. Pages own their examples; navigation destroys the previous playground.</summary>
 public partial class TweenDemo : Control
 {
-    private readonly List<TweenInstance> handles = [];
-    private readonly Color mint = new("79deb4");
-    private readonly Color amber = new("f2bc74");
-    private Polygon2D movement = null!, transform = null!, chain = null!;
-    private ColorRect color = null!;
-    private Control movementLane = null!, chainLane = null!;
-    private Label status = null!, durationLabel = null!, chainLabel = null!;
+    public static readonly string[] PageNames = ["Motion & paths", "Interface", "Drawing & particles", "3D stage", "Materials", "Shaders"];
+    private readonly List<Button> navigation = [];
+    private readonly List<Resource> themeResources = [];
+    private VBoxContainer content = null!;
+    private Label status = null!, durationLabel = null!;
     private Button pause = null!;
-    private OptionButton easeChoice = null!;
+    private OptionButton ease = null!;
     private HSlider duration = null!;
     private CheckBox pingPong = null!;
-    private int generation;
+    private GalleryPage? page;
     private bool paused;
+    private int revision;
+    public int SelectedPage { get; private set; }
     public bool IsPlaying { get; private set; }
-    public int DemoTweenCount => handles.FindAll(t => !t.IsTerminal).Count;
-    public Task? ChainTask { get; private set; }
-
+    public int DemoTweenCount => page?.ActiveCount ?? 0;
+    public Task? ChainTask => page?.SequenceTask;
+    public GalleryPage? CurrentPage => page;
     public override void _Ready()
     {
-        BuildControls();
-        Resized += () => { if (IsNodeReady() && IsPlaying) RestartDemo(); };
-        Callable.From(RestartDemo).CallDeferred();
+        BuildControls(); SelectPage(0);
     }
-
-    private static Label Text(string text, int size, Color? tint = null)
-    {
-        var label = new Label { Text = text };
-        label.AddThemeFontSizeOverride("font_size", size);
-        if (tint.HasValue) label.AddThemeColorOverride("font_color", tint.Value);
-        return label;
-    }
-
     private void BuildControls()
     {
-        var background = new ColorRect { Color = new Color("17222b"), MouseFilter = MouseFilterEnum.Ignore };
-        AddChild(background);
-        background.SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
-        var margin = new MarginContainer(); AddChild(margin);
-        margin.SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
-        foreach (var side in new[] { "left", "right", "top", "bottom" }) margin.AddThemeConstantOverride("margin_" + side, 32);
-        var layout = new VBoxContainer(); layout.AddThemeConstantOverride("separation", 12); margin.AddChild(layout);
-        var title = new HBoxContainer(); layout.AddChild(title);
-        var heading = Text("godotweens", 36); heading.SizeFlagsHorizontal = SizeFlags.ExpandFill; title.AddChild(heading);
-        title.AddChild(Text("C# / GODOT", 16, mint));
-        layout.AddChild(Text("Change the timing. Watch the same tween system drive every example.", 18, new Color("b6c8d2")));
-        layout.AddChild(new HSeparator());
-
-        var settings = new HBoxContainer(); settings.AddThemeConstantOverride("separation", 16); layout.AddChild(settings);
-        settings.AddChild(Text("Ease", 18));
-        easeChoice = new OptionButton { CustomMinimumSize = new Vector2(160, 40) };
-        foreach (var ease in new[] { EaseType.CubicInOut, EaseType.Linear, EaseType.BackOut, EaseType.ElasticOut, EaseType.BounceOut })
-            easeChoice.AddItem(ease.ToString(), (int)ease);
-        settings.AddChild(easeChoice);
-        durationLabel = Text("Duration 1.4 s", 18); settings.AddChild(durationLabel);
-        duration = new HSlider { MinValue = 0.2, MaxValue = 3, Step = 0.1, Value = 1.4,
-            CustomMinimumSize = new Vector2(140, 40), SizeFlagsHorizontal = SizeFlags.ExpandFill,
-            TooltipText = "Seconds per forward or backward leg" };
+        var background = new ColorRect { Color = new Color("101925"), MouseFilter = MouseFilterEnum.Ignore };
+        AddChild(background); background.SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
+        var margin = new MarginContainer(); AddChild(margin); margin.SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
+        foreach (var side in new[] { "left", "right", "top", "bottom" }) margin.AddThemeConstantOverride("margin_" + side, 24);
+        var layout = new VBoxContainer(); layout.AddThemeConstantOverride("separation", 14); margin.AddChild(layout);
+        var header = new HBoxContainer(); layout.AddChild(header);
+        var title = GalleryPage.Text("godotweens / playground", 30); title.SizeFlagsHorizontal = SizeFlags.ExpandFill; header.AddChild(title);
+        header.AddChild(GalleryPage.Text("06 PAGES  ·  LIVE C#", 14, GalleryPage.Mint));
+        var settings = new HBoxContainer(); settings.AddThemeConstantOverride("separation", 14); layout.AddChild(settings);
+        settings.AddChild(GalleryPage.Text("Easing", 16, GalleryPage.Muted));
+        ease = new OptionButton { CustomMinimumSize = new Vector2(180, 38) };
+        foreach (var choice in new[] { EaseType.CubicInOut, EaseType.Linear, EaseType.SineInOut, EaseType.BackOut, EaseType.ElasticOut, EaseType.BounceOut })
+            ease.AddItem(choice.ToString(), (int)choice);
+        settings.AddChild(ease);
+        durationLabel = GalleryPage.Text("Leg duration  1.8 s", 16); settings.AddChild(durationLabel);
+        duration = new HSlider { MinValue = 0.4, MaxValue = 4, Step = 0.1, Value = 1.8,
+            CustomMinimumSize = new Vector2(150, 38), SizeFlagsHorizontal = SizeFlags.ExpandFill };
         settings.AddChild(duration);
         pingPong = new CheckBox { Text = "Ping-pong", ButtonPressed = true }; settings.AddChild(pingPong);
-
-        (movementLane, _) = Row(layout, "Position", "Node2D.Position");
-        movement = Marker(movementLane, mint);
-        (var transformLane, _) = Row(layout, "Scale & rotation", "Two tweens, one node");
-        transform = Marker(transformLane, amber); transform.Position = new Vector2(80, 40);
-        (var colorLane, _) = Row(layout, "Color & opacity", "CanvasItem.Modulate");
-        color = new ColorRect { Position = new Vector2(20, 12), Size = new Vector2(160, 56), Color = Colors.White };
-        colorLane.AddChild(color);
-        (chainLane, var chainRow) = Row(layout, "Async sequence", "await Completion");
-        chain = Marker(chainLane, mint);
-        chainLabel = Text("Move → return → done", 16, new Color("b6c8d2")); chainRow.AddChild(chainLabel);
-
-        var actions = new HBoxContainer(); actions.AddThemeConstantOverride("separation", 12); layout.AddChild(actions);
-        pause = AddButton(actions, "Pause", TogglePause);
-        AddButton(actions, "Cancel", StopDemo);
-        AddButton(actions, "Restart", RestartDemo);
-        status = Text("Starting…", 18, mint); status.SizeFlagsHorizontal = SizeFlags.ExpandFill;
+        layout.AddChild(new HSeparator());
+        var body = new HBoxContainer { SizeFlagsVertical = SizeFlags.ExpandFill }; body.AddThemeConstantOverride("separation", 20); layout.AddChild(body);
+        var sidebar = new VBoxContainer { CustomMinimumSize = new Vector2(214, 0) }; sidebar.AddThemeConstantOverride("separation", 8); body.AddChild(sidebar);
+        sidebar.AddChild(GalleryPage.Text("EXPLORE", 12, GalleryPage.Muted));
+        for (var i = 0; i < PageNames.Length; i++)
+        {
+            var index = i;
+            var button = new Button { Text = $"{i + 1:00}  {PageNames[i]}", ToggleMode = true,
+                Alignment = HorizontalAlignment.Left, CustomMinimumSize = new Vector2(214, 46) };
+            var selected = GalleryPage.Box(new Color("294b48"), 8); themeResources.Add(selected);
+            button.AddThemeStyleboxOverride("pressed", selected);
+            button.AddThemeFontSizeOverride("font_size", 15);
+            button.Pressed += () => SelectPage(index); sidebar.AddChild(button); navigation.Add(button);
+        }
+        var hint = GalleryPage.Text("Pick a page.\nMix the timing.\nWatch it move.", 14, GalleryPage.Muted); sidebar.AddChild(hint);
+        var scroll = new ScrollContainer { SizeFlagsHorizontal = SizeFlags.ExpandFill, SizeFlagsVertical = SizeFlags.ExpandFill,
+            HorizontalScrollMode = ScrollContainer.ScrollMode.Disabled };
+        body.AddChild(scroll);
+        content = new VBoxContainer { SizeFlagsHorizontal = SizeFlags.ExpandFill, SizeFlagsVertical = SizeFlags.ExpandFill }; scroll.AddChild(content);
+        var actions = new HBoxContainer(); actions.AddThemeConstantOverride("separation", 10); layout.AddChild(actions);
+        pause = Button(actions, "Pause", TogglePause);
+        Button(actions, "Cancel", StopDemo); Button(actions, "Restart page", RestartDemo);
+        status = GalleryPage.Text("Starting…", 15, GalleryPage.Mint); status.SizeFlagsHorizontal = SizeFlags.ExpandFill;
         status.HorizontalAlignment = HorizontalAlignment.Right; actions.AddChild(status);
-        layout.AddChild(Text("Pause holds every active tween. Cancel keeps its current value. Restart captures fresh values.", 16,
-            new Color("b6c8d2")));
-        easeChoice.ItemSelected += _ => RestartDemo();
-        duration.ValueChanged += value => { durationLabel.Text = $"Duration {value:0.0} s"; RestartDemo(); };
+        ease.ItemSelected += _ => RestartDemo();
+        duration.ValueChanged += v => { durationLabel.Text = $"Leg duration  {v:0.0} s"; RestartDemo(); };
         pingPong.Toggled += _ => RestartDemo();
     }
-
-    private static (Control Lane, VBoxContainer Caption) Row(VBoxContainer layout, string title, string subtitle)
+    private static Button Button(HBoxContainer row, string text, Action action)
     {
-        var row = new HBoxContainer { SizeFlagsVertical = SizeFlags.ExpandFill, CustomMinimumSize = new Vector2(0, 84) };
-        layout.AddChild(row);
-        var caption = new VBoxContainer { CustomMinimumSize = new Vector2(240, 0) };
-        caption.AddChild(Text(title, 22)); caption.AddChild(Text(subtitle, 16, new Color("b6c8d2")));
-        row.AddChild(caption);
-        var lane = new Control { SizeFlagsHorizontal = SizeFlags.ExpandFill, ClipContents = true };
-        row.AddChild(lane);
-        var track = new ColorRect { Color = new Color("33434e"), Position = new Vector2(0, 39), Size = new Vector2(10000, 2), MouseFilter = MouseFilterEnum.Ignore };
-        lane.AddChild(track);
-        return (lane, caption);
-    }
-
-    private static Polygon2D Marker(Control lane, Color tint)
-    {
-        var marker = new Polygon2D { Polygon = [new(-16, -16), new(16, -16), new(16, 16), new(-16, 16)], Color = tint };
-        lane.AddChild(marker); return marker;
-    }
-
-    private static Button AddButton(HBoxContainer row, string label, Action action)
-    {
-        var button = new Button { Text = label, CustomMinimumSize = new Vector2(108, 42) };
+        var button = new Button { Text = text, CustomMinimumSize = new Vector2(110, 40) };
         button.Pressed += action; row.AddChild(button); return button;
     }
-
-    public void RestartDemo()
+    public void SelectPage(int index)
     {
-        if (!IsInsideTree() || movement is null) return;
-        StopDemo();
-        IsPlaying = true;
-        paused = false;
-        pause.Text = "Pause";
-        pause.Disabled = false;
-        var seconds = duration.Value;
-        var ease = (EaseType)easeChoice.GetSelectedId();
-        movement.Position = new Vector2(24, 40);
-        transform.Scale = Vector2.One; transform.Rotation = 0;
-        color.Modulate = mint;
-        chain.Position = new Vector2(24, 40);
-        handles.Add(movement.Tween(new Position2DTween { To = new Vector2(Math.Max(60, movementLane.Size.X - 36), 40),
-            Duration = seconds, Ease = ease, UsePingPong = pingPong.ButtonPressed, IsInfinite = true, RepeatInterval = 0.3, PingPongInterval = 0.2 }));
-        handles.Add(transform.Tween(new Scale2DTween { To = new Vector2(1.6f, 1.6f), Duration = seconds, Ease = ease, UsePingPong = true, IsInfinite = true }));
-        handles.Add(transform.Tween(new Rotation2DTween { To = Mathf.Pi, Duration = seconds, Ease = ease, IsInfinite = true }));
-        handles.Add(color.Tween(new ModulateTween { To = new Color(amber.R, amber.G, amber.B, 0.2f),
-            Duration = seconds, Ease = ease, UsePingPong = true, IsInfinite = true }));
-        ChainTask = RunChain(generation, seconds, ease);
-        status.Text = "Playing";
-    }
-
-    private async Task RunChain(int run, double seconds, EaseType ease)
-    {
-        try
+        if (index < 0 || index >= PageNames.Length) throw new ArgumentOutOfRangeException(nameof(index));
+        if (!IsInsideTree()) return;
+        StopDemo(); DestroyPage(); SelectedPage = index;
+        for (var i = 0; i < navigation.Count; i++) navigation[i].SetPressedNoSignal(i == index);
+        page = index switch { 0 => new MotionPage(), 1 => new InterfacePage(), 2 => new EffectsPage(),
+            3 => new SpatialPage(), 4 => new MaterialsPage(), _ => new ShadersPage() };
+        page.SizeFlagsHorizontal = SizeFlags.ExpandFill; page.SizeFlagsVertical = SizeFlags.ExpandFill;
+        content.AddChild(page);
+        var selected = page; var current = ++revision;
+        Callable.From(() =>
         {
-            chainLabel.Text = "Moving out…";
-            var outward = chain.Tween(new Position2DTween { To = new Vector2(Math.Max(60, chainLane.Size.X - 36), 40), Duration = seconds, Ease = ease });
-            handles.Add(outward);
-            if (await outward.Completion != TweenCompletionReason.Completed || run != generation) return;
-            chainLabel.Text = "Returning…";
-            var inward = chain.Tween(new Position2DTween { To = new Vector2(24, 40), Duration = seconds, Ease = ease });
-            handles.Add(inward);
-            if (await inward.Completion != TweenCompletionReason.Completed || run != generation) return;
-            chainLabel.Text = "Sequence complete";
-        }
-        catch (Exception error)
-        {
-            if (run == generation && IsInsideTree()) status.Text = "Sequence failed — restart to retry";
-            GD.PushError(error.ToString());
-        }
+            if (!IsInsideTree() || current != revision || selected != page) return;
+            try
+            {
+                selected.Start(duration.Value, (EaseType)ease.GetSelectedId(), pingPong.ButtonPressed);
+                IsPlaying = true; paused = false; pause.Text = "Pause"; pause.Disabled = false;
+            }
+            catch (Exception error) { selected.Stop(); status.Text = "Could not start this page: " + error.Message; GD.PushError(error.ToString()); }
+        }).CallDeferred();
     }
-
+    public void RestartDemo() { if (content is not null) SelectPage(SelectedPage); }
     public void TogglePause()
     {
         if (!IsPlaying) return;
-        paused = !paused;
-        foreach (var tween in handles) tween.IsPaused = paused;
-        pause.Text = paused ? "Resume" : "Pause";
-        status.Text = paused ? "Paused" : "Playing";
+        paused = !paused; page?.Pause(paused); pause.Text = paused ? "Resume" : "Pause";
     }
-
     public void StopDemo()
     {
-        generation++;
-        IsPlaying = false;
-        foreach (var tween in handles) tween.Cancel();
-        handles.Clear();
-        if (status is not null) status.Text = "Cancelled — restart to play";
-        if (chainLabel is not null) chainLabel.Text = "Sequence cancelled";
+        revision++; IsPlaying = false; page?.Stop();
         if (pause is not null) { pause.Text = "Pause"; pause.Disabled = true; }
+        if (status is not null) status.Text = "Cancelled · values held. Restart to play.";
     }
-
-    public override void _ExitTree() => StopDemo();
+    public override void _Process(double delta)
+    {
+        if (page?.Error is { } error) status.Text = "Tween error: " + error;
+        else if (IsPlaying) status.Text = $"{(paused ? "Paused" : "Playing")}  ·  {DemoTweenCount} active tweens";
+    }
+    private void DestroyPage()
+    {
+        if (page is null) return;
+        page.Free(); page.ReleaseResources(); page = null;
+    }
+    public override void _ExitTree()
+    {
+        StopDemo();
+        // Children are still valid during tree exit; release page-owned resources after their deletion.
+        DestroyPage();
+        foreach (var resource in themeResources) resource.Dispose(); themeResources.Clear();
+    }
 }

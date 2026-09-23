@@ -12,7 +12,7 @@ dotnet test testbed/testbed.tests/testbed.tests.csproj
 dotnet run --project testbed/testbed.2dog
 ```
 
-The demo shows movement, scale/rotation, color/opacity, and an awaited sequence. Change easing and duration, pause/resume, cancel, or restart. From `testbed/`, `dotnet test` and `dotnet run --project testbed.2dog` also work.
+The testbed is a six-page gallery with 24 examples: motion and paths, interface, drawing and particles, a 3D stage, materials, and shaders. Change easing and duration, pause/resume, cancel, or restart the current page. See the [gallery guide](docs/TESTBED-GALLERY.md) for the examples, controls and capture commands. From `testbed/`, `dotnet test` and `dotnet run --project testbed.2dog` also work.
 
 ## Use the library
 
@@ -70,7 +70,7 @@ await Task.WhenAll(first.Completion, second.Completion);
 await first.AwaitDecommissionAsync(cancellationToken);
 ```
 
-The wait token cancels **only that wait**. Call `Cancel()` to cancel playback. Check completion reasons before starting a follow-up animation when cancellation should stop a sequence (see `TweenDemo.RunChain`). Errors in interpolation, easing, setters, or callbacks fault the completion task and are reported through `TweenScheduler.UnhandledException`; the automatic runner reports them with `GD.PushError`. Other tweens continue. Terminal callbacks and `OnFinally` run at most once, with cleanup and task settlement even when callbacks fail. Multiple failures are retained in an `AggregateException`.
+The wait token cancels **only that wait**. Call `Cancel()` to cancel playback. Check completion reasons before starting a follow-up animation when cancellation should stop a sequence (see `MotionPage.Deliver`). Errors in interpolation, easing, setters, or callbacks fault the completion task and are reported through `TweenScheduler.UnhandledException`; the automatic runner reports them with `GD.PushError`. Other tweens continue. Terminal callbacks and `OnFinally` run at most once, with cleanup and task settlement even when callbacks fail. Multiple failures are retained in an `AggregateException`.
 
 Create/control tweens on Godot's main thread. Completion is settled from that thread; normal Godot async callers retain their synchronization context. Do not use `.Wait()`, `.Result`, `Task.Run`, or `ConfigureAwait(false)` around engine access. No coroutine API is provided. Use Godot's `ToSignal` for unrelated engine-signal waits.
 
