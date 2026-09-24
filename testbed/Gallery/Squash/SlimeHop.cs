@@ -28,19 +28,14 @@ public sealed class SlimeHop : GalleryEffect
         drops = Enumerable.Range(0, 5).Select(_ => Blob(view, 4, 4, Palette.Mint)).ToArray();
         foreach (var drop in drops) drop.Modulate = Colors.Transparent;
 
-        slime = new Node2D { Position = new Vector2(-135, Ground) };
-        view.AddChild(slime);
-        body = new Node2D { Position = new Vector2(0, -20) };
-        slime.AddChild(body);
-        body.AddChild(new Polygon2D { Polygon = Dome(), Color = Palette.Mint, Antialiased = true });
-        var highlight = Blob(body, 8, 4, new Color(1, 1, 1, 0.5f), new Vector2(-17, -24));
-        highlight.Rotation = -0.5f;
+        slime = view.Add(new Node2D { Position = new Vector2(-135, Ground) });
+        body = slime.Add(new Node2D { Position = new Vector2(0, -20) });
+        body.Add(new Polygon2D { Polygon = Dome(), Color = Palette.Mint, Antialiased = true });
+        Blob(body, 8, 4, new Color(1, 1, 1, 0.5f), new Vector2(-17, -24)).Rotation = -0.5f;
 
-        eyes = new Node2D { Position = new Vector2(0, -8) };
-        body.AddChild(eyes);
+        eyes = body.Add(new Node2D { Position = new Vector2(0, -8) });
         foreach (var x in new[] { -11f, 11f }) Blob(eyes, 6, 7.5f, Colors.White, new Vector2(x, 0));
-        pupils = new Node2D();
-        eyes.AddChild(pupils);
+        pupils = eyes.Add(new Node2D());
         foreach (var x in new[] { -11f, 11f }) Blob(pupils, 3.2f, 4, Palette.Background, new Vector2(x + 1, 1));
     }
 

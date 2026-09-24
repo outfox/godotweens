@@ -20,13 +20,11 @@ public sealed class SquashWave : GalleryEffect
     {
         var view = View();
         var outline = Pill();
-        pills = Enumerable.Range(0, Count).Select(i =>
+        pills = Enumerable.Range(0, Count).Select(i => view.Add(new Polygon2D
         {
-            var position = new Vector2((i - Count / 2) * Spacing, Ground);
-            var pill = new Polygon2D { Polygon = outline, Color = Gradient(i / (Count - 1f)), Antialiased = true, Position = position };
-            view.AddChild(pill);
-            return pill;
-        }).ToArray();
+            Polygon = outline, Color = Gradient(i / (Count - 1f)), Antialiased = true,
+            Position = new Vector2((i - Count / 2) * Spacing, Ground),
+        })).ToArray();
         Line(view, [new(-210, Ground + 1), new(210, Ground + 1)], Palette.Outline, 2);
     }
 

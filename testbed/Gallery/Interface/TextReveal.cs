@@ -21,11 +21,10 @@ public sealed class TextReveal : GalleryEffect
         text.VisibleRatio = 0;
         Stage.AddChild(text);
 
-        underline = new ColorRect
+        underline = Stage.Add(new ColorRect
         {
             Color = Palette.Mint, Position = new Vector2(20, 142), Size = new Vector2(230, 3), Scale = new Vector2(0, 1),
-        };
-        Stage.AddChild(underline);
+        });
     }
 
     protected override void Animate()

@@ -16,8 +16,8 @@ public sealed class SharedUniform : GalleryEffect
     {
         var view = View();
         material = Shader("shader_type canvas_item; uniform float amount = 0.15; " + SplitPanel.Body);
-        SplitPanel.Add(view, material, SplitPanel.Left);
-        SplitPanel.Add(view, material, SplitPanel.Right);
+        view.Add(SplitPanel.Create(material, SplitPanel.Left));
+        view.Add(SplitPanel.Create(material, SplitPanel.Right));
         SplitPanel.Caption(view, "SAME MATERIAL", "SAME VALUE");
     }
 

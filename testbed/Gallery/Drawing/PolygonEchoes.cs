@@ -21,15 +21,13 @@ public sealed class PolygonEchoes : GalleryEffect
     protected override void Build()
     {
         var view = View();
-        echoes = Enumerable.Range(1, 3).Reverse().Select(e => new Polygon2D
+        echoes = Enumerable.Range(1, 3).Reverse().Select(e => view.Add(new Polygon2D
         {
             Polygon = Outline, Color = Palette.Mint, Modulate = Colors.White with { A = 0.32f - e * 0.08f }, Antialiased = true,
-        }).ToArray();
-        foreach (var echo in echoes) view.AddChild(echo);
+        })).ToArray();
 
-        polygon = new Polygon2D { Polygon = Outline, Color = Palette.Mint, Antialiased = true };
-        view.AddChild(polygon);
-        polygon.AddChild(new Line2D
+        polygon = view.Add(new Polygon2D { Polygon = Outline, Color = Palette.Mint, Antialiased = true });
+        polygon.Add(new Line2D
         {
             Points = Outline, Closed = true, Width = 2, DefaultColor = Colors.White with { A = 0.5f },
             JointMode = Line2D.LineJointMode.Round, Antialiased = true,

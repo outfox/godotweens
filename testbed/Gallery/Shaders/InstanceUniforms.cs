@@ -16,8 +16,8 @@ public sealed class InstanceUniforms : GalleryEffect
     {
         var view = View();
         var material = Shader("shader_type canvas_item; instance uniform float amount = 0.15; " + SplitPanel.Body);
-        first = SplitPanel.Add(view, material, SplitPanel.Left);
-        second = SplitPanel.Add(view, material, SplitPanel.Right);
+        first = view.Add(SplitPanel.Create(material, SplitPanel.Left));
+        second = view.Add(SplitPanel.Create(material, SplitPanel.Right));
         second.SetInstanceShaderParameter("amount", 0.85f);
         SplitPanel.Caption(view, "INSTANCE A", "INSTANCE B");
     }

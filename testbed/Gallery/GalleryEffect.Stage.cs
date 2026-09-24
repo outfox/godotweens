@@ -16,7 +16,7 @@ public abstract partial class GalleryEffect
     protected SubViewport View()
     {
         var view = Viewport(spatial: false);
-        view.AddChild(new Camera2D { Position = Vector2.Zero });
+        view.Add(new Camera2D { Position = Vector2.Zero });
         return view;
     }
 
@@ -32,30 +32,28 @@ public abstract partial class GalleryEffect
             GlowEnabled = true, GlowIntensity = 0.9f, GlowBloom = 0.02f, GlowHdrThreshold = 0.9f,
             FogEnabled = true, FogLightColor = Palette.Stage, FogDensity = 0.09f,
         });
-        view.AddChild(new WorldEnvironment { Environment = environment });
+        view.Add(new WorldEnvironment { Environment = environment });
 
-        var camera = new Camera3D { Position = new Vector3(0, 0.8f, 3.6f), Fov = 43, Current = true };
-        view.AddChild(camera);
+        var camera = view.Add(new Camera3D { Position = new Vector3(0, 0.8f, 3.6f), Fov = 43, Current = true });
         camera.LookAt(Vector3.Zero);
 
-        var sun = new DirectionalLight3D { RotationDegrees = new Vector3(-50, -30, 0), LightEnergy = 0.9f, ShadowEnabled = true };
-        view.AddChild(sun);
+        var sun = view.Add(new DirectionalLight3D
+        {
+            RotationDegrees = new Vector3(-50, -30, 0), LightEnergy = 0.9f, ShadowEnabled = true,
+        });
         return new Scene3D(view, camera, sun, environment);
     }
 
     private SubViewport Viewport(bool spatial)
     {
-        var container = new SubViewportContainer { Stretch = true, MouseFilter = Control.MouseFilterEnum.Ignore };
-        Stage.AddChild(container);
+        var container = Stage.Add(new SubViewportContainer { Stretch = true, MouseFilter = Control.MouseFilterEnum.Ignore });
         container.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.FullRect);
-        var view = new SubViewport
+        return container.Add(new SubViewport
         {
             Size = new Vector2I(440, 180), OwnWorld3D = spatial, TransparentBg = !spatial,
             RenderTargetUpdateMode = SubViewport.UpdateMode.Always, HandleInputLocally = false,
             Msaa2D = Godot.Viewport.Msaa.Msaa4X, Msaa3D = Godot.Viewport.Msaa.Msaa4X,
-        };
-        container.AddChild(view);
-        return view;
+        });
     }
 
     /// <summary>Adds <paramref name="child"/> stretched over the stage, inset by <paramref name="inset"/>.</summary>
@@ -76,11 +74,7 @@ public abstract partial class GalleryEffect
     protected StandardMaterial3D Surface(Color color) => Own(new StandardMaterial3D { AlbedoColor = color, Roughness = 0.35f });
 
     protected MeshInstance3D Mesh(Node parent, Mesh mesh, Material material, Vector3 position = default)
-    {
-        var node = new MeshInstance3D { Mesh = Own(mesh), MaterialOverride = material, Position = position };
-        parent.AddChild(node);
-        return node;
-    }
+        => parent.Add(new MeshInstance3D { Mesh = Own(mesh), MaterialOverride = material, Position = position });
 
     protected ShaderMaterial Shader(string code) => Own(new ShaderMaterial { Shader = Own(new Godot.Shader { Code = code }) });
 
@@ -107,36 +101,24 @@ public abstract partial class GalleryEffect
         return Own(ImageTexture.CreateFromImage(image));
     }
 
-    protected static Polygon2D Diamond(Node parent, Vector2 position, Color color, float radius = 16)
+    protected static Polygon2D Diamond(Node parent, Vector2 position, Color color, float radius = 16) => parent.Add(new Polygon2D
     {
-        var node = new Polygon2D
-        {
-            Polygon = [new(0, -radius), new(radius, 0), new(0, radius), new(-radius, 0)], Position = position, Color = color,
-        };
-        parent.AddChild(node);
-        return node;
-    }
+        Polygon = [new(0, -radius), new(radius, 0), new(0, radius), new(-radius, 0)], Position = position, Color = color,
+    });
 
     protected static Polygon2D Blob(Node parent, float rx, float ry, Color color, Vector2 position = default)
-    {
-        var node = new Polygon2D { Polygon = Ellipse(rx, ry), Color = color, Position = position, Antialiased = true };
-        parent.AddChild(node);
-        return node;
-    }
+        => parent.Add(new Polygon2D { Polygon = Ellipse(rx, ry), Color = color, Position = position, Antialiased = true });
 
+    /// <summary>A plain polyline. Lines that need more settings use an initializer instead.</summary>
     protected static Line2D Line(Node parent, Vector2[] points, Color color, float width = 2)
-    {
-        var line = new Line2D { Points = points, DefaultColor = color, Width = width, Antialiased = true };
-        parent.AddChild(line);
-        return line;
-    }
+        => parent.Add(new Line2D { Points = points, DefaultColor = color, Width = width, Antialiased = true });
 
     protected static Line2D Ring(Node parent, Vector2 center, float radius, Color color, float width = 2, int segments = 32)
-    {
-        var ring = Line(parent, Ellipse(radius, radius, segments, center), color, width);
-        ring.Closed = true;
-        return ring;
-    }
+        => parent.Add(new Line2D
+        {
+            Points = Ellipse(radius, radius, segments, center), Closed = true, DefaultColor = color, Width = width,
+            Antialiased = true,
+        });
 
     protected static Vector2[] Ellipse(float rx, float ry, int segments = 32, Vector2 center = default)
         => Enumerable.Range(0, segments)

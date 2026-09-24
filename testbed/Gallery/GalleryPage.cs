@@ -69,27 +69,25 @@ public abstract partial class GalleryPage : VBoxContainer
     /// <summary>Adds a titled card to the grid and returns its stage, the area an effect draws into.</summary>
     private Control AddCard(GridContainer grid, string title, string caption)
     {
-        var panel = new PanelContainer { SizeFlagsHorizontal = SizeFlags.ExpandFill, SizeFlagsVertical = SizeFlags.ExpandFill };
+        var panel = grid.Add(new PanelContainer
+        {
+            SizeFlagsHorizontal = SizeFlags.ExpandFill, SizeFlagsVertical = SizeFlags.ExpandFill,
+        });
         panel.AddThemeStyleboxOverride("panel", Own(GalleryTheme.Box(Palette.Surface, 12, 1)));
-        grid.AddChild(panel);
 
-        var column = new VBoxContainer();
+        var column = panel.Add(new VBoxContainer());
         column.AddThemeConstantOverride("separation", 8);
-        panel.AddChild(column);
         column.AddChild(GalleryTheme.Label(title, 19));
 
         // Drawn clipping keeps viewports inside the rounded inset.
-        var stage = new Panel
+        var stage = column.Add(new Panel
         {
             CustomMinimumSize = new Vector2(370, 168), SizeFlagsHorizontal = SizeFlags.ExpandFill,
             SizeFlagsVertical = SizeFlags.ExpandFill, ClipChildren = ClipChildrenMode.AndDraw, MouseFilter = MouseFilterEnum.Ignore,
-        };
+        });
         stage.AddThemeStyleboxOverride("panel", Own(GalleryTheme.Box(Palette.Stage, 8)));
-        column.AddChild(stage);
 
-        var note = GalleryTheme.Label(caption, 13, Palette.Muted);
-        note.AutowrapMode = TextServer.AutowrapMode.WordSmart;
-        column.AddChild(note);
+        column.Add(GalleryTheme.Label(caption, 13, Palette.Muted)).AutowrapMode = TextServer.AutowrapMode.WordSmart;
         return stage;
     }
 

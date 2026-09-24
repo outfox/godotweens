@@ -16,8 +16,7 @@ public sealed class ParentedRotation : GalleryEffect
     {
         var scene = World();
         Floor(scene.View, -1.05f);
-        var parent = new Node3D { Rotation = new Vector3(0.2f, 0.3f, 0.2f) };
-        scene.View.AddChild(parent);
+        var parent = scene.View.Add(new Node3D { Rotation = new Vector3(0.2f, 0.3f, 0.2f) });
         cube = Mesh(parent, new BoxMesh { Size = new Vector3(1.2f, 1.2f, 1.2f) }, Surface(Palette.Mint));
         Mesh(parent, new SphereMesh { Radius = 0.16f, Height = 0.32f }, Surface(Palette.Amber), new Vector3(1, 0, 0));
     }

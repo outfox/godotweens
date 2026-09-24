@@ -18,22 +18,21 @@ public sealed class LightSweep : GalleryEffect
     protected override void Build()
     {
         var view = View();
-        view.AddChild(new CanvasModulate { Color = new Color("3a4a64") });
+        view.Add(new CanvasModulate { Color = new Color("3a4a64") });
 
         var tile = Rounded(Tile / 2, Tile / 2, 5).Select(p => p + new Vector2(Tile / 2, Tile / 2)).ToArray();
         for (var y = -3; y < 3; y++)
             for (var x = -7; x < 7; x++)
-                view.AddChild(new Polygon2D
+                view.Add(new Polygon2D
                 {
                     Polygon = tile, Antialiased = true, Position = new Vector2(x * Cell, y * Cell),
                     Color = (x + y) % 2 == 0 ? Palette.Mint : Palette.Blue,
                 });
 
-        light = new PointLight2D
+        light = view.Add(new PointLight2D
         {
             Texture = RadialFalloff(128), Energy = 0.7f, TextureScale = 1.2f, Position = new Vector2(-100, 0), Color = Warm,
-        };
-        view.AddChild(light);
+        });
         Blob(light, 6, 6, Warm);
         Blob(light, 3, 3, Colors.White);
     }

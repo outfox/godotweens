@@ -15,14 +15,12 @@ public sealed class OffsetTransforms : GalleryEffect
 
     protected override void Build()
     {
-        var row = new HBoxContainer();
+        var row = Fill(new CenterContainer(), 0).Add(new HBoxContainer());
         row.AddThemeConstantOverride("separation", 18);
-        Fill(new CenterContainer(), 0).AddChild(row);
 
-        featured = Tile(2, highlighted: true);
-        featured.OffsetTransformPivot = TileSize / 2;
         row.AddChild(Tile(1, highlighted: false));
-        row.AddChild(featured);
+        featured = row.Add(Tile(2, highlighted: true));
+        featured.OffsetTransformPivot = TileSize / 2;
         row.AddChild(Tile(3, highlighted: false));
     }
 
@@ -35,9 +33,8 @@ public sealed class OffsetTransforms : GalleryEffect
         style.ShadowOffset = highlighted ? Vector2.Zero : new Vector2(0, 4);
         tile.AddThemeStyleboxOverride("panel", style);
 
-        var label = GalleryTheme.Label($"0{number}", 24, highlighted ? Palette.Mint : Palette.Muted);
+        var label = tile.Add(GalleryTheme.Label($"0{number}", 24, highlighted ? Palette.Mint : Palette.Muted));
         label.HorizontalAlignment = HorizontalAlignment.Center;
-        tile.AddChild(label);
         return tile;
     }
 

@@ -42,10 +42,8 @@ public sealed class JellyCube : GalleryEffect
         wave = Mesh(scene.View, ring, ripple, new Vector3(0, Ground + 0.02f, 0));
 
         // Scaling "feet" squashes towards the floor; the cube inside it tumbles around its own center.
-        feet = new Node3D { Position = new Vector3(0, Ground, 0) };
-        scene.View.AddChild(feet);
-        tumble = new Node3D { Position = new Vector3(0, 0.45f, 0) };
-        feet.AddChild(tumble);
+        feet = scene.View.Add(new Node3D { Position = new Vector3(0, Ground, 0) });
+        tumble = feet.Add(new Node3D { Position = new Vector3(0, 0.45f, 0) });
         jelly = Surface(Palette.Mint);
         jelly.Roughness = 0.2f;
         Mesh(tumble, new BoxMesh { Size = new Vector3(0.9f, 0.9f, 0.9f) }, jelly);

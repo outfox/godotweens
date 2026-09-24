@@ -29,23 +29,21 @@ public sealed class BouncingBall : GalleryEffect
         Line(view, [new(-210, Ground), new(210, Ground)], Palette.Outline, 2);
         shadow = Blob(view, 22, 5, new Color(0, 0, 0, 0.45f), start + new Vector2(0, 2));
 
-        ring = Line(view, Ellipse(24, 6, 40), Palette.Amber, 3);
-        ring.Closed = true;
-        ring.Position = start;
-        ring.Modulate = Colors.Transparent;
+        ring = view.Add(new Line2D
+        {
+            Points = Ellipse(24, 6, 40), Closed = true, DefaultColor = Palette.Amber, Width = 3, Antialiased = true,
+            Position = start, Modulate = Colors.Transparent,
+        });
 
         dust = Enumerable.Range(0, 6).Select(_ => Blob(view, 3.5f, 3.5f, Palette.Soft)).ToArray();
         foreach (var mote in dust) mote.Modulate = Colors.Transparent;
 
-        ball = new Node2D { Position = start };
-        view.AddChild(ball);
-        spin = new Node2D { Position = new Vector2(0, -20) };
-        ball.AddChild(spin);
+        ball = view.Add(new Node2D { Position = start });
+        spin = ball.Add(new Node2D { Position = new Vector2(0, -20) });
         Blob(spin, 20, 20, Palette.Amber);
         Vector2[] stripe = [new(-19.5f, -4), new(19.5f, -4), new(19.5f, 4), new(-19.5f, 4)];
-        spin.AddChild(new Polygon2D { Polygon = stripe, Color = new Color("d8893a") });
-        var highlight = Blob(ball, 5, 3.5f, new Color(1, 1, 1, 0.55f), new Vector2(-8, -30));
-        highlight.Rotation = -0.6f;
+        spin.Add(new Polygon2D { Polygon = stripe, Color = new Color("d8893a") });
+        Blob(ball, 5, 3.5f, new Color(1, 1, 1, 0.55f), new Vector2(-8, -30)).Rotation = -0.6f;
     }
 
     protected override void Animate() => Sequence = Repeat(Bounce);

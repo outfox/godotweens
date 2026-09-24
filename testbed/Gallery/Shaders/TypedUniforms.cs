@@ -31,7 +31,7 @@ public sealed class TypedUniforms : GalleryEffect
     protected override void Build()
     {
         material = Shader(DotGrid);
-        View().AddChild(new ColorRect
+        View().Add(new ColorRect
         {
             Material = material, Position = new Vector2(-180, -65), Size = new Vector2(360, 130),
             MouseFilter = Control.MouseFilterEnum.Ignore,

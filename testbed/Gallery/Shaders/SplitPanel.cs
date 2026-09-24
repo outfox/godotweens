@@ -25,12 +25,8 @@ public static class SplitPanel
         }
         """;
 
-    public static ColorRect Add(Node parent, ShaderMaterial material, Vector2 position)
-    {
-        var rect = new ColorRect { Material = material, Position = position, Size = Size, MouseFilter = Control.MouseFilterEnum.Ignore };
-        parent.AddChild(rect);
-        return rect;
-    }
+    public static ColorRect Create(ShaderMaterial material, Vector2 position)
+        => new() { Material = material, Position = position, Size = Size, MouseFilter = Control.MouseFilterEnum.Ignore };
 
     /// <summary>Labels the panels at <see cref="Left"/> and <see cref="Right"/>.</summary>
     public static void Caption(Node parent, string left, string right)
@@ -41,8 +37,6 @@ public static class SplitPanel
 
     private static void Label(Node parent, string text, Vector2 position)
     {
-        var label = GalleryTheme.Label(text, 12, Palette.Soft);
-        label.Position = position;
-        parent.AddChild(label);
+        parent.Add(GalleryTheme.Label(text, 12, Palette.Soft)).Position = position;
     }
 }

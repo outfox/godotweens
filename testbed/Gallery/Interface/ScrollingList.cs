@@ -20,9 +20,8 @@ public sealed class ScrollingList : GalleryEffect
         {
             HorizontalScrollMode = ScrollContainer.ScrollMode.Disabled, MouseFilter = Control.MouseFilterEnum.Ignore,
         }, 8);
-        var list = new VBoxContainer { SizeFlagsHorizontal = Control.SizeFlags.ExpandFill };
+        var list = scroll.Add(new VBoxContainer { SizeFlagsHorizontal = Control.SizeFlags.ExpandFill });
         list.AddThemeConstantOverride("separation", 10);
-        scroll.AddChild(list);
         for (var i = 0; i < 8; i++) list.AddChild(Entry(i));
     }
 
@@ -32,10 +31,9 @@ public sealed class ScrollingList : GalleryEffect
         var entry = new PanelContainer { CustomMinimumSize = new Vector2(0, 48) };
         entry.AddThemeStyleboxOverride("panel", Own(GalleryTheme.Box(new Color("293c50"), 7, 0, null, 12, 8)));
 
-        var line = new HBoxContainer();
+        var line = entry.Add(new HBoxContainer());
         line.AddThemeConstantOverride("separation", 12);
-        entry.AddChild(line);
-        line.AddChild(new ColorRect
+        line.Add(new ColorRect
         {
             Color = accent, CustomMinimumSize = new Vector2(4, 26), SizeFlagsVertical = Control.SizeFlags.ShrinkCenter,
         });

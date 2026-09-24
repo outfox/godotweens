@@ -27,27 +27,24 @@ public sealed class JellyButton : GalleryEffect
 
     protected override void Build()
     {
-        var center = new Control { MouseFilter = Control.MouseFilterEnum.Ignore };
-        Stage.AddChild(center);
+        var center = Stage.Add(new Control { MouseFilter = Control.MouseFilterEnum.Ignore });
         center.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.Center);
-        shaker = new Control { MouseFilter = Control.MouseFilterEnum.Ignore };
-        center.AddChild(shaker);
+        shaker = center.Add(new Control { MouseFilter = Control.MouseFilterEnum.Ignore });
 
-        var burstLayer = new Node2D { Position = new Vector2(0, 8) };
-        shaker.AddChild(burstLayer);
-        burst = Line(burstLayer, Ellipse(60, 30, 48), Palette.Mint, 4);
-        burst.Closed = true;
-        burst.Modulate = Colors.Transparent;
-        shards = Enumerable.Range(0, 18).Select(i => new Polygon2D
+        var burstLayer = shaker.Add(new Node2D { Position = new Vector2(0, 8) });
+        burst = burstLayer.Add(new Line2D
+        {
+            Points = Ellipse(60, 30, 48), Closed = true, DefaultColor = Palette.Mint, Width = 4, Antialiased = true,
+            Modulate = Colors.Transparent,
+        });
+        shards = Enumerable.Range(0, 18).Select(i => burstLayer.Add(new Polygon2D
         {
             Polygon = [new(-5, -2.5f), new(5, -2.5f), new(5, 2.5f), new(-5, 2.5f)],
             Color = Confetti[i % Confetti.Length], Modulate = Colors.Transparent,
-        }).ToArray();
-        foreach (var shard in shards) burstLayer.AddChild(shard);
+        })).ToArray();
 
-        button = BuildButton();
+        button = shaker.Add(BuildButton());
         button.Pressed += () => Pop(Generation);
-        shaker.AddChild(button);
 
         bonus = GalleryTheme.Label($"+{Points}", 22, Palette.Amber);
         bonus.Modulate = Colors.Transparent;

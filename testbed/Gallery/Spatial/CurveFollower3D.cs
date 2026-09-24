@@ -21,8 +21,7 @@ public sealed class CurveFollower3D : GalleryEffect
         var curve = Own(new Curve3D());
         curve.AddPoint(new Vector3(-2, -0.4f, 0), Vector3.Zero, new Vector3(1.3f, 2, -1));
         curve.AddPoint(new Vector3(2, 0.4f, 0), new Vector3(-1.3f, -2, 1), Vector3.Zero);
-        var path = new Path3D { Curve = curve };
-        scene.View.AddChild(path);
+        var path = scene.View.Add(new Path3D { Curve = curve });
         Floor(scene.View, -1.1f);
 
         echoes = Enumerable.Range(1, 3).Select(e =>
@@ -50,11 +49,7 @@ public sealed class CurveFollower3D : GalleryEffect
     }
 
     private static PathFollow3D Follower(Path3D path)
-    {
-        var follower = new PathFollow3D { Loop = false, RotationMode = PathFollow3D.RotationModeEnum.None };
-        path.AddChild(follower);
-        return follower;
-    }
+        => path.Add(new PathFollow3D { Loop = false, RotationMode = PathFollow3D.RotationModeEnum.None });
 
     protected override void Animate()
     {

@@ -22,12 +22,11 @@ public sealed class Spotlight : GalleryEffect
         Mesh(scene.View, new PlaneMesh { Size = new Vector2(8, 6) }, Surface(new Color("788aa0")), new Vector3(0, -0.7f, 0));
         Mesh(scene.View, new TorusMesh { InnerRadius = 0.4f, OuterRadius = 0.8f }, Surface(new Color("d3dce4")));
 
-        spot = new SpotLight3D
+        spot = scene.View.Add(new SpotLight3D
         {
             Position = new Vector3(0, 2.8f, 2), SpotRange = 8, SpotAngle = 18, LightColor = Palette.Mint, LightEnergy = 0.8f,
             ShadowEnabled = true,
-        };
-        scene.View.AddChild(spot);
+        });
         spot.LookAt(new Vector3(0, -0.5f, 0));
 
         var bulb = Own(new StandardMaterial3D

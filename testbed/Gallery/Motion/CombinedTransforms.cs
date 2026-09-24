@@ -15,8 +15,11 @@ public sealed class CombinedTransforms : GalleryEffect
     protected override void Build()
     {
         var view = View();
-        var rest = Line(view, [new(0, -34), new(34, 0), new(0, 34), new(-34, 0)], new Color("3a4f69"), 1.5f);
-        rest.Closed = true;
+        view.Add(new Line2D
+        {
+            Points = [new(0, -34), new(34, 0), new(0, 34), new(-34, 0)], Closed = true,
+            DefaultColor = new Color("3a4f69"), Width = 1.5f, Antialiased = true,
+        });
         shadow = Diamond(view, new Vector2(8, 10), new Color(0, 0, 0, 0.4f), 34);
         shape = Diamond(view, Vector2.Zero, Palette.Blue, 34);
         Diamond(shape, Vector2.Zero, new Color("aec3ff"), 20);

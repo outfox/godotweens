@@ -16,21 +16,19 @@ public sealed class GlowingRibbon : GalleryEffect
     {
         var view = View();
         Vector2[] zigzag = [new(-170, 35), new(-100, -40), new(-25, 25), new(55, -45), new(160, 30)];
-        glow = WithRoundCaps(Line(view, zigzag, Palette.Mint with { A = 0.28f }, 12));
-        ribbon = WithRoundCaps(Line(view, zigzag, Palette.Mint, 3));
+        Line2D RoundLine(Color color, float width) => new()
+        {
+            Points = zigzag, DefaultColor = color, Width = width, Antialiased = true,
+            BeginCapMode = Line2D.LineCapMode.Round, EndCapMode = Line2D.LineCapMode.Round,
+            JointMode = Line2D.LineJointMode.Round,
+        };
+        glow = view.Add(RoundLine(Palette.Mint with { A = 0.28f }, 12));
+        ribbon = view.Add(RoundLine(Palette.Mint, 3));
         foreach (var point in zigzag)
         {
             Blob(view, 4, 4, Palette.Background, point);
             Blob(view, 2.5f, 2.5f, Colors.White, point);
         }
-    }
-
-    private static Line2D WithRoundCaps(Line2D line)
-    {
-        line.BeginCapMode = Line2D.LineCapMode.Round;
-        line.EndCapMode = Line2D.LineCapMode.Round;
-        line.JointMode = Line2D.LineJointMode.Round;
-        return line;
     }
 
     protected override void Animate()

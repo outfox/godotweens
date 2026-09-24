@@ -36,19 +36,16 @@ public sealed class CardDeal : GalleryEffect
 
     private static PlayingCard CreateCard(Node parent, string rank, Color ink)
     {
-        var body = new Node2D { Position = DeckPosition };
-        parent.AddChild(body);
-        body.AddChild(new Polygon2D { Polygon = Rounded(29, 41, 6), Color = new Color(0, 0, 0, 0.35f), Position = new Vector2(2, 4) });
+        var body = parent.Add(new Node2D { Position = DeckPosition });
+        body.Add(new Polygon2D { Polygon = Rounded(29, 41, 6), Color = new Color(0, 0, 0, 0.35f), Position = new Vector2(2, 4) });
 
-        var back = new Node2D();
-        body.AddChild(back);
-        back.AddChild(new Polygon2D { Polygon = Rounded(27, 39, 5), Color = CardBack, Antialiased = true });
-        back.AddChild(new Line2D { Points = Rounded(20, 32, 3), Closed = true, Width = 2, DefaultColor = Palette.Blue });
+        var back = body.Add(new Node2D());
+        back.Add(new Polygon2D { Polygon = Rounded(27, 39, 5), Color = CardBack, Antialiased = true });
+        back.Add(new Line2D { Points = Rounded(20, 32, 3), Closed = true, Width = 2, DefaultColor = Palette.Blue });
         Diamond(back, Vector2.Zero, Palette.Blue, 9);
 
-        var face = new Node2D { Visible = false };
-        body.AddChild(face);
-        face.AddChild(new Polygon2D { Polygon = Rounded(27, 39, 5), Color = Paper, Antialiased = true });
+        var face = body.Add(new Node2D { Visible = false });
+        face.Add(new Polygon2D { Polygon = Rounded(27, 39, 5), Color = Paper, Antialiased = true });
         var center = GalleryTheme.Label(rank, 26, ink);
         center.HorizontalAlignment = HorizontalAlignment.Center;
         center.Size = new Vector2(54, 36);

@@ -33,18 +33,15 @@ public sealed class CurveFollower2D : GalleryEffect
         }
 
         // Added after the track so the followers draw on top of it.
-        var path = new Path2D { Curve = curve };
-        view.AddChild(path);
+        var path = view.Add(new Path2D { Curve = curve });
         echoes = Enumerable.Range(1, 3).Select(e =>
         {
-            var echo = new PathFollow2D { Loop = false };
-            path.AddChild(echo);
+            var echo = path.Add(new PathFollow2D { Loop = false });
             Diamond(echo, Vector2.Zero, Palette.Mint with { A = 0.55f - e * 0.15f }, 16 - e * 2.5f);
             return echo;
         }).ToArray();
 
-        leader = new PathFollow2D { Loop = false };
-        path.AddChild(leader);
+        leader = path.Add(new PathFollow2D { Loop = false });
         Blob(leader, 24, 24, Palette.Mint with { A = 0.14f });
         ship = Diamond(leader, Vector2.Zero, Palette.Mint);
         Diamond(ship, Vector2.Zero, new Color("c3f5df"), 6);
