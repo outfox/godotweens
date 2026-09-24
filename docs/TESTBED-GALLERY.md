@@ -6,10 +6,12 @@ Run the interactive testbed:
 dotnet run --project testbed/testbed.2dog
 ~~~
 
-The gallery contains six pages and 24 examples. Each page is a separate C# Control subtree; only the current page is instantiated. Small SubViewports isolate the cameras, lights and 3D worlds in individual cards.
+The gallery contains eight pages and 32 examples. Each page is a separate C# Control subtree; only the current page is instantiated. Small SubViewports isolate the cameras, lights and 3D worlds in individual cards.
 
 | Page | Examples and combinations |
 | --- | --- |
+| Squash & stretch | Bouncing ball with stretch, squash, shadow and dust; hopping slime with anticipation and flips; clickable jelly button with confetti and a rolling score; delayed squash wave |
+| Choreography | Staggered card deal with flips; easing race with delayed echoes; OnUpdate-driven spirograph; 3D jelly cube with shockwave and camera shake |
 | Motion & paths | PathFollow2D progress + lateral offset + marker scale; Camera2D zoom + offset; skew + rotation + independent scale axes; awaited outward movement followed by concurrent return and rotation |
 | Interface | Character reveal + text tint; progress value + color/opacity; Control offset-transform position + rotation + scale within a container; integer scrolling |
 | Drawing & particles | Line2D width + color; Polygon2D color + offset + rotation; CPU particle spread + gravity + color + emitter movement; PointLight2D texture scale + energy + position |
@@ -31,26 +33,28 @@ The default window is 1280 × 900, with canvas scaling and a scrollable page are
 
 ## Navigate and capture from the desktop host
 
-Page indices are zero-based (0–5):
+Page indices are zero-based (0–7):
 
 ~~~powershell
 # Open directly on the material page.
-dotnet run --project testbed/testbed.2dog -- --gallery-page 4
+dotnet run --project testbed/testbed.2dog -- --gallery-page 6
 
 # Capture every page and quit, using a deterministic frame step.
 dotnet run --project testbed/testbed.2dog -- --gallery-snapshots artifacts/gallery --rendering-method gl_compatibility --fixed-fps 60
 
 # The existing single-page screenshot command also accepts a page selection.
-dotnet run --project testbed/testbed.2dog -- --gallery-page 5 --snapshot artifacts/shaders.png --rendering-method gl_compatibility
+dotnet run --project testbed/testbed.2dog -- --gallery-page 7 --snapshot artifacts/shaders.png --rendering-method gl_compatibility
 ~~~
 
-The gallery capture writes 01.png through 06.png after 60 frames per page. The compatibility renderer walkthrough has been visually checked on all six pages.
+The gallery capture writes 01.png through 08.png after 60 frames per page.
 
 ## Extend the gallery
 
-The shell lives in [TweenDemo.cs](../testbed/TweenDemo.cs). Shared page helpers and lifecycle handling live in [GalleryPage.cs](../testbed/Gallery/GalleryPage.cs); each page has its own file in [testbed/Gallery](../testbed/Gallery).
+The shell lives in [TweenDemo.cs](../testbed/TweenDemo.cs). Each page has a folder in [testbed/Gallery](../testbed/Gallery) holding a small page class and one file per example card.
 
-Derive a page from GalleryPage, create its visuals in Build, and start its tweens in Animate. Use Keep for each playback handle, Own for resources created by the page, and Cycle for the shared repeating timing options. Material tweens bind to the page node so they stop with it. Do not dispose resources borrowed from another owner. Add the page to the shell's page names/factory and the navigation/rendering tests.
+An example derives from [GalleryEffect](../testbed/Gallery/GalleryEffect.cs): give it a Title and Caption, create its visuals in Build, and start its tweens in Animate. Build draws into Stage directly, or into a 2D View() or 3D World() created over it; the builders in [GalleryEffect.Stage.cs](../testbed/Gallery/GalleryEffect.Stage.cs) cover common shapes, meshes and textures. Use Keep for each playback handle, Own for resources the effect creates, and Cycle (or CycleAfter for delayed echoes) for the shared repeating timing. Async choreography assigns Sequence, usually via Repeat, and checks Finished after each await so Stop ends it. Material tweens bind to Stage so they stop with the page. Do not dispose resources borrowed from another owner. Colors come from [Palette](../testbed/Gallery/Palette.cs).
+
+List the effect in its page's CreateEffects; cards are numbered in that order. For a new page, derive from GalleryPage, add it to the shell's page table and to the navigation/rendering tests.
 
 ## Tests
 
