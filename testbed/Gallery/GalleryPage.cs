@@ -112,7 +112,7 @@ public abstract partial class GalleryPage : VBoxContainer
         stage.AddChild(container); container.SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
         var viewport = new SubViewport { Size = new Vector2I(440, 180), OwnWorld3D = spatial,
             TransparentBg = !spatial, RenderTargetUpdateMode = SubViewport.UpdateMode.Always,
-            HandleInputLocally = false };
+            HandleInputLocally = false, Msaa2D = Viewport.Msaa.Msaa4X, Msaa3D = Viewport.Msaa.Msaa4X };
         container.AddChild(viewport);
         if (!spatial) viewport.AddChild(new Camera2D { Position = Vector2.Zero });
         return viewport;

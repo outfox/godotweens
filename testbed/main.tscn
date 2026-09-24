@@ -1,8 +1,8 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene format=3 uid="uid://bofn45crn26ba"]
 
-[ext_resource type="Script" path="res://TweenDemo.cs" id="1_demo"]
+[ext_resource type="Script" uid="uid://k57311qwypim" path="res://TweenDemo.cs" id="1_demo"]
 
-[node name="Main" type="Control"]
+[node name="Main" type="Control" unique_id=570059642]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0

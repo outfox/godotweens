@@ -26,13 +26,14 @@ public partial class MotionPage : GalleryPage
         var curve = Own(new Curve2D());
         curve.AddPoint(new(-160, 35), Vector2.Zero, new(90, -130));
         curve.AddPoint(new(160, -35), new(-90, 130), Vector2.Zero);
-        var path = new Path2D { Curve = curve }; view.AddChild(path);
         Line(view, curve.GetBakedPoints(), Mint with { A = 0.1f }, 14);
         Line(view, curve.GetBakedPoints(), Track, 3);
         foreach (var end in new Vector2[] { new(-160, 35), new(160, -35) })
         {
             Blob(view, 5, 5, Track, end); var halo = Line(view, Ellipse(9, 9, 24, end), Track, 1.5f); halo.Closed = true;
         }
+        // Added after the track so the followers draw on top of it.
+        var path = new Path2D { Curve = curve }; view.AddChild(path);
         echoes = Enumerable.Range(1, 3).Select(e =>
         {
             var echo = new PathFollow2D { Loop = false }; path.AddChild(echo);
@@ -45,10 +46,10 @@ public partial class MotionPage : GalleryPage
 
         var cameraView = View(Card("02 / Camera2D", "Zoom and offset applied to a static scene."));
         camera = cameraView.GetChild<Camera2D>(0);
-        for (var x = -400; x <= 400; x += 40) Line(cameraView, [new(x, -200), new(x, 200)], new Color("2a3b50"), 1);
-        for (var y = -200; y <= 200; y += 40) Line(cameraView, [new(-400, y), new(400, y)], new Color("2a3b50"), 1);
-        Line(cameraView, [new(0, -200), new(0, 200)], new Color("41597a"), 1.5f);
-        Line(cameraView, [new(-400, 0), new(400, 0)], new Color("41597a"), 1.5f);
+        for (var x = -400; x <= 400; x += 40) Line(cameraView, [new(x, -200), new(x, 200)], new Color("2a3b50"), 2);
+        for (var y = -200; y <= 200; y += 40) Line(cameraView, [new(-400, y), new(400, y)], new Color("2a3b50"), 2);
+        Line(cameraView, [new(0, -200), new(0, 200)], new Color("41597a"), 3);
+        Line(cameraView, [new(-400, 0), new(400, 0)], new Color("41597a"), 3);
         beacon = Line(cameraView, Ellipse(14, 14, 32), Amber, 2); beacon.Closed = true;
         for (var i = -2; i <= 2; i++)
         {
