@@ -7,24 +7,24 @@ namespace testbed;
 
 public partial class SpatialPage : GalleryPage
 {
-    public override string Heading => "3D stage";
-    public override string Description => "A small world in every card: world rotation, lens changes, a curved route, and a shifting spotlight.";
+    public override string Heading => "3D";
+    public override string Description => "3D transforms, camera controls, paths, and lighting.";
     private MeshInstance3D object3D = null!;
     private Camera3D lens = null!;
     private PathFollow3D follower = null!;
     private SpotLight3D spot = null!;
     protected override void Build()
     {
-        var (view, _) = World(Card("01 / Turn in world space", "Global quaternion + scale. The object sits below a rotated parent."));
+        var (view, _) = World(Card("01 / Global Quaternion", "Global rotation and local scale under a rotated parent."));
         var parent = new Node3D { Rotation = new Vector3(0.2f, 0.3f, 0.2f) }; view.AddChild(parent);
         object3D = Mesh(parent, new BoxMesh { Size = new Vector3(1.2f, 1.2f, 1.2f) }, Surface(Mint));
         Mesh(parent, new SphereMesh { Radius = 0.16f, Height = 0.32f }, Surface(Amber), new Vector3(1, 0, 0));
-        var (cameraView, camera) = World(Card("02 / Through the lens", "Camera3D field of view + horizontal offset. Watch the whole arrangement reframe."));
+        var (cameraView, camera) = World(Card("02 / Camera3D", "Field of view and horizontal offset."));
         lens = camera;
         for (var i = -2; i <= 2; i++) Mesh(cameraView, new BoxMesh { Size = Vector3.One * 0.7f },
             Surface(i % 2 == 0 ? Mint : Blue), new Vector3(i * 1.25f, 0, -Mathf.Abs(i) * 0.6f));
 
-        var (route, _) = World(Card("03 / A spatial route", "PathFollow3D progress ratio + vertical offset. The beads trace the curve."));
+        var (route, _) = World(Card("03 / PathFollow3D", "Progress ratio and vertical offset. Points show the path."));
         var curve = Own(new Curve3D());
         curve.AddPoint(new Vector3(-2, -0.4f, 0), Vector3.Zero, new Vector3(1.3f, 2, -1));
         curve.AddPoint(new Vector3(2, 0.4f, 0), new Vector3(-1.3f, -2, 1), Vector3.Zero);
@@ -35,7 +35,7 @@ public partial class SpatialPage : GalleryPage
         for (var i = 0; i <= 24; i++) Mesh(route, new SphereMesh { Radius = 0.045f, Height = 0.09f, RadialSegments = 8, Rings = 4 },
             beads, curve.SampleBaked(curve.GetBakedLength() * i / 24));
 
-        var (lights, _) = World(Card("04 / Paint with light", "Spot angle + light color + energy. A floor catches the changing cone."));
+        var (lights, _) = World(Card("04 / SpotLight3D", "Spot angle, light color, and energy."));
         foreach (var child in lights.GetChildren())
         {
             if (child is DirectionalLight3D directional) directional.Free();

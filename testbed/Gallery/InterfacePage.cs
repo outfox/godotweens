@@ -8,7 +8,7 @@ namespace testbed;
 public partial class InterfacePage : GalleryPage
 {
     public override string Heading => "Interface";
-    public override string Description => "Reveal text, fill a meter, move inside a layout, and browse an animated list.";
+    public override string Description => "Text, range values, layout transforms, and scrolling.";
     private Label reveal = null!;
     private ProgressBar progress = null!;
     private ColorRect swatch = null!;
@@ -16,13 +16,13 @@ public partial class InterfacePage : GalleryPage
     private ScrollContainer scroll = null!;
     protected override void Build()
     {
-        var words = Card("01 / Words arrive", "Visible ratio reveals characters while self-modulate shifts their color.");
-        reveal = Text("MAKE SMALL\nTHINGS FEEL\nALIVE.", 30, Colors.White);
+        var words = Card("01 / Visible Ratio", "Label.VisibleRatio and SelfModulate.");
+        reveal = Text("VisibleRatio\nreveals text\nover time.", 30, Colors.White);
         reveal.SelfModulate = Mint;
         reveal.Position = new Vector2(18, 8); reveal.VisibleRatio = 0; words.AddChild(reveal);
 
-        var meters = Card("02 / A meter with a pulse", "Range value + color + alpha. Independent properties animate together.");
-        meters.AddChild(Text("BUILDING SOMETHING GOOD", 13, Muted));
+        var meters = Card("02 / Range Value", "ProgressBar.Value with color and alpha tweens.");
+        meters.AddChild(Text("VALUE", 13, Muted));
         progress = new ProgressBar { Position = new Vector2(8, 55), Size = new Vector2(340, 30), Step = 0, ShowPercentage = false };
         progress.AddThemeStyleboxOverride("background", Own(Box(new Color("293c50"), 6)));
         progress.AddThemeStyleboxOverride("fill", Own(Box(Mint, 6))); meters.AddChild(progress);
@@ -30,7 +30,7 @@ public partial class InterfacePage : GalleryPage
         var readout = Text("0%", 26); readout.Position = new Vector2(280, 105); meters.AddChild(readout);
         progress.ValueChanged += v => readout.Text = $"{v:0}%";
 
-        var layout = Card("03 / A card breaks formation", "Offset-transform position + rotation + scale inside an HBoxContainer.");
+        var layout = Card("03 / Offset Transforms", "Position, rotation, and scale within an HBoxContainer.");
         var row = new HBoxContainer { Position = new Vector2(15, 35) }; row.AddThemeConstantOverride("separation", 18); layout.AddChild(row);
         for (var i = 0; i < 3; i++)
         {
@@ -40,12 +40,12 @@ public partial class InterfacePage : GalleryPage
             block.AddChild(label); row.AddChild(block);
             if (i == 1) { tile = block; tile.OffsetTransformPivot = new Vector2(44, 41); }
         }
-        var browse = Card("04 / Browse the collection", "Integer scroll position travels through a clipped list.");
+        var browse = Card("04 / Scroll Position", "ScrollContainer.ScrollVertical uses integer interpolation.");
         scroll = new ScrollContainer { Position = new Vector2(8, 0), Size = new Vector2(345, 168),
             HorizontalScrollMode = ScrollContainer.ScrollMode.Disabled, MouseFilter = MouseFilterEnum.Ignore };
         browse.AddChild(scroll);
         var list = new VBoxContainer { SizeFlagsHorizontal = SizeFlags.ExpandFill }; list.AddThemeConstantOverride("separation", 10); scroll.AddChild(list);
-        foreach (var name in new[] { "01   Morning light", "02   Side streets", "03   Open water", "04   Golden hour", "05   Night drive", "06   Home again" })
+        foreach (var name in new[] { "01   Item A", "02   Item B", "03   Item C", "04   Item D", "05   Item E", "06   Item F" })
         {
             var entry = new PanelContainer { CustomMinimumSize = new Vector2(0, 48) };
             entry.AddThemeStyleboxOverride("panel", Own(Box(new Color("293c50"), 7)));

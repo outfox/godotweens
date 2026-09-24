@@ -8,7 +8,7 @@ namespace testbed;
 public partial class ShadersPage : GalleryPage
 {
     public override string Heading => "Shaders";
-    public override string Description => "Compare shared uniforms with per-node overrides, then animate typed vectors, colors, and a 3D surface.";
+    public override string Description => "Shared and per-instance uniforms with typed values.";
     private ShaderMaterial shared = null!, typed = null!;
     private ColorRect first = null!, second = null!;
     private MeshInstance3D deform = null!;
@@ -28,24 +28,24 @@ public partial class ShadersPage : GalleryPage
         rendering = DisplayServer.GetName() != "headless";
         if (!rendering)
         {
-            Card("A renderer is required", "Open the desktop testbed to explore shader defaults and per-instance uniforms.")
-                .AddChild(Text("Shaders need a graphics context.", 17, Amber));
+            Card("Renderer Required", "Run the desktop testbed with rendering enabled.")
+                .AddChild(Text("Unavailable in headless mode.", 17, Amber));
             return;
         }
         const string body = "void fragment() { float edge = smoothstep(amount - 0.03, amount + 0.03, UV.x); vec3 c = mix(vec3(0.47,0.87,0.70), vec3(0.13,0.21,0.32), edge); COLOR = vec4(c,1.0); }";
-        var twins = View(Card("01 / Shared uniform", "One float uniform on a shared ShaderMaterial. Both panels update together."));
+        var twins = View(Card("01 / Shared Uniform", "One float uniform updates both panels."));
         shared = Shader("shader_type canvas_item; uniform float amount = 0.15; " + body);
         Patch(twins, shared, new Vector2(-180, -50), new Vector2(165, 100));
         Patch(twins, shared, new Vector2(15, -50), new Vector2(165, 100));
         Caption(twins, "SAME MATERIAL", new Vector2(-165, 60)); Caption(twins, "SAME VALUE", new Vector2(40, 60));
-        var instances = View(Card("02 / Shared material, independent values", "Two instance uniforms move in opposite directions without cloning the material."));
+        var instances = View(Card("02 / Instance Uniforms", "Independent CanvasItem values on a shared material."));
         var instance = Shader("shader_type canvas_item; instance uniform float amount = 0.15; " + body);
         first = Patch(instances, instance, new Vector2(-180, -50), new Vector2(165, 100));
         second = Patch(instances, instance, new Vector2(15, -50), new Vector2(165, 100));
         second.SetInstanceShaderParameter("amount", 0.85f);
         Caption(instances, "INSTANCE A", new Vector2(-165, 60)); Caption(instances, "INSTANCE B", new Vector2(40, 60));
 
-        var color = View(Card("03 / Color + vector uniforms", "A typed Color shifts the palette while Vector2 moves the pattern. No shader clock."));
+        var color = View(Card("03 / Color & Vector2", "Color controls tint; Vector2 controls pattern offset."));
         typed = Shader("""
             shader_type canvas_item;
             uniform vec4 tint : source_color = vec4(0.47, 0.87, 0.70, 1.0);
@@ -57,7 +57,7 @@ public partial class ShadersPage : GalleryPage
             }
             """);
         Patch(color, typed, new Vector2(-180, -65), new Vector2(360, 130));
-        var (surface, _) = World(Card("04 / A per-instance 3D pulse", "Only the left sphere changes its displacement uniform. The right sphere is the reference."));
+        var (surface, _) = World(Card("04 / 3D Instance Uniform", "Left: tweened displacement. Right: default value."));
         var material = Shader("""
             shader_type spatial;
             instance uniform float amplitude = 0.0;

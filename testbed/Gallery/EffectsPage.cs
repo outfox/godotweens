@@ -9,7 +9,7 @@ namespace testbed;
 public partial class EffectsPage : GalleryPage
 {
     public override string Heading => "Drawing & particles";
-    public override string Description => "Change the marks themselves: line weight, shape color, particle flow, and a moving pool of light.";
+    public override string Description => "Line, polygon, particle, and 2D light properties.";
     private Line2D ribbon = null!;
     private Polygon2D polygon = null!;
     private CpuParticles2D particles = null!;
@@ -17,20 +17,20 @@ public partial class EffectsPage : GalleryPage
     private double particleSpeed = 1;
     protected override void Build()
     {
-        var drawing = View(Card("01 / A living line", "Line width + default color. The geometry stays fixed while its stroke changes."));
+        var drawing = View(Card("01 / Line2D", "Width and DefaultColor on a fixed path."));
         ribbon = Line(drawing, [new(-170, 35), new(-100, -40), new(-25, 25), new(55, -45), new(160, 30)], Mint, 3);
         ribbon.BeginCapMode = Line2D.LineCapMode.Round; ribbon.EndCapMode = Line2D.LineCapMode.Round;
         ribbon.JointMode = Line2D.LineJointMode.Round;
-        var shapes = View(Card("02 / Shape study", "Polygon color + offset + rotation. Three properties, one visual."));
+        var shapes = View(Card("02 / Polygon2D", "Color, offset, and rotation."));
         polygon = new Polygon2D { Polygon = [new(-45, -40), new(35, -50), new(65, 15), new(0, 50), new(-60, 15)], Color = Mint };
         shapes.AddChild(polygon);
-        var stream = View(Card("03 / A changing current", "CPU particle spread + gravity + color + emitter position. Pause also holds simulation."));
+        var stream = View(Card("03 / CPUParticles2D", "Spread, gravity, color, and position. Pause stops simulation."));
         particles = new CpuParticles2D { Amount = 120, Lifetime = 2, Preprocess = 1, Direction = Vector2.Right,
             Spread = 8, InitialVelocityMin = 70, InitialVelocityMax = 110, Gravity = Vector2.Zero,
             ScaleAmountMin = 2, ScaleAmountMax = 4, Color = Mint, Position = new Vector2(-100, 25),
             LocalCoords = false };
         stream.AddChild(particles);
-        var lit = View(Card("04 / A pool of light", "PointLight2D texture scale + energy + position. A radial texture lights the tiled surface."));
+        var lit = View(Card("04 / PointLight2D", "TextureScale, energy, and position."));
         var modulate = new CanvasModulate { Color = new Color("263143") }; lit.AddChild(modulate);
         for (var y = -3; y < 3; y++) for (var x = -7; x < 7; x++)
         {

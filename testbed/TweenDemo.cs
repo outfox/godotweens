@@ -11,7 +11,7 @@ namespace testbed;
 /// <summary>Gallery shell. Pages own their examples; navigation destroys the previous playground.</summary>
 public partial class TweenDemo : Control
 {
-    public static readonly string[] PageNames = ["Motion & paths", "Interface", "Drawing & particles", "3D stage", "Materials", "Shaders"];
+    public static readonly string[] PageNames = ["Motion & paths", "Interface", "Drawing & particles", "3D", "Materials", "Shaders"];
     private readonly List<Button> navigation = [];
     private readonly List<Resource> themeResources = [];
     private VBoxContainer content = null!;
@@ -40,8 +40,8 @@ public partial class TweenDemo : Control
         foreach (var side in new[] { "left", "right", "top", "bottom" }) margin.AddThemeConstantOverride("margin_" + side, 24);
         var layout = new VBoxContainer(); layout.AddThemeConstantOverride("separation", 14); margin.AddChild(layout);
         var header = new HBoxContainer(); layout.AddChild(header);
-        var title = GalleryPage.Text("godotweens / playground", 30); title.SizeFlagsHorizontal = SizeFlags.ExpandFill; header.AddChild(title);
-        header.AddChild(GalleryPage.Text("06 PAGES  ·  LIVE C#", 14, GalleryPage.Mint));
+        var title = GalleryPage.Text("godotweens / testbed", 30); title.SizeFlagsHorizontal = SizeFlags.ExpandFill; header.AddChild(title);
+        header.AddChild(GalleryPage.Text("C# / GODOT", 14, GalleryPage.Mint));
         var settings = new HBoxContainer(); settings.AddThemeConstantOverride("separation", 14); layout.AddChild(settings);
         settings.AddChild(GalleryPage.Text("Easing", 16, GalleryPage.Muted));
         ease = new OptionButton { CustomMinimumSize = new Vector2(180, 38) };
@@ -56,7 +56,7 @@ public partial class TweenDemo : Control
         layout.AddChild(new HSeparator());
         var body = new HBoxContainer { SizeFlagsVertical = SizeFlags.ExpandFill }; body.AddThemeConstantOverride("separation", 20); layout.AddChild(body);
         var sidebar = new VBoxContainer { CustomMinimumSize = new Vector2(214, 0) }; sidebar.AddThemeConstantOverride("separation", 8); body.AddChild(sidebar);
-        sidebar.AddChild(GalleryPage.Text("EXPLORE", 12, GalleryPage.Muted));
+        sidebar.AddChild(GalleryPage.Text("EXAMPLES", 12, GalleryPage.Muted));
         for (var i = 0; i < PageNames.Length; i++)
         {
             var index = i;
@@ -67,7 +67,7 @@ public partial class TweenDemo : Control
             button.AddThemeFontSizeOverride("font_size", 15);
             button.Pressed += () => SelectPage(index); sidebar.AddChild(button); navigation.Add(button);
         }
-        var hint = GalleryPage.Text("Pick a page.\nMix the timing.\nWatch it move.", 14, GalleryPage.Muted); sidebar.AddChild(hint);
+        var hint = GalleryPage.Text("Settings apply to\nthe current page.", 14, GalleryPage.Muted); sidebar.AddChild(hint);
         var scroll = new ScrollContainer { SizeFlagsHorizontal = SizeFlags.ExpandFill, SizeFlagsVertical = SizeFlags.ExpandFill,
             HorizontalScrollMode = ScrollContainer.ScrollMode.Disabled };
         body.AddChild(scroll);
@@ -118,7 +118,7 @@ public partial class TweenDemo : Control
     {
         revision++; IsPlaying = false; page?.Stop();
         if (pause is not null) { pause.Text = "Pause"; pause.Disabled = true; }
-        if (status is not null) status.Text = "Cancelled · values held. Restart to play.";
+        if (status is not null) status.Text = "Cancelled · values retained";
     }
     public override void _Process(double delta)
     {
