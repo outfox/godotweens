@@ -50,7 +50,7 @@ public abstract partial class GalleryEffect
         container.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.FullRect);
         return container.Add(new SubViewport
         {
-            Size = new Vector2I(440, 180), OwnWorld3D = spatial, TransparentBg = !spatial,
+            Size = new Vector2I(512, 256), OwnWorld3D = spatial, TransparentBg = !spatial,
             RenderTargetUpdateMode = SubViewport.UpdateMode.Always, HandleInputLocally = false,
             Msaa2D = Godot.Viewport.Msaa.Msaa4X, Msaa3D = Godot.Viewport.Msaa.Msaa4X,
         });
