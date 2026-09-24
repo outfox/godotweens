@@ -32,7 +32,20 @@ public partial class ShadersPage : GalleryPage
                 .AddChild(Text("Unavailable in headless mode.", 17, Amber));
             return;
         }
-        const string body = "void fragment() { float edge = smoothstep(amount - 0.03, amount + 0.03, UV.x); vec3 c = mix(vec3(0.47,0.87,0.70), vec3(0.17,0.26,0.38), edge); COLOR = vec4(c,1.0); }";
+        // Rounded mask for the 165x100 patches, plus a bright seam where the uniform splits the fill.
+        const string body = """
+            float rounded(vec2 uv, vec2 size, float r) {
+                vec2 q = abs((uv - 0.5) * size) - size * 0.5 + r;
+                return 1.0 - smoothstep(-0.75, 0.75, length(max(q, 0.0)) + min(max(q.x, q.y), 0.0) - r);
+            }
+            void fragment() {
+                float edge = smoothstep(amount - 0.03, amount + 0.03, UV.x);
+                vec3 fill = mix(vec3(0.47,0.87,0.70), vec3(0.62,0.95,0.80), UV.y * 0.6);
+                vec3 c = mix(fill, vec3(0.17,0.26,0.38), edge);
+                c += vec3(0.9) * (1.0 - smoothstep(0.0, 0.012, abs(UV.x - amount)));
+                COLOR = vec4(c, rounded(UV, vec2(165.0, 100.0), 12.0));
+            }
+            """;
         var twins = View(Card("01 / Shared Uniform", "One float uniform updates both panels."));
         shared = Shader("shader_type canvas_item; uniform float amount = 0.15; " + body);
         Patch(twins, shared, new Vector2(-180, -50), new Vector2(165, 100));
@@ -52,18 +65,24 @@ public partial class ShadersPage : GalleryPage
             uniform vec2 offset = vec2(0.0);
             void fragment() {
                 vec2 p = (UV + offset) * vec2(8.0, 3.0);
-                float rings = smoothstep(0.25, 0.30, length(fract(p) - 0.5));
-                COLOR = vec4(mix(tint.rgb, vec3(0.15,0.23,0.34), rings), 1.0);
+                float d = length(fract(p) - 0.5);
+                float rings = smoothstep(0.25, 0.30, d);
+                vec3 dot = tint.rgb * (1.15 - d * 1.2);
+                vec3 c = mix(dot, vec3(0.15,0.23,0.34), rings) + tint.rgb * 0.18 * (1.0 - smoothstep(0.3, 0.45, d)) * rings;
+                vec2 q = abs((UV - 0.5) * vec2(360.0, 130.0)) - vec2(180.0, 65.0) + 14.0;
+                float mask = 1.0 - smoothstep(-0.75, 0.75, length(max(q, 0.0)) + min(max(q.x, q.y), 0.0) - 14.0);
+                COLOR = vec4(c, mask);
             }
             """);
         Patch(color, typed, new Vector2(-180, -65), new Vector2(360, 130));
-        var (surface, _) = World(Card("04 / 3D Instance Uniform", "Left: tweened displacement. Right: default value."));
+        var (surface, lens) = World(Card("04 / 3D Instance Uniform", "Left: tweened displacement. Right: default value."));
         var material = Shader("""
             shader_type spatial;
             instance uniform float amplitude = 0.0;
             void vertex() { VERTEX += NORMAL * sin(VERTEX.y * 16.0) * amplitude; }
             void fragment() { ALBEDO = vec3(0.47,0.87,0.70); ROUGHNESS = 0.28; }
             """);
+        Floor(surface, -0.75f); lens.Position = new Vector3(0, 1.0f, 3.6f); lens.LookAt(Vector3.Zero);
         deform = Mesh(surface, new SphereMesh { Radius = 0.65f, Height = 1.3f, RadialSegments = 64, Rings = 32 }, material, new Vector3(-1, 0, 0));
         Mesh(surface, new SphereMesh { Radius = 0.65f, Height = 1.3f }, material, new Vector3(1, 0, 0));
     }

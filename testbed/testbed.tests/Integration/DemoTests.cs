@@ -32,7 +32,7 @@ public class DemoTests(HeadlessFixture godot)
                 demo.SelectPage(index); Pump();
                 Assert.False(GodotObject.IsInstanceValid(old)); Assert.Equal(0, old.ActiveCount);
                 Assert.Equal(index, demo.SelectedPage); Assert.Null(demo.CurrentPage!.Error);
-                if (index != 5) Assert.True(demo.DemoTweenCount >= 7);
+                if (demo.CurrentPage is not ShadersPage) Assert.True(demo.DemoTweenCount >= 7);
                 demo.TogglePause(); Assert.True(demo.CurrentPage.AllPaused);
                 demo.TogglePause();
                 demo.RestartDemo(); Pump(); Assert.Null(demo.CurrentPage!.Error);

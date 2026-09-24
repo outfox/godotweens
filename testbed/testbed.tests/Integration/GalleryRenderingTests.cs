@@ -12,7 +12,7 @@ namespace testbed.Tests;
 public class GalleryRenderingTests(Fixture godot)
 {
     [Theory]
-    [InlineData(0)] [InlineData(1)] [InlineData(2)] [InlineData(3)] [InlineData(4)] [InlineData(5)]
+    [InlineData(0)] [InlineData(1)] [InlineData(2)] [InlineData(3)] [InlineData(4)] [InlineData(5)] [InlineData(6)] [InlineData(7)]
     public void EachPagePlaysPausesAndReleasesItsNativeScene(int index)
     {
         var demo = new testbed.TweenDemo(); godot.Tree.Root.AddChild(demo);

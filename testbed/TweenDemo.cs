@@ -11,7 +11,7 @@ namespace testbed;
 /// <summary>Gallery shell. Pages own their examples; navigation destroys the previous playground.</summary>
 public partial class TweenDemo : Control
 {
-    public static readonly string[] PageNames = ["Motion & paths", "Interface", "Drawing & particles", "3D", "Materials", "Shaders"];
+    public static readonly string[] PageNames = ["Squash & stretch", "Choreography", "Motion & paths", "Interface", "Drawing & particles", "3D", "Materials", "Shaders"];
     private readonly List<Button> navigation = [];
     private readonly List<Resource> themeResources = [];
     private VBoxContainer content = null!;
@@ -100,8 +100,8 @@ public partial class TweenDemo : Control
         if (!IsInsideTree()) return;
         StopDemo(); DestroyPage(); SelectedPage = index;
         for (var i = 0; i < navigation.Count; i++) navigation[i].SetPressedNoSignal(i == index);
-        page = index switch { 0 => new MotionPage(), 1 => new InterfacePage(), 2 => new EffectsPage(),
-            3 => new SpatialPage(), 4 => new MaterialsPage(), _ => new ShadersPage() };
+        page = index switch { 0 => new SquashPage(), 1 => new ChoreographyPage(), 2 => new MotionPage(), 3 => new InterfacePage(),
+            4 => new EffectsPage(), 5 => new SpatialPage(), 6 => new MaterialsPage(), _ => new ShadersPage() };
         page.SizeFlagsHorizontal = SizeFlags.ExpandFill; page.SizeFlagsVertical = SizeFlags.ExpandFill;
         content.AddChild(page);
         var selected = page; var current = ++revision;

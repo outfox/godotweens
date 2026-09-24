@@ -13,9 +13,10 @@ public partial class MaterialsPage : GalleryPage
     protected override void Build()
     {
         var (twins, _) = World(Card("01 / Shared Material", "Albedo color and roughness shared by both meshes."));
+        Floor(twins, -0.75f);
         shared = Surface(Mint); shared.Roughness = 0.05f;
-        Mesh(twins, new SphereMesh { Radius = 0.65f, Height = 1.3f }, shared, new Vector3(-1, 0, 0));
-        var cube = Mesh(twins, new BoxMesh { Size = Vector3.One }, shared, new Vector3(1, 0, 0));
+        Mesh(twins, new SphereMesh { Radius = 0.65f, Height = 1.3f }, shared, new Vector3(-1, -0.1f, 0));
+        var cube = Mesh(twins, new BoxMesh { Size = Vector3.One }, shared, new Vector3(1, -0.02f, 0));
         cube.Rotation = new Vector3(0.3f, 0.5f, 0);
         var (uv, camera) = World(Card("02 / UV Transform", "UV1 offset X and scale."));
         camera.Position = new Vector3(0, 0, 2.7f); camera.LookAt(Vector3.Zero);
@@ -32,6 +33,7 @@ public partial class MaterialsPage : GalleryPage
         transparent = Surface(Blue); transparent.Transparency = BaseMaterial3D.TransparencyEnum.Alpha;
         Mesh(fade, new SphereMesh { Radius = 0.8f, Height = 1.6f }, transparent);
         var (glow, _) = World(Card("04 / Emission", "Emission color and energy multiplier."));
+        Floor(glow, -0.9f);
         emissive = Surface(new Color("2a3a50")); emissive.EmissionEnabled = true;
         emissive.Emission = new Color(0.08f, 0.22f, 0.15f); emissive.EmissionEnergyMultiplier = 0.15f;
         Mesh(glow, new TorusMesh { InnerRadius = 0.45f, OuterRadius = 0.8f }, emissive).RotationDegrees = new Vector3(65, 0, 15);
