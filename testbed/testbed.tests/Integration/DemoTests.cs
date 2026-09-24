@@ -7,6 +7,7 @@ using twodog.Testing;
 using twodog.Testing.Xunit;
 namespace testbed.Tests;
 
+
 [Collection<HeadlessCollection>]
 public class DemoTests(HeadlessFixture godot)
 {
@@ -43,6 +44,14 @@ public class DemoTests(HeadlessFixture godot)
             Assert.Throws<ArgumentOutOfRangeException>(() => demo.SelectPage(99));
         }
         finally { demo.Free(); }
+    }
+    [Fact]
+    public void FreeingBeforeThePageStartsDropsTheDeferredStart()
+    {
+        var demo = new testbed.TweenDemo(); godot.Tree.Root.AddChild(demo);
+        demo.Free();
+        Pump();
+        Assert.Empty(godot.Errors.Drain());
     }
     [Fact]
     public void LeavingDuringAnAwaitedSequenceSettlesItAndDisposesThePage()

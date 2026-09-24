@@ -189,6 +189,7 @@ public class ShaderTweenTests(Fixture godot)
             else ((GeometryInstance3D)node).MaterialOverride = replacement;
             TweenRuntime.GetRunner(node).Scheduler.Update(0.5);
             await Assert.ThrowsAsync<InvalidOperationException>(async () => await tween.Completion);
+            godot.Errors.Expect("The material binding changed during shader playback.");
             Assert.False(HasOverride(node, "amount"));
         }
         finally { node.Free(); }
@@ -260,6 +261,7 @@ public class ShaderTweenTests(Fixture godot)
             shader.Code += "\n// changed";
             TweenRuntime.GetRunner(child).Scheduler.Update(0.5);
             await Assert.ThrowsAsync<InvalidOperationException>(async () => await tween.Completion);
+            godot.Errors.Expect("The shader binding changed during playback.");
         }
         finally { parent.Free(); }
     }
@@ -283,6 +285,7 @@ public class ShaderTweenTests(Fixture godot)
             if (change == "next-pass") baseMaterial.NextPass = replacement;
             TweenRuntime.GetRunner(node).Scheduler.Update(0.5);
             await Assert.ThrowsAsync<InvalidOperationException>(async () => await tween.Completion);
+            godot.Errors.Expect("binding changed during shader playback.");
         }
         finally { node.Free(); }
     }

@@ -48,6 +48,7 @@ public partial class TweenDemo : Control
 
     public override void _Ready()
     {
+        if (GalleryEffect.Supports2DMsaa) GetTree().Root.Msaa2D = Viewport.Msaa.Msaa4X;
         BuildControls();
         SelectPage(0);
     }
@@ -202,27 +203,28 @@ public partial class TweenDemo : Control
         page.SizeFlagsVertical = SizeFlags.ExpandFill;
         content.AddChild(page);
 
-        // Start once the page's layout has settled; a newer selection in the same frame supersedes this one.
-        var selected = page;
-        var current = ++revision;
-        Callable.From(() =>
+        // Start once the page's layout has settled. Bound to this node, so Godot drops the call if the demo is freed first.
+        CallDeferred(MethodName.StartSelectedPage, ++revision);
+    }
+
+    /// <summary>Starts the current page, unless a newer selection or a stop superseded <paramref name="selection"/>.</summary>
+    private void StartSelectedPage(int selection)
+    {
+        if (!IsInsideTree() || selection != revision || page is null) return;
+        try
         {
-            if (!IsInsideTree() || current != revision || selected != page) return;
-            try
-            {
-                selected.Start(duration.Value, (EaseType)ease.GetSelectedId(), pingPong.ButtonPressed);
-                IsPlaying = true;
-                paused = false;
-                pause.Text = "Pause";
-                pause.Disabled = false;
-            }
-            catch (Exception error)
-            {
-                selected.Stop();
-                status.Text = "Could not start this page: " + error.Message;
-                GD.PushError(error.ToString());
-            }
-        }).CallDeferred();
+            page.Start(duration.Value, (EaseType)ease.GetSelectedId(), pingPong.ButtonPressed);
+            IsPlaying = true;
+            paused = false;
+            pause.Text = "Pause";
+            pause.Disabled = false;
+        }
+        catch (Exception error)
+        {
+            page.Stop();
+            status.Text = "Could not start this page: " + error.Message;
+            GD.PushError(error.ToString());
+        }
     }
 
     public void RestartDemo()

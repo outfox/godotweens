@@ -52,9 +52,14 @@ public abstract partial class GalleryEffect
         {
             Size = new Vector2I(512, 256), OwnWorld3D = spatial, TransparentBg = !spatial,
             RenderTargetUpdateMode = SubViewport.UpdateMode.Always, HandleInputLocally = false,
-            Msaa2D = Godot.Viewport.Msaa.Msaa4X, Msaa3D = Godot.Viewport.Msaa.Msaa4X,
+            // Godot warns when a viewport requests MSAA for content it does not draw.
+            Msaa2D = !spatial && Supports2DMsaa ? Godot.Viewport.Msaa.Msaa4X : Godot.Viewport.Msaa.Disabled,
+            Msaa3D = spatial ? Godot.Viewport.Msaa.Msaa4X : Godot.Viewport.Msaa.Disabled,
         });
     }
+
+    /// <summary>The Compatibility renderer has no 2D MSAA and warns for every viewport that requests it.</summary>
+    public static bool Supports2DMsaa => RenderingServer.GetCurrentRenderingMethod() != "gl_compatibility";
 
     /// <summary>Adds <paramref name="child"/> stretched over the stage, inset by <paramref name="inset"/>.</summary>
     protected T Fill<T>(T child, int inset) where T : Control
