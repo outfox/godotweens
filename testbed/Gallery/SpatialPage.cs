@@ -31,7 +31,7 @@ public partial class SpatialPage : GalleryPage
         var path = new Path3D { Curve = curve }; route.AddChild(path);
         follower = new PathFollow3D { Loop = false, RotationMode = PathFollow3D.RotationModeEnum.None }; path.AddChild(follower);
         Mesh(follower, new SphereMesh { Radius = 0.25f, Height = 0.5f }, Surface(Amber));
-        var beads = Surface(new Color("426070"));
+        var beads = Surface(new Color("7fa3bd"));
         for (var i = 0; i <= 24; i++) Mesh(route, new SphereMesh { Radius = 0.045f, Height = 0.09f, RadialSegments = 8, Rings = 4 },
             beads, curve.SampleBaked(curve.GetBakedLength() * i / 24));
 
@@ -39,7 +39,7 @@ public partial class SpatialPage : GalleryPage
         foreach (var child in lights.GetChildren())
         {
             if (child is DirectionalLight3D directional) directional.Free();
-            if (child is WorldEnvironment world) world.Environment.AmbientLightEnergy = 0.08f;
+            if (child is WorldEnvironment world) world.Environment.AmbientLightEnergy = 0.2f;
         }
         Mesh(lights, new PlaneMesh { Size = new Vector2(8, 6) }, Surface(new Color("788aa0")), new Vector3(0, -0.7f, 0));
         Mesh(lights, new TorusMesh { InnerRadius = 0.4f, OuterRadius = 0.8f }, Surface(new Color("d3dce4")));

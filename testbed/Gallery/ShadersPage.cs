@@ -21,7 +21,7 @@ public partial class ShadersPage : GalleryPage
     }
     private static void Caption(Node parent, string text, Vector2 position)
     {
-        var label = Text(text, 12, Muted); label.Position = position; parent.AddChild(label);
+        var label = Text(text, 12, Soft); label.Position = position; parent.AddChild(label);
     }
     protected override void Build()
     {
@@ -32,7 +32,7 @@ public partial class ShadersPage : GalleryPage
                 .AddChild(Text("Unavailable in headless mode.", 17, Amber));
             return;
         }
-        const string body = "void fragment() { float edge = smoothstep(amount - 0.03, amount + 0.03, UV.x); vec3 c = mix(vec3(0.47,0.87,0.70), vec3(0.13,0.21,0.32), edge); COLOR = vec4(c,1.0); }";
+        const string body = "void fragment() { float edge = smoothstep(amount - 0.03, amount + 0.03, UV.x); vec3 c = mix(vec3(0.47,0.87,0.70), vec3(0.17,0.26,0.38), edge); COLOR = vec4(c,1.0); }";
         var twins = View(Card("01 / Shared Uniform", "One float uniform updates both panels."));
         shared = Shader("shader_type canvas_item; uniform float amount = 0.15; " + body);
         Patch(twins, shared, new Vector2(-180, -50), new Vector2(165, 100));
@@ -53,7 +53,7 @@ public partial class ShadersPage : GalleryPage
             void fragment() {
                 vec2 p = (UV + offset) * vec2(8.0, 3.0);
                 float rings = smoothstep(0.25, 0.30, length(fract(p) - 0.5));
-                COLOR = vec4(mix(tint.rgb, vec3(0.10,0.16,0.25), rings), 1.0);
+                COLOR = vec4(mix(tint.rgb, vec3(0.15,0.23,0.34), rings), 1.0);
             }
             """);
         Patch(color, typed, new Vector2(-180, -65), new Vector2(360, 130));

@@ -31,7 +31,7 @@ public partial class EffectsPage : GalleryPage
             LocalCoords = false };
         stream.AddChild(particles);
         var lit = View(Card("04 / PointLight2D", "TextureScale, energy, and position."));
-        var modulate = new CanvasModulate { Color = new Color("263143") }; lit.AddChild(modulate);
+        var modulate = new CanvasModulate { Color = new Color("3a4a64") }; lit.AddChild(modulate);
         for (var y = -3; y < 3; y++) for (var x = -7; x < 7; x++)
         {
             var cell = new Polygon2D { Polygon = [new(0, 0), new(27, 0), new(27, 27), new(0, 27)],

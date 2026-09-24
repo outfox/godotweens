@@ -32,7 +32,7 @@ public partial class MaterialsPage : GalleryPage
         transparent = Surface(Blue); transparent.Transparency = BaseMaterial3D.TransparencyEnum.Alpha;
         Mesh(fade, new SphereMesh { Radius = 0.8f, Height = 1.6f }, transparent);
         var (glow, _) = World(Card("04 / Emission", "Emission color and energy multiplier."));
-        emissive = Surface(new Color("162130")); emissive.EmissionEnabled = true;
+        emissive = Surface(new Color("2a3a50")); emissive.EmissionEnabled = true;
         emissive.Emission = new Color(0.08f, 0.22f, 0.15f); emissive.EmissionEnergyMultiplier = 0.15f;
         Mesh(glow, new TorusMesh { InnerRadius = 0.45f, OuterRadius = 0.8f }, emissive).RotationDegrees = new Vector3(65, 0, 15);
     }

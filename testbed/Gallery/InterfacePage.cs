@@ -22,7 +22,7 @@ public partial class InterfacePage : GalleryPage
         reveal.Position = new Vector2(18, 8); reveal.VisibleRatio = 0; words.AddChild(reveal);
 
         var meters = Card("02 / Range Value", "ProgressBar.Value with color and alpha tweens.");
-        meters.AddChild(Text("VALUE", 13, Muted));
+        var caption = Text("VALUE", 13, Muted); caption.Position = new Vector2(10, 8); meters.AddChild(caption);
         progress = new ProgressBar { Position = new Vector2(8, 55), Size = new Vector2(340, 30), Step = 0, ShowPercentage = false };
         progress.AddThemeStyleboxOverride("background", Own(Box(new Color("293c50"), 6)));
         progress.AddThemeStyleboxOverride("fill", Own(Box(Mint, 6))); meters.AddChild(progress);
@@ -41,7 +41,7 @@ public partial class InterfacePage : GalleryPage
             if (i == 1) { tile = block; tile.OffsetTransformPivot = new Vector2(44, 41); }
         }
         var browse = Card("04 / Scroll Position", "ScrollContainer.ScrollVertical uses integer interpolation.");
-        scroll = new ScrollContainer { Position = new Vector2(8, 0), Size = new Vector2(345, 168),
+        scroll = new ScrollContainer { Position = new Vector2(8, 8), Size = new Vector2(345, 152),
             HorizontalScrollMode = ScrollContainer.ScrollMode.Disabled, MouseFilter = MouseFilterEnum.Ignore };
         browse.AddChild(scroll);
         var list = new VBoxContainer { SizeFlagsHorizontal = SizeFlags.ExpandFill }; list.AddThemeConstantOverride("separation", 10); scroll.AddChild(list);

@@ -34,7 +34,8 @@ public partial class TweenDemo : Control
     }
     private void BuildControls()
     {
-        var background = new ColorRect { Color = new Color("101925"), MouseFilter = MouseFilterEnum.Ignore };
+        Theme = GalleryTheme.Build(themeResources);
+        var background = new ColorRect { Color = GalleryTheme.Background, MouseFilter = MouseFilterEnum.Ignore };
         AddChild(background); background.SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
         var margin = new MarginContainer(); AddChild(margin); margin.SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
         foreach (var side in new[] { "left", "right", "top", "bottom" }) margin.AddThemeConstantOverride("margin_" + side, 24);
@@ -48,26 +49,33 @@ public partial class TweenDemo : Control
         foreach (var choice in new[] { EaseType.CubicInOut, EaseType.Linear, EaseType.SineInOut, EaseType.BackOut, EaseType.ElasticOut, EaseType.BounceOut })
             ease.AddItem(choice.ToString(), (int)choice);
         settings.AddChild(ease);
-        durationLabel = GalleryPage.Text("Leg duration  1.8 s", 16); settings.AddChild(durationLabel);
+        settings.AddChild(new Control { CustomMinimumSize = new Vector2(8, 0) });
+        settings.AddChild(GalleryPage.Text("Leg duration", 16, GalleryPage.Muted));
+        durationLabel = GalleryPage.Text("1.8 s", 16); durationLabel.CustomMinimumSize = new Vector2(44, 0); settings.AddChild(durationLabel);
         duration = new HSlider { MinValue = 0.4, MaxValue = 4, Step = 0.1, Value = 1.8,
             CustomMinimumSize = new Vector2(150, 38), SizeFlagsHorizontal = SizeFlags.ExpandFill };
         settings.AddChild(duration);
         pingPong = new CheckBox { Text = "Ping-pong", ButtonPressed = true }; settings.AddChild(pingPong);
         layout.AddChild(new HSeparator());
         var body = new HBoxContainer { SizeFlagsVertical = SizeFlags.ExpandFill }; body.AddThemeConstantOverride("separation", 20); layout.AddChild(body);
-        var sidebar = new VBoxContainer { CustomMinimumSize = new Vector2(214, 0) }; sidebar.AddThemeConstantOverride("separation", 8); body.AddChild(sidebar);
+        var sidebar = new VBoxContainer { CustomMinimumSize = new Vector2(214, 0) }; sidebar.AddThemeConstantOverride("separation", 6); body.AddChild(sidebar);
         sidebar.AddChild(GalleryPage.Text("EXAMPLES", 12, GalleryPage.Muted));
+        var idle = GalleryTheme.Box(Colors.Transparent, 8, 0, null, 14, 8);
+        var hover = GalleryTheme.Box(GalleryTheme.Raised, 8, 0, null, 14, 8);
+        var selected = GalleryTheme.Box(GalleryTheme.Selected, 8, 0, GalleryPage.Mint, 14, 8); selected.BorderWidthLeft = 3;
+        themeResources.AddRange([idle, hover, selected]);
         for (var i = 0; i < PageNames.Length; i++)
         {
             var index = i;
-            var button = new Button { Text = $"{i + 1:00}  {PageNames[i]}", ToggleMode = true,
-                Alignment = HorizontalAlignment.Left, CustomMinimumSize = new Vector2(214, 46) };
-            var selected = GalleryPage.Box(new Color("294b48"), 8); themeResources.Add(selected);
-            button.AddThemeStyleboxOverride("pressed", selected);
+            var button = new Button { Text = $"{i + 1:00}  {PageNames[i]}", ToggleMode = true, FocusMode = FocusModeEnum.None,
+                Alignment = HorizontalAlignment.Left, CustomMinimumSize = new Vector2(214, 44) };
+            button.AddThemeStyleboxOverride("normal", idle); button.AddThemeStyleboxOverride("hover", hover);
+            button.AddThemeStyleboxOverride("pressed", selected); button.AddThemeStyleboxOverride("hover_pressed", selected);
             button.AddThemeFontSizeOverride("font_size", 15);
             button.Pressed += () => SelectPage(index); sidebar.AddChild(button); navigation.Add(button);
         }
-        var hint = GalleryPage.Text("Settings apply to\nthe current page.", 14, GalleryPage.Muted); sidebar.AddChild(hint);
+        sidebar.AddChild(new Control { CustomMinimumSize = new Vector2(0, 6) });
+        sidebar.AddChild(GalleryPage.Text("Settings apply to\nthe current page.", 14, GalleryPage.Muted));
         var scroll = new ScrollContainer { SizeFlagsHorizontal = SizeFlags.ExpandFill, SizeFlagsVertical = SizeFlags.ExpandFill,
             HorizontalScrollMode = ScrollContainer.ScrollMode.Disabled };
         body.AddChild(scroll);
@@ -78,7 +86,7 @@ public partial class TweenDemo : Control
         status = GalleryPage.Text("Starting…", 15, GalleryPage.Mint); status.SizeFlagsHorizontal = SizeFlags.ExpandFill;
         status.HorizontalAlignment = HorizontalAlignment.Right; actions.AddChild(status);
         ease.ItemSelected += _ => RestartDemo();
-        duration.ValueChanged += v => { durationLabel.Text = $"Leg duration  {v:0.0} s"; RestartDemo(); };
+        duration.ValueChanged += v => { durationLabel.Text = $"{v:0.0} s"; RestartDemo(); };
         pingPong.Toggled += _ => RestartDemo();
     }
     private static Button Button(HBoxContainer row, string text, Action action)

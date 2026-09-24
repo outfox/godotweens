@@ -12,7 +12,7 @@ namespace testbed;
 /// <summary>One disposable playground. Only the selected page is instantiated.</summary>
 public abstract partial class GalleryPage : VBoxContainer
 {
-    public static readonly Color Mint = new("79deb4"), Amber = new("f2bc74"), Blue = new("8caaff"), Muted = new("9aaebf");
+    public static readonly Color Mint = new("79deb4"), Amber = new("f2bc74"), Blue = new("8caaff"), Muted = new("a9bccd"), Soft = GalleryTheme.Soft;
     private readonly List<TweenInstance> handles = [];
     private readonly List<Resource> resources = [];
     protected GridContainer Grid = null!;
@@ -66,20 +66,19 @@ public abstract partial class GalleryPage : VBoxContainer
     {
         var label = new Label { Text = text, MouseFilter = MouseFilterEnum.Ignore };
         label.AddThemeFontSizeOverride("font_size", size);
-        label.AddThemeColorOverride("font_color", color ?? new Color("eef4fa")); return label;
+        label.AddThemeColorOverride("font_color", color ?? GalleryTheme.Text); return label;
     }
-    public static StyleBoxFlat Box(Color color, int radius = 12)
-        => new() { BgColor = color, CornerRadiusTopLeft = radius, CornerRadiusTopRight = radius,
-            CornerRadiusBottomLeft = radius, CornerRadiusBottomRight = radius,
-            ContentMarginLeft = 16, ContentMarginRight = 16, ContentMarginTop = 14, ContentMarginBottom = 14 };
+    public static StyleBoxFlat Box(Color color, int radius = 12) => GalleryTheme.Box(color, radius);
     protected Control Card(string title, string caption)
     {
         var panel = new PanelContainer { SizeFlagsHorizontal = SizeFlags.ExpandFill, SizeFlagsVertical = SizeFlags.ExpandFill };
-        panel.AddThemeStyleboxOverride("panel", Own(Box(new Color("1d2b3b")))); Grid.AddChild(panel);
+        panel.AddThemeStyleboxOverride("panel", Own(GalleryTheme.Box(GalleryTheme.Surface, 12, 1))); Grid.AddChild(panel);
         var column = new VBoxContainer(); column.AddThemeConstantOverride("separation", 8); panel.AddChild(column);
         column.AddChild(Text(title, 19));
-        var stage = new Control { CustomMinimumSize = new Vector2(370, 168), SizeFlagsVertical = SizeFlags.ExpandFill,
-            SizeFlagsHorizontal = SizeFlags.ExpandFill, ClipContents = true };
+        // Drawn clipping keeps viewports inside the rounded inset.
+        var stage = new Panel { CustomMinimumSize = new Vector2(370, 168), SizeFlagsVertical = SizeFlags.ExpandFill,
+            SizeFlagsHorizontal = SizeFlags.ExpandFill, ClipChildren = ClipChildrenMode.AndDraw, MouseFilter = MouseFilterEnum.Ignore };
+        stage.AddThemeStyleboxOverride("panel", Own(GalleryTheme.Box(GalleryTheme.Stage, 8)));
         column.AddChild(stage);
         var note = Text(caption, 13, Muted); note.AutowrapMode = TextServer.AutowrapMode.WordSmart; column.AddChild(note);
         return stage;
@@ -99,7 +98,7 @@ public abstract partial class GalleryPage : VBoxContainer
     {
         var view = View(stage, true);
         var environment = Own(new Godot.Environment { BackgroundMode = Godot.Environment.BGMode.Color,
-            BackgroundColor = new Color("142030"), AmbientLightSource = Godot.Environment.AmbientSource.Color,
+            BackgroundColor = GalleryTheme.Stage, AmbientLightSource = Godot.Environment.AmbientSource.Color,
             AmbientLightColor = new Color("9eb6e3"), AmbientLightEnergy = 0.3f,
             TonemapMode = Godot.Environment.ToneMapper.Filmic });
         view.AddChild(new WorldEnvironment { Environment = environment });

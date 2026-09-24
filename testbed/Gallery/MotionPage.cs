@@ -22,15 +22,17 @@ public partial class MotionPage : GalleryPage
         curve.AddPoint(new(-160, 35), Vector2.Zero, new(90, -130));
         curve.AddPoint(new(160, -35), new(-90, 130), Vector2.Zero);
         var path = new Path2D { Curve = curve }; view.AddChild(path);
-        Line(view, curve.GetBakedPoints(), new Color("365b68"), 3);
+        Line(view, curve.GetBakedPoints(), new Color("4d8190"), 3);
         follower = new PathFollow2D { Loop = false }; path.AddChild(follower);
         ship = Diamond(follower, Vector2.Zero, Mint);
         Diamond(view, new(-160, 35), Muted, 4); Diamond(view, new(160, -35), Muted, 4);
 
         var cameraView = View(Card("02 / Camera2D", "Zoom and offset applied to a static scene."));
         camera = cameraView.GetChild<Camera2D>(0);
-        for (var x = -400; x <= 400; x += 40) Line(cameraView, [new(x, -200), new(x, 200)], new Color("2b3c50"), 1);
-        for (var y = -200; y <= 200; y += 40) Line(cameraView, [new(-400, y), new(400, y)], new Color("2b3c50"), 1);
+        for (var x = -400; x <= 400; x += 40) Line(cameraView, [new(x, -200), new(x, 200)], new Color("2a3b50"), 1);
+        for (var y = -200; y <= 200; y += 40) Line(cameraView, [new(-400, y), new(400, y)], new Color("2a3b50"), 1);
+        Line(cameraView, [new(0, -200), new(0, 200)], new Color("41597a"), 1.5f);
+        Line(cameraView, [new(-400, 0), new(400, 0)], new Color("41597a"), 1.5f);
         for (var i = -2; i <= 2; i++) Diamond(cameraView, new(i * 90, i % 2 * 35), i == 0 ? Amber : Blue, 12);
 
         var transforms = View(Card("03 / Combined Transforms", "Skew, rotation, and independent X/Y scale."));
@@ -38,9 +40,9 @@ public partial class MotionPage : GalleryPage
         Line(shape, [Vector2.Zero, new(42, 0)], Amber, 3);
 
         var chainView = View(Card("04 / Async Sequence", "Await position, then run position and rotation together."));
-        Line(chainView, [new(-150, 15), new(150, 15)], new Color("365b68"), 2);
+        Line(chainView, [new(-150, 15), new(150, 15)], new Color("4d8190"), 2);
         courier = Diamond(chainView, new(-150, 15), Mint, 18);
-        sequence = Text("Position → position + rotation", 14, Muted);
+        sequence = Text("Position → position + rotation", 15, Soft);
         sequence.Position = new Vector2(-160, -65); chainView.AddChild(sequence);
     }
     protected override void Animate()
