@@ -111,7 +111,19 @@ public abstract partial class GalleryEffect
         return run == Generation && results.All(r => r == TweenCompletionReason.Completed);
     }
 
+    /// <summary>Tracks a newly created group for the playback controls, then awaits its completion results.</summary>
+    protected Task<bool> Finished(params TweenInstance[] tweens)
+    {
+        foreach (var tween in tweens) Keep(tween);
+        return Finished(Generation, tweens);
+    }
+
     protected Task<bool> Wait(int run, double seconds) => Finished(run, Keep(Stage.TweenFloat(1, seconds, t => t.From = 0)));
+
+    protected Task<bool> Wait(double seconds) => Finished(Stage.TweenFloat(1, seconds, t => t.From = 0));
+
+    /// <summary>Repeats completion-driven steps without exposing testbed run identifiers to the example.</summary>
+    protected Task Repeat(Func<Task<bool>> step) => Repeat(_ => step());
 
     /// <summary>Repeats an async step until it reports false, e.g. after Stop.</summary>
     protected async Task Repeat(Func<int, Task<bool>> step)
@@ -119,7 +131,7 @@ public abstract partial class GalleryEffect
         var run = Generation;
         try
         {
-            while (await step(run)) { }
+            while (run == Generation && await step(run)) { }
         }
         catch (Exception error)
         {

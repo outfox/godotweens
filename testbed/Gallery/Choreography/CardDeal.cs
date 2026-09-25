@@ -60,16 +60,16 @@ public sealed class CardDeal : GalleryEffect
 
     protected override void Animate() => Sequence = Repeat(Deal);
 
-    private async Task<bool> Deal(int run)
+    private async Task<bool> Deal()
     {
         Reset();
-        return await Finished(run, Spread())
-            && await FlipAll(run, faceUp: true, stagger: 0.09 * Tempo)
-            && await Finished(run, LiftHero())
-            && await Wait(run, 0.6 * Tempo)
-            && await Finished(run, Gather())
-            && await FlipAll(run, faceUp: false, stagger: 0)
-            && await Finished(run, Toss());
+        return await Finished(Spread())
+            && await FlipAll(faceUp: true, stagger: 0.09 * Tempo)
+            && await Finished(LiftHero())
+            && await Wait(0.6 * Tempo)
+            && await Finished(Gather())
+            && await FlipAll(faceUp: false, stagger: 0)
+            && await Finished(Toss());
     }
 
     private void Reset()
@@ -93,8 +93,8 @@ public sealed class CardDeal : GalleryEffect
         void Stagger(TweenOptions t) { t.Delay = i * 0.1 * Tempo; t.Ease = EaseType.BackOut; }
         return new TweenInstance[]
         {
-            Keep(card.Body.TweenPosition(spot, duration, Stagger)),
-            Keep(card.Body.TweenRotation(offset * 0.13f, duration, Stagger)),
+            card.Body.TweenPosition(spot, duration, Stagger),
+            card.Body.TweenRotation(offset * 0.13f, duration, Stagger),
         };
     }).ToArray();
 
@@ -105,9 +105,9 @@ public sealed class CardDeal : GalleryEffect
         void Pop(TweenOptions t) => t.Ease = EaseType.BackOut;
         return
         [
-            Keep(hero.TweenPositionY(hero.Position.Y - 26, duration, Pop)),
-            Keep(hero.TweenScale(new Vector2(1.18f, 1.18f), duration, Pop)),
-            Keep(hero.TweenRotation(0, duration, Pop)),
+            hero.TweenPositionY(hero.Position.Y - 26, duration, Pop),
+            hero.TweenScale(new Vector2(1.18f, 1.18f), duration, Pop),
+            hero.TweenRotation(0, duration, Pop),
         ];
     }
 
@@ -118,9 +118,9 @@ public sealed class CardDeal : GalleryEffect
         void Stagger(TweenOptions t) { t.Delay = (deck.Length - 1 - i) * 0.05 * Tempo; t.Ease = EaseType.CubicInOut; }
         return new TweenInstance[]
         {
-            Keep(card.Body.TweenPosition(new Vector2(0, -i * 2), duration, Stagger)),
-            Keep(card.Body.TweenRotation(0, duration, Stagger)),
-            Keep(card.Body.TweenScale(Vector2.One, duration, Stagger)),
+            card.Body.TweenPosition(new Vector2(0, -i * 2), duration, Stagger),
+            card.Body.TweenRotation(0, duration, Stagger),
+            card.Body.TweenScale(Vector2.One, duration, Stagger),
         };
     }).ToArray();
 
@@ -131,23 +131,23 @@ public sealed class CardDeal : GalleryEffect
         void Stagger(TweenOptions t) { t.Delay = i * 0.04 * Tempo; t.Ease = EaseType.BackIn; }
         return new TweenInstance[]
         {
-            Keep(card.Body.TweenPosition(new Vector2((i - 2) * 30, -170), duration, Stagger)),
-            Keep(card.Body.TweenRotation((i - 2) * 0.4f, duration, Stagger)),
+            card.Body.TweenPosition(new Vector2((i - 2) * 30, -170), duration, Stagger),
+            card.Body.TweenRotation((i - 2) * 0.4f, duration, Stagger),
         };
     }).ToArray();
 
-    private async Task<bool> FlipAll(int run, bool faceUp, double stagger)
+    private async Task<bool> FlipAll(bool faceUp, double stagger)
     {
-        var flips = await Task.WhenAll(deck.Select((card, i) => Flip(run, card, i * stagger, faceUp)));
+        var flips = await Task.WhenAll(deck.Select((card, i) => Flip(card, i * stagger, faceUp)));
         return flips.All(completed => completed);
     }
 
     /// <summary>Squeezes the card to zero width, swaps its side, then springs it back open.</summary>
-    private async Task<bool> Flip(int run, PlayingCard card, double delay, bool faceUp)
+    private async Task<bool> Flip(PlayingCard card, double delay, bool faceUp)
     {
-        var fold = Keep(card.Body.TweenScaleX(0, 0.1 * Tempo, t => { t.Delay = delay; t.Ease = EaseType.QuadIn; }));
-        if (!await Finished(run, fold)) return false;
+        var fold = card.Body.TweenScaleX(0, 0.1 * Tempo, t => { t.Delay = delay; t.Ease = EaseType.QuadIn; });
+        if (!await Finished(fold)) return false;
         card.Show(faceUp);
-        return await Finished(run, Keep(card.Body.TweenScaleX(1, 0.22 * Tempo, t => t.Ease = EaseType.BackOut)));
+        return await Finished(card.Body.TweenScaleX(1, 0.22 * Tempo, t => t.Ease = EaseType.BackOut));
     }
 }
