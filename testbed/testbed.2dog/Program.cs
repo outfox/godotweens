@@ -17,19 +17,21 @@ internal static class Program
         var restartCheck = false;
         string? gallerySnapshots = null;
         var galleryPage = 0;
+        var gallerySource = -1;
         for (var i = 0; i < args.Length; i++)
         {
             if (args[i] == "--snapshot" && i + 1 < args.Length) snapshot = Path.GetFullPath(args[++i]);
             else if (args[i] == "--gallery-snapshots" && i + 1 < args.Length) gallerySnapshots = Path.GetFullPath(args[++i]);
             else if (args[i] == "--gallery-page" && i + 1 < args.Length) galleryPage = int.Parse(args[++i]);
+            else if (args[i] == "--gallery-source" && i + 1 < args.Length) gallerySource = int.Parse(args[++i]);
             else if (args[i] == "--restart-check") restartCheck = true;
             else forwarded.Add(args[i]);
         }
-        Run(forwarded.ToArray(), snapshot, gallerySnapshots, galleryPage);
-        if (restartCheck) Run(forwarded.ToArray(), null, null, galleryPage);
+        Run(forwarded.ToArray(), snapshot, gallerySnapshots, galleryPage, gallerySource);
+        if (restartCheck) Run(forwarded.ToArray(), null, null, galleryPage, gallerySource);
     }
 
-    private static void Run(string[] args, string? snapshot, string? gallerySnapshots, int galleryPage)
+    private static void Run(string[] args, string? snapshot, string? gallerySnapshots, int galleryPage, int gallerySource)
     {
         // The default constructor finds raw project content during development
         // and the exe-adjacent .pck after publish. Arguments are forwarded to Godot.
@@ -44,6 +46,7 @@ internal static class Program
 
         var gallery = engine.Tree.CurrentScene as testbed.TweenDemo;
         gallery?.SelectPage(gallerySnapshots is null ? galleryPage : 0);
+        if (gallerySource >= 0) gallery?.CurrentPage?.ShowSource(gallerySource);
         var capturedPages = 0;
 
         // Iteration() returns true when Godot wants to quit.
@@ -71,7 +74,11 @@ internal static class Program
                 if (image.SavePng(target) != Error.Ok) throw new IOException("Could not save " + target);
                 Console.WriteLine($"Captured {testbed.TweenDemo.PageNames[capturedPages]} ({gallery.DemoTweenCount} tweens)");
                 if (++capturedPages == testbed.TweenDemo.PageNames.Length) engine.Tree.Quit();
-                else gallery.SelectPage(capturedPages);
+                else
+                {
+                    gallery.SelectPage(capturedPages);
+                    if (gallerySource >= 0) gallery.CurrentPage?.ShowSource(gallerySource);
+                }
             }
         }
 

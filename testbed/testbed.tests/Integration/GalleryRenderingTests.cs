@@ -32,6 +32,18 @@ public class GalleryRenderingTests(Fixture godot)
             if (particles is not null) Assert.True(particles.SpeedScale > 0);
             scheduler.Update(0.7); Assert.Null(page.Error);
             Assert.True(Descendants(page).OfType<SubViewport>().All(v => v.Size.X > 0 && v.Size.Y > 0));
+            var sourceButtons = Descendants(page).OfType<Button>().Where(b => b.Text == "View C#").ToArray();
+            for (var effect = 0; effect < sourceButtons.Length; effect++)
+            {
+                sourceButtons[effect].EmitSignal(BaseButton.SignalName.Pressed);
+                godot.Engine.Iteration();
+                var view = page.SourceView;
+                Assert.Equal(effect, page.SelectedEffect);
+                Assert.Equal(Godot.FileAccess.GetFileAsString("res://" + view.Source.Path).Replace("\r\n", "\n"), view.Code.Text);
+                Assert.True(view.Source.TweenLine > 0);
+                Assert.True(view.Code.Size.X > 0 && view.Code.Size.Y > 0);
+                Assert.Null(page.Error);
+            }
             demo.RestartDemo();
             Assert.Equal(0, page.ActiveCount); Assert.False(GodotObject.IsInstanceValid(page));
             for (var i = 0; i < 3; i++) godot.Engine.Iteration();
