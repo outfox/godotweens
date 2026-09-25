@@ -2,7 +2,7 @@
 // SPDX-FileCopyrightText: 2026 Moritz Voss
 
 using Godot;
-using godotweens;
+using tweens.gd;
 namespace testbed;
 
 /// <summary>Also freezes the particle simulation itself while paused or stopped.</summary>

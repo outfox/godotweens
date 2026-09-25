@@ -5,14 +5,14 @@ param([Parameter(Mandatory)][string] $Version)
 
 $ErrorActionPreference = 'Stop'
 $packageDirectory = Join-Path $PSScriptRoot '../../artifacts/packages' | Resolve-Path
-$package = Join-Path $packageDirectory "godotweens.$Version.nupkg"
-$symbols = Join-Path $packageDirectory "godotweens.$Version.snupkg"
+$package = Join-Path $packageDirectory "tweens.gd.$Version.nupkg"
+$symbols = Join-Path $packageDirectory "tweens.gd.$Version.snupkg"
 if (!(Test-Path $symbols)) { throw "Missing symbol package: $symbols" }
 
 Add-Type -AssemblyName System.IO.Compression.FileSystem
 $symbolArchive = [System.IO.Compression.ZipFile]::OpenRead($symbols)
 try {
-    $pdbPath = 'lib/net10.0/godotweens.pdb'
+    $pdbPath = 'lib/net10.0/tweens.gd.pdb'
     $pdb = $symbolArchive.GetEntry($pdbPath)
     if (!$pdb) { throw "Symbol package is missing $pdbPath" }
     if ($pdb.Length -eq 0) { throw "Symbol package contains an empty $pdbPath" }
@@ -22,13 +22,13 @@ try {
 
 $archive = [System.IO.Compression.ZipFile]::OpenRead($package)
 try {
-    foreach ($path in @('LICENSE', 'README.md', 'THIRD-PARTY-NOTICES.md', 'lib/net10.0/godotweens.dll', 'lib/net10.0/godotweens.xml')) {
+    foreach ($path in @('LICENSE', 'README.md', 'THIRD-PARTY-NOTICES.md', 'lib/net10.0/tweens.gd.dll', 'lib/net10.0/tweens.gd.xml')) {
         if (!$archive.GetEntry($path)) { throw "Package is missing $path" }
     }
-    $reader = [System.IO.StreamReader]::new($archive.GetEntry('godotweens.nuspec').Open())
+    $reader = [System.IO.StreamReader]::new($archive.GetEntry('tweens.gd.nuspec').Open())
     try { $manifest = [xml]$reader.ReadToEnd() } finally { $reader.Dispose() }
     $metadata = $manifest.package.metadata
-    if ($metadata.id -cne 'godotweens' -or $metadata.version -cne $Version) {
+    if ($metadata.id -cne 'tweens.gd' -or $metadata.version -cne $Version) {
         throw 'Package ID or version is incorrect.'
     }
     if ($metadata.license.type -ne 'expression' -or $metadata.license.InnerText -ne 'MIT') {
@@ -48,14 +48,14 @@ New-Item $consumer -ItemType Directory -Force | Out-Null
 @"
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup><TargetFramework>net10.0</TargetFramework></PropertyGroup>
-  <ItemGroup><PackageReference Include="godotweens" Version="[$Version]" /></ItemGroup>
+  <ItemGroup><PackageReference Include="tweens.gd" Version="[$Version]" /></ItemGroup>
 </Project>
 "@ | Set-Content (Join-Path $consumer 'Consumer.csproj')
 @'
 // SPDX-License-Identifier: MIT
 // SPDX-FileCopyrightText: 2026 Moritz Voss
 using Godot;
-using godotweens;
+using tweens.gd;
 public static class Consumer
 {
     public static System.Threading.Tasks.Task<TweenCompletionReason> Animate(Node2D node) =>
@@ -73,7 +73,7 @@ $escapedPackageDirectory = [System.Security.SecurityElement]::Escape($packageDir
   </packageSources>
   <packageSourceMapping>
     <clear />
-    <packageSource key="local"><package pattern="godotweens" /></packageSource>
+    <packageSource key="local"><package pattern="tweens.gd" /></packageSource>
     <packageSource key="nuget.org"><package pattern="*" /></packageSource>
   </packageSourceMapping>
 </configuration>

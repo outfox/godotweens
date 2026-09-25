@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 // SPDX-FileCopyrightText: 2026 Moritz Voss
 
-using godotweens;
+using tweens.gd;
 namespace testbed.Tests;
 
 public class BindingHookTests

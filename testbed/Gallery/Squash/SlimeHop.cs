@@ -5,7 +5,7 @@ using System;
 using System.Linq;
 using System.Threading.Tasks;
 using Godot;
-using godotweens;
+using tweens.gd;
 namespace testbed;
 
 public sealed class SlimeHop : GalleryEffect

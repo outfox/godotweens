@@ -2,7 +2,7 @@
 // SPDX-FileCopyrightText: 2026 Moritz Voss
 
 using Godot;
-using godotweens;
+using tweens.gd;
 using twodog.Testing;
 using twodog.Testing.Xunit;
 namespace testbed.Tests;

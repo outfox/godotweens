@@ -4,7 +4,7 @@
 using System;
 using System.Linq;
 using Godot;
-using godotweens;
+using tweens.gd;
 namespace testbed;
 
 public sealed class PolygonEchoes : GalleryEffect

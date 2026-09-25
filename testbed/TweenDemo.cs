@@ -6,7 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Godot;
-using godotweens;
+using tweens.gd;
 namespace testbed;
 
 /// <summary>Gallery shell. Pages own their examples; navigation destroys the previous playground.</summary>
@@ -91,7 +91,7 @@ public partial class TweenDemo : Control
     private static HBoxContainer BuildHeader()
     {
         var header = new HBoxContainer();
-        var title = GalleryTheme.Label("godotweens / testbed", 30);
+        var title = GalleryTheme.Label("tweens.gd / testbed", 30);
         title.SizeFlagsHorizontal = SizeFlags.ExpandFill;
         header.AddChild(title);
         header.AddChild(GalleryTheme.Label("C# / GODOT", 14, Palette.Mint));
