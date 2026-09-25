@@ -1,0 +1,101 @@
+---
+title: C# playback and async
+description: Control handles, compose animations, await completion, and handle cancellation and faults.
+---
+
+Every addition returns a `TweenInstance<TTarget, TValue>`. Keep it to pause,
+resume, cancel, inspect progress, or await completion. Instances share the
+non-generic `TweenInstance` base, useful for storing different tween types together.
+
+The snippets below run in an async Node method with an in-tree `Sprite2D` named
+`sprite`. Import `Godot`, `tweens.gd`, and `System`; the cancellation example
+also takes a `CancellationToken cancellationToken` supplied by your caller.
+
+## Sequence animations
+
+Check the completion reason before starting a follow-up animation:
+
+```csharp
+var reason = await sprite.TweenPosition(new Vector2(400, 180), 0.6).Completion;
+if (reason != TweenCompletionReason.Completed)
+    return;
+
+await sprite.TweenModulateAlpha(0, 0.3).Completion;
+```
+
+To run animations concurrently, start them before awaiting:
+
+```csharp
+var move = sprite.TweenPosition(new Vector2(400, 180), 0.6);
+var fade = sprite.TweenModulateAlpha(0.5f, 0.6);
+var reasons = await Task.WhenAll(move.Completion, fade.Completion);
+
+if (reasons.All(reason => reason == TweenCompletionReason.Completed))
+    GD.Print("Both animations finished");
+```
+
+Include `System.Threading.Tasks` and `System.Linq` if implicit usings are disabled.
+`Task.WhenAll` waits for every tween; it does not cancel siblings when one fails
+or is cancelled. Cancel sibling handles explicitly if that is your desired policy.
+
+## Completion reasons
+
+`Completion` is a lazily allocated, shared `Task<TweenCompletionReason>`. Multiple
+callers can await it, including after playback has ended.
+
+| Reason | Meaning |
+| --- | --- |
+| `Completed` | Reached natural completion |
+| `Cancelled` | Explicitly cancelled |
+| `TargetFreed` | Target was disposed, freed, or queued for deletion |
+| `OwnerExited` | Owner left the tree |
+| `RunnerDisposed` | Runner, tree, or manual scheduler shut down |
+
+Godot emits tree exit before invalidating a directly freed node, so `Free()` may
+be observed as `OwnerExited`. `QueueFree()` is identified as `TargetFreed` for a
+node that owns its own tween.
+
+## Cancel a wait or cancel playback
+
+```csharp
+var movement = sprite.TweenPosition(new Vector2(400, 180), 0.6);
+try
+{
+    await movement.AwaitDecommissionAsync(cancellationToken);
+}
+catch (OperationCanceledException)
+{
+    // This wait was cancelled. Stop playback too if that is your policy.
+    movement.Cancel();
+}
+```
+
+The token only cancels this wait. Other waiters and playback continue unless you
+call `Cancel()`. Ordinary playback cancellation returns a reason instead of
+throwing `OperationCanceledException`.
+
+## Callbacks and errors
+
+Callback order is `OnAdd`, optional delay-fill `OnUpdate`, `OnStart` once, updates,
+then `OnEnd` and `OnFinally`. Cancellation substitutes `OnCancel` for `OnEnd`;
+faults run `OnFinally`. Terminal state is visible before terminal callbacks.
+Terminal callbacks run at most once, with cleanup and task settlement even when
+callbacks fail.
+
+`OnUpdate` samples once per eligible tick, with extra samples for delay fill or
+restoration when applicable. New tweens created by update callbacks begin on the
+next eligible update. A long frame does not replay every skipped cycle's callbacks.
+
+Failures in interpolation, easing, setters, or callbacks fault completion and
+populate `Error`. Multiple failures are retained in an `AggregateException`.
+The scheduler reports them through `UnhandledException`; the automatic runner
+uses `GD.PushError`. Other tweens continue. Catch exceptions around your async
+sequence, especially in `async void` Godot callbacks such as `_Ready`.
+
+## Stay on the main thread
+
+Create/control automatic tweens and access `Completion` on Godot's main thread.
+Completion settles there, and normal Godot async callers retain their
+synchronization context. Do not block with `.Wait()` or `.Result`, or use
+`Task.Run` / `ConfigureAwait(false)` around engine access. Use Godot's `ToSignal`
+for unrelated engine-signal waits; tweens.gd provides no coroutine API.

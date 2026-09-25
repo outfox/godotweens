@@ -1,6 +1,6 @@
 # tweens.gd for C#
 
-Typed C# tweens for GodotSharp and 2dog, superseding the `godotweens` package.
+Typed C# tweens for GodotSharp and 2dog.
 Reuse tween definitions, control independent playback handles, and compose
 animations with `async`/`await`.
 
@@ -34,19 +34,13 @@ Definitions are snapshotted on addition. Playback supports pause/resume,
 cancellation, delays, loops, ping-pong, easing, and node lifetime handling.
 Create and control tweens on Godot's main thread.
 
-## Migrating from godotweens
-
-Replace the `godotweens` package reference with `tweens.gd` and change
-`using godotweens;` to `using tweens.gd;`. Update fully qualified type names and
-assembly references from `godotweens` to `tweens.gd`, then restore and rebuild
-all consumers. Public type names and tween behavior are unchanged. This is a
-source and binary breaking rename; no legacy namespace shim is included.
+## Documentation
 
 The GDScript addon is planned separately and is not included in this package.
-Public documentation is being prepared in the repository's Astro/Starlight site.
-Until then, see the [repository README](https://github.com/outfox/godotweens#readme)
-for the C# API and examples. The repository URL retains its existing name until
-the GitHub rename is completed.
+Public documentation lives in the repository's Astro/Starlight site, with
+deployment pending. See the [documentation source](https://github.com/outfox/godotweens/tree/main/docs)
+or [repository README](https://github.com/outfox/godotweens#readme) for C# guides
+and examples.
 
 MIT licensed. Easing math and API inspiration come from Jeffrey Lanters'
 unity-tweens; the package includes the license and third-party notices.
