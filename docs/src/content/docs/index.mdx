@@ -4,7 +4,7 @@ template: splash
 description: Animate nodes, values, materials, and shader uniforms with reusable definitions and independent playback.
 hero:
   title: tweens.gd
-  tagline: Define a motion once. Play it wherever you need it.
+  tagline: Coding animations doesn't have to suck.
   actions:
     - text: Start with C#
       link: /csharp/quickstart/
@@ -15,12 +15,17 @@ hero:
 ---
 
 import { Tabs, TabItem } from '@astrojs/starlight/components';
-import Feature from '../../components/Feature.astro';
-import FeatureReel from '../../components/FeatureReel.astro';
+import ReauthorDemo from '../../components/ReauthorDemo.astro';
 
-Animate positions, colors, UI, audio, materials, and shader uniforms with typed
-tween definitions. Each playback has its own handle for pausing, cancellation,
-and completion. Compose C# animations with `async`/`await`.
+## Structured, readable, reusable
+
+A tween in tweens.gd is a definition: one object that names the property,
+endpoints, timing, and easing together. It reads top to bottom, you can name it
+and start it from any number of places, and you change it in one spot when the
+motion should feel different. Refactoring and reauthoring motion become ordinary
+code edits instead of a hunt through scattered call chains.
+
+<ReauthorDemo />
 
 ## Choose your language
 
@@ -35,12 +40,15 @@ is pending.
 using Godot;
 using tweens.gd;
 
-// sprite is an in-tree Sprite2D. Run on Godot's main thread.
-var movement = sprite.TweenPosition(new Vector2(400, 180), 0.6,
-    options => options.Ease = EaseType.CubicOut);
+var arrive = new Position2DTween
+{
+    To = new Vector2(400, 180),
+    Duration = 0.6,
+    Ease = EaseType.CubicOut,
+};
 
-var reason = await movement.Completion;
-if (reason == TweenCompletionReason.Completed)
+var movement = sprite.Tween(arrive);
+if (await movement.Completion == TweenCompletionReason.Completed)
     GD.Print("Arrived");
 ```
 
@@ -57,39 +65,3 @@ supported exports will be documented once implemented and tested.
 
   </TabItem>
 </Tabs>
-
-## Build an animation
-
-<FeatureReel>
-  <Feature title="Reuse definitions" art="reuse">
-    Keep the endpoints, easing, and timing together. Starting a tween snapshots
-    that definition into an independent playback.
-    [Understand definitions](/concepts/definitions/).
-  </Feature>
-  <Feature title="Control playback" art="control">
-    Pause, resume, cancel, and await completion. Node ownership stops work when
-    a scene leaves the tree.
-    [Control a C# tween](/csharp/playback/).
-  </Feature>
-  <Feature title="Animate Godot properties" art="properties">
-    Use typed adapters for transforms, UI, lights, audio, particles, and more.
-    [Browse the C# catalog](/csharp/nodes/).
-  </Feature>
-  <Feature title="Work with materials" art="materials">
-    Animate a shared resource or a per-instance shader uniform with explicit
-    ownership and restoration behavior.
-    [Explore material tweens](/csharp/materials/).
-  </Feature>
-</FeatureReel>
-
-## Compatibility
-
-The C# library targets **.NET 10 and GodotSharp 4.7.2**. The application supplies
-the engine; the package has no dependency on 2dog, native engine packages, or
-editor assemblies. See [compatibility and availability](/compatibility/) before
-choosing an engine or export target.
-
-The API design and easing math are inspired by Jeffrey Lanters'
-[unity-tweens](https://github.com/jeffreylanters/unity-tweens).
-tweens.gd is MIT licensed, with upstream attribution preserved in the
-[third-party notices](https://github.com/outfox/godotweens/blob/main/THIRD-PARTY-NOTICES.md).

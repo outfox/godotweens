@@ -4,8 +4,8 @@ description: Move and fade a Sprite2D with a complete, cancellation-aware exampl
 ---
 
 [Install the library](/csharp/installation/), create a scene with a `Sprite2D`,
-give it a texture, and attach this script as `MoveAndFade.cs`. Run the scene in
-your matching Godot host.
+give it a texture, and attach this script as `MoveAndFade.cs`. Play the scene in
+Godot.
 
 ```csharp title="MoveAndFade.cs"
 using Godot;
@@ -32,13 +32,20 @@ public partial class MoveAndFade : Sprite2D
 }
 ```
 
+The move uses the structured style that tweens.gd is built around: a definition
+object keeps the property, endpoints, timing, and easing together. It reads top
+to bottom, and you can name it, store it in a field, and start it from as many
+places as you like. Change the definition once and every later start follows.
+The fade uses a shorthand extension method, which builds and starts a definition
+in one call. Use it for one-off motion; prefer definitions for anything you reuse
+or expect to tune.
+
 The movement captures the current position as `From`. When it finishes normally,
 the sprite fades out. Leaving the tree cancels its playback; checking the
 completion reason prevents the fade from starting after cancellation.
 
 The first tween installs one internal runner under the scene-tree root through
-deferred attachment. No autoload, scene script file, or custom host-loop code is
-required. Start from `_Ready` or later on Godot's main thread.
+deferred attachment. No autoload, extra script, or custom main loop is required. Start from `_Ready` or later on Godot's main thread.
 
 ## Keep a handle to control it
 

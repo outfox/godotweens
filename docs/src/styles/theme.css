@@ -469,7 +469,7 @@ h4,
 :root[data-has-hero] {
 	--sl-content-width: 72rem;
 }
-[data-has-hero] .sl-markdown-content > :is(p, div:not(.reel), .expressive-code, starlight-tabs) {
+[data-has-hero] .sl-markdown-content > :is(p, div, .expressive-code, starlight-tabs) {
 	max-width: 46rem;
 }
 

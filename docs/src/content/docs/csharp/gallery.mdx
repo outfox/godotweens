@@ -5,11 +5,7 @@ description: Run eight pages and 32 tween examples, from squash and stretch to s
 
 import GalleryReel from '../../../components/GalleryReel.astro';
 
-Run the interactive testbed:
-
-~~~powershell
-dotnet run --project testbed/testbed.2dog
-~~~
+Open `testbed/project.godot` in Godot 4.7 with .NET support and press Play.
 
 The gallery contains eight pages and 32 examples. Each page is a separate C# Control subtree; only the current page is instantiated. Small SubViewports isolate the cameras, lights and 3D worlds in individual cards.
 
@@ -37,25 +33,7 @@ The gallery contains eight pages and 32 examples. Each page is a separate C# Con
 
 The material page updates explicitly shared resources. The shader page contrasts shared material uniforms with node-owned instance uniforms. Materials are configured for transparency/emission before playback; the tween library does not enable those features itself.
 
-The default window is 1280 × 900, with canvas scaling and a scrollable page area. Shaders require a real graphics context; headless runs show an explanatory card on that page. No downloaded assets are needed: geometry, checker patterns, light textures and shaders are created by the examples.
-
-## Navigate and capture from the desktop host
-
-Page indices are zero-based (0–7):
-
-~~~powershell
-# Open directly on the material page.
-dotnet run --project testbed/testbed.2dog -- --gallery-page 6
-
-# Capture every page and quit, using a deterministic frame step.
-dotnet run --project testbed/testbed.2dog -- --gallery-snapshots artifacts/gallery --rendering-method gl_compatibility --fixed-fps 60
-
-# The existing single-page screenshot command also accepts a page selection.
-dotnet run --project testbed/testbed.2dog -- --gallery-page 7 --snapshot artifacts/shaders.png --rendering-method gl_compatibility
-~~~
-
-The gallery capture writes 01.png through 08.png after 60 frames per page.
-
+The default window is 1280 × 900, with canvas scaling and a scrollable page area. No downloaded assets are needed: geometry, checker patterns, light textures and shaders are created by the examples.
 
 ## Explore the source
 

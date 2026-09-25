@@ -1,0 +1,258 @@
+---
+// One named definition, three call sites. Reauthoring the definition changes every future start.
+const eases = ['ElasticOut', 'BackOut', 'BounceOut', 'CubicOut'];
+const durations = ['0.3', '0.6', '1.0'];
+const sites = [
+	{ name: 'coin', shape: 'coin' },
+	{ name: 'gem', shape: 'gem' },
+	{ name: 'sprite', shape: 'sprite' },
+];
+---
+
+<div class="tw-widget rd not-content" data-reauthor>
+	<div class="def">
+		<pre class="code" aria-label="Definition"><span class="kw">static readonly</span> <span class="ty">Scale2DTween</span> Pop = <span class="kw">new</span>()
+{'{'}
+    From = Vector2.Zero,
+    To = Vector2.One,
+    Duration = <span class="val" data-duration-out>0.6</span>,
+    Ease = EaseType.<span class="val" data-ease-out>ElasticOut</span>,
+{'}'};</pre>
+		<div class="edit">
+			<p class="edit-label">Reauthor the definition</p>
+			<div class="chips" role="group" aria-label="Ease">
+				{
+					eases.map((e, i) => (
+						<button type="button" class="chip" data-ease={e} aria-pressed={i === 0 ? 'true' : 'false'}>
+							{e}
+						</button>
+					))
+				}
+			</div>
+			<div class="chips" role="group" aria-label="Duration">
+				{
+					durations.map((d) => (
+						<button type="button" class="chip" data-duration={d} aria-pressed={d === '0.6' ? 'true' : 'false'}>
+							{d} s
+						</button>
+					))
+				}
+			</div>
+		</div>
+	</div>
+
+	<div class="sites">
+		{
+			sites.map((s) => (
+				<div class="site" data-site>
+					<div class="stage">
+						<span class:list={['thing', s.shape]} data-thing />
+					</div>
+					<code class="call">
+						{s.name}.<wbr />Tween(Pop);
+					</code>
+				</div>
+			))
+		}
+	</div>
+	<p class="sr-only" aria-live="polite" data-announce></p>
+</div>
+
+<script>
+	import { EASES, type EaseName, loop } from '../scripts/motion';
+
+	const STAGGER = 0.22;
+	const REST = 1.1;
+
+	for (const root of document.querySelectorAll<HTMLElement>('[data-reauthor]')) {
+		const things = [...root.querySelectorAll<HTMLElement>('[data-thing]')];
+		const easeOut = root.querySelector<HTMLElement>('[data-ease-out]')!;
+		const durationOut = root.querySelector<HTMLElement>('[data-duration-out]')!;
+		const announce = root.querySelector<HTMLElement>('[data-announce]')!;
+		const easeChips = [...root.querySelectorAll<HTMLButtonElement>('[data-ease]')];
+		const durationChips = [...root.querySelectorAll<HTMLButtonElement>('[data-duration]')];
+
+		let ease: EaseName = 'ElasticOut';
+		let duration = 0.6;
+		// Each call site snapshots the definition when it starts, as the library does.
+		const snapshots = things.map(() => ({ ease, duration }));
+		let cycleStart = 0;
+
+		const flash = (el: HTMLElement) =>
+			el.animate([{ background: 'color-mix(in oklab, var(--tw-amber) 45%, transparent)' }, { background: 'transparent' }], {
+				duration: 900,
+				easing: 'ease-out',
+			});
+
+		const press = (chips: HTMLButtonElement[], chosen: HTMLButtonElement) =>
+			chips.forEach((c) => c.setAttribute('aria-pressed', String(c === chosen)));
+
+		easeChips.forEach((chip) =>
+			chip.addEventListener('click', () => {
+				ease = chip.dataset.ease as EaseName;
+				easeOut.textContent = ease;
+				press(easeChips, chip);
+				flash(easeOut);
+				announce.textContent = `Ease set to ${ease}. Every call site uses it on its next start.`;
+			}),
+		);
+		durationChips.forEach((chip) =>
+			chip.addEventListener('click', () => {
+				duration = Number(chip.dataset.duration);
+				durationOut.textContent = chip.dataset.duration!;
+				press(durationChips, chip);
+				flash(durationOut);
+				announce.textContent = `Duration set to ${chip.dataset.duration} seconds. Every call site uses it on its next start.`;
+			}),
+		);
+
+		loop(
+			root,
+			(t) => {
+				const cycle = Math.max(...snapshots.map((s) => s.duration)) + STAGGER * (things.length - 1) + REST;
+				if (t - cycleStart >= cycle) {
+					cycleStart = t;
+					snapshots.forEach((s) => Object.assign(s, { ease, duration }));
+				}
+				const local = t - cycleStart;
+				things.forEach((el, i) => {
+					const s = snapshots[i];
+					const p = Math.min(1, Math.max(0, (local - i * STAGGER) / s.duration));
+					el.style.scale = String(EASES[s.ease](p).toFixed(3));
+				});
+			},
+			// Reduced motion shows the settled frame of the first cycle.
+			2,
+		);
+	}
+</script>
+
+<style>
+	.rd {
+		display: grid;
+		gap: 1.25rem;
+		padding: 1.25rem;
+	}
+	.def {
+		display: grid;
+		gap: 1rem;
+	}
+	@media (min-width: 40rem) {
+		.def {
+			grid-template-columns: minmax(0, 1fr) minmax(0, 14rem);
+			align-items: center;
+		}
+	}
+	.code {
+		margin: 0;
+		padding: 0.9rem 1rem;
+		border-radius: 0.8rem;
+		background: color-mix(in oklab, var(--tw-bg) 75%, transparent);
+		font: 0.8rem/1.75 var(--sl-font-mono);
+		color: var(--sl-color-white);
+		overflow-x: auto;
+	}
+	.kw {
+		color: var(--tw-blue-ink);
+	}
+	.ty {
+		color: var(--tw-mint-ink);
+	}
+	.val {
+		display: inline-block;
+		padding-inline: 0.2rem;
+		margin-inline: -0.2rem;
+		border-radius: 0.25rem;
+		color: var(--tw-amber-ink);
+		font-weight: 700;
+	}
+	.edit {
+		display: grid;
+		gap: 0.5rem;
+	}
+	.edit-label {
+		margin: 0;
+		font-size: var(--sl-text-xs);
+		color: var(--tw-muted);
+	}
+	.chips {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.35rem;
+	}
+	.chip {
+		all: unset;
+		cursor: pointer;
+		padding: 0.25rem 0.65rem;
+		border-radius: 999px;
+		font: 0.72rem var(--sl-font-mono);
+		color: var(--tw-soft);
+		background: var(--tw-raised);
+		transition:
+			translate 0.35s var(--ease-back-out),
+			background-color 0.2s,
+			color 0.2s;
+	}
+	.chip:hover {
+		translate: 0 -2px;
+		color: var(--sl-color-white);
+	}
+	.chip:focus-visible {
+		outline: 2px solid var(--tw-mint);
+		outline-offset: 2px;
+	}
+	.chip[aria-pressed='true'] {
+		background: var(--tw-amber);
+		color: #231705;
+	}
+	.sites {
+		display: grid;
+		grid-template-columns: repeat(3, minmax(0, 1fr));
+		gap: 0.75rem;
+	}
+	.site {
+		display: grid;
+		gap: 0.5rem;
+		justify-items: center;
+	}
+	.stage {
+		display: grid;
+		place-items: center;
+		width: 100%;
+		height: 7rem;
+		border-radius: 0.8rem;
+		background: var(--tw-surface);
+		overflow: hidden;
+	}
+	.thing {
+		display: block;
+		width: 2.8rem;
+		height: 2.8rem;
+		scale: 0;
+	}
+	.coin {
+		border-radius: 50%;
+		background: radial-gradient(circle at 35% 30%, #fff8 0 12%, transparent 35%), var(--tw-amber);
+		box-shadow: inset 0 0 0 4px color-mix(in oklab, var(--tw-amber) 70%, #000);
+	}
+	.gem {
+		border-radius: 0.4rem;
+		rotate: 45deg;
+		background: linear-gradient(135deg, var(--tw-blue), color-mix(in oklab, var(--tw-blue) 55%, var(--tw-stage)));
+	}
+	.sprite {
+		border-radius: 0.7rem;
+		background: var(--tw-mint);
+	}
+	.call {
+		max-width: 100%;
+		font-size: 0.72rem;
+		color: var(--tw-soft);
+		text-align: center;
+	}
+	@media (prefers-reduced-motion: reduce) {
+		.thing {
+			scale: 1;
+		}
+	}
+</style>

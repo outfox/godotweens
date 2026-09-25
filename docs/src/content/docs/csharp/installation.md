@@ -5,7 +5,7 @@ description: Reference the C# project or build and consume its NuGet package loc
 
 The library targets .NET 10 and GodotSharp 4.7.2. Your application supplies a
 matching Godot engine. Check [compatibility](/compatibility/) first; the included
-2dog testbed is the validated way to try the library from this repository.
+gallery project is the quickest way to see the library in action.
 
 The package ID and C# namespace are both lowercase **`tweens.gd`**. Public NuGet
 publication is pending; use either path below now.
@@ -19,7 +19,7 @@ adjusting the path to your checkout:
 dotnet add path/to/YourGame.csproj reference path/to/tweens.gd/csharp/tweens.gd.csproj
 ```
 
-This is how the included testbed consumes the library. Source lives under
+This is how the included gallery project consumes the library. Source lives under
 `csharp/src/`; the root solution is `tweens.gd.slnx`.
 
 ## Build a local NuGet package
@@ -57,14 +57,7 @@ Use a project reference or a package reference, not both.
 
 ## Run the included gallery
 
-From the repository root:
-
-```powershell
-dotnet build tweens.gd.slnx
-dotnet run --project testbed/testbed.2dog
-```
-
-The testbed brings its engine through NuGet. The library itself has no 2dog,
-native engine, or editor assembly dependency.
+Open `testbed/project.godot` in Godot 4.7 with .NET support and press Play.
+The project references the library source directly, so Godot builds both.
 
 Continue with the [C# quickstart](/csharp/quickstart/).

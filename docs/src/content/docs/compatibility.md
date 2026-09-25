@@ -19,17 +19,16 @@ source or use the locally packed artifact.
 | --- | --- |
 | Target framework | `net10.0` |
 | Library bindings | GodotSharp 4.7.2 |
-| Included testbed | 2dog 4.7.2.91, using the versions in `testbed/Directory.Build.props` |
-| Windows | CI builds/tests the C# solution and runs the headless testbed |
+| Gallery project | Godot 4.7.2 with .NET support |
+| Windows | CI builds and tests the C# solution and the gallery |
 | Rendering | Gallery and dedicated shader/material tests use a real graphics context |
 | Other operating systems | Not certified by the current CI |
 | Other Godot versions | Not validated |
 | Trimmed, AOT, mobile, and web exports | Not validated; package metadata is not an export support guarantee |
 
-Your application supplies the engine. Use bindings and an engine that match; do
-not assume a similarly numbered stock editor is interchangeable with the testbed
-host. The library depends only on GodotSharp. Its source generator is a private
-build dependency, and 2dog is used by the testbed rather than the library package.
+Your application supplies the engine. Use a Godot .NET engine that matches the
+GodotSharp bindings. The library depends only on GodotSharp; its source generator
+is a private build dependency.
 
 ## Rendering requirements
 

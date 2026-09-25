@@ -9,6 +9,9 @@ A **definition** describes endpoints, timing, easing, and callbacks. A **playbac
 instance** is one running use of that definition on a target. The behavior below
 is implemented in C# and is the intended model for the planned GDScript addon.
 
+Definitions are the heart of tweens.gd's design. Motion becomes structured data
+you can read at a glance, reuse across targets, and reauthor in one place.
+
 ## Reuse a definition
 
 In this C# example, `sprite` is an in-tree `Sprite2D` and `label` an in-tree

@@ -52,11 +52,9 @@ const ghosts = Array.from({ length: 11 }, (_, i) => i);
 
 	<figure class="stage" data-stage>
 		<figcaption class="code" aria-live="polite">
-			<span class="t-var">sprite</span>.<span class="t-fn">TweenPosition</span>(to, <span class="t-num">0.8</span>,{" "}
-			<span class="t-var">o</span> =&gt; <span class="t-var">o</span>.Ease = EaseType.<span
-				class="t-ease"
-				data-ease-label>{eases[0]}</span
-			>);
+			<span class="t-kw">var</span> <span class="t-var">hop</span> = <span class="t-kw">new</span> <span class="t-ty">Position2DTween</span><br />
+			<span class="indent">{'{'} To = to, Duration = <span class="t-num">0.9</span>, Ease = EaseType.<span class="t-ease" data-ease-label>{eases[0]}</span> {'}'};</span><br />
+			<span class="t-var">sprite</span>.<span class="t-fn">Tween</span>(<span class="t-var">hop</span>);
 		</figcaption>
 
 		<svg class="lane" viewBox="0 0 400 84" aria-hidden="true">
@@ -327,8 +325,18 @@ const ghosts = Array.from({ length: 11 }, (_, i) => i);
 	.t-var {
 		color: var(--sl-color-white);
 	}
-	.t-fn {
+	.indent {
+		display: inline-block;
+		padding-left: 4ch;
+	}
+	.t-kw {
 		color: var(--tw-blue-ink);
+	}
+	.t-ty {
+		color: var(--tw-mint-ink);
+	}
+	.t-fn {
+		color: var(--tw-amber-ink);
 	}
 	.t-num {
 		color: var(--tw-amber-ink);
