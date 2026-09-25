@@ -7,8 +7,11 @@ import Default from '@astrojs/starlight/components/MarkdownContent.astro';
 <script>
 	import { onceVisible } from '../../scripts/motion';
 
-	document.documentElement.classList.add('tw-js');
-	for (const heading of document.querySelectorAll('.sl-markdown-content .sl-heading-wrapper.level-h2')) {
-		onceVisible(heading, () => heading.classList.add('is-in'), 0.6);
+	const headings = [...document.querySelectorAll('.sl-markdown-content .sl-heading-wrapper.level-h2')];
+	for (const heading of headings) {
+		if (heading.getBoundingClientRect().top < innerHeight) heading.classList.add('is-in');
+		else onceVisible(heading, () => heading.classList.add('is-in'), 0.6);
 	}
+	// Enable the transition only after the settled state has painted, so nothing animates on load.
+	requestAnimationFrame(() => requestAnimationFrame(() => document.documentElement.classList.add('tw-js')));
 </script>

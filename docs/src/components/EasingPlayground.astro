@@ -13,24 +13,26 @@ const ghosts = Array.from({ length: 11 }, (_, i) => i);
 	<div class="preview">
 		<div class="graph">
 			<svg viewBox="0 0 320 200" aria-hidden="true">
-				<path class="grid" d="M0 40H320M0 160H320M0 100H320"></path>
-				<text class="axis-label" x="4" y="34">1</text>
-				<text class="axis-label" x="4" y="154">0</text>
-				<path class="curve" data-curve d={curvePath('BackOut', 320, 200, 40)}></path>
+				<path class="grid" d="M0 50H320M0 150H320"></path>
+				<text class="axis-label" x="4" y="44">1</text>
+				<text class="axis-label" x="316" y="144" text-anchor="end">0</text>
+				<path class="curve" data-curve d={curvePath('BackOut', 320, 200, 50)}></path>
 				<line class="now" data-now x1="0" x2="0" y1="0" y2="200"></line>
 				<circle class="tracer" data-tracer r="7" cx="0" cy="160"></circle>
 			</svg>
 			<svg class="lane" viewBox="0 0 320 44" aria-hidden="true">
-				<line class="rail" x1="14" x2="306" y1="22" y2="22"></line>
+				<rect class="zone" x="4" y="8" width="64" height="28" rx="14"></rect>
+				<rect class="zone" x="252" y="8" width="64" height="28" rx="14"></rect>
+				<line class="rail" x1="76" x2="242" y1="22" y2="22"></line>
 				<g data-ghosts>{ghosts.map(() => <circle class="ghost" cy="22" r="9" />)}</g>
-				<g data-ball transform="translate(14 22)">
+				<g data-ball transform="translate(76 22)">
 					<circle class="ball" r="11"></circle>
 				</g>
 			</svg>
 		</div>
 		<div class="side">
 			<p class="name"><span class="ns">EaseType.</span><span data-name>BackOut</span></p>
-			<p class="hint">Onion-skin rings mark equal slices of time. Wide gaps are fast; bunched rings are slow.</p>
+			<p class="hint">Onion-skin rings mark equal slices of time. Wide gaps are fast; bunched rings are slow. Dashed zones catch overshoot.</p>
 			<label class="tw-field">
 				<span>Duration <output data-duration-out>0.8 s</output></span>
 				<input type="range" min="0.2" max="3" step="0.1" value="0.8" data-duration />
@@ -103,8 +105,9 @@ const ghosts = Array.from({ length: 11 }, (_, i) => i);
 		let playing: TweenHandle | undefined;
 		let racing: TweenHandle | undefined;
 
-		const laneX = (w: number) => 14 + w * 292;
-		const graphY = (w: number) => 160 - w * 120;
+		// Room for undershoot and overshoot down to -0.4 and up to 1.4 (the elastic extremes).
+		const laneX = (w: number) => 76 + w * 166;
+		const graphY = (w: number) => 150 - w * 100;
 
 		const draw = (p: number) => {
 			const w = EASES[selected](p);
@@ -132,7 +135,7 @@ const ghosts = Array.from({ length: 11 }, (_, i) => i);
 			selected = name;
 			nameOut.textContent = name;
 			announce.textContent = `${name} selected`;
-			curve.setAttribute('d', curvePath(name, 320, 200, 40));
+			curve.setAttribute('d', curvePath(name, 320, 200, 50));
 			curve.animate([{ opacity: 0.2 }, { opacity: 1 }], { duration: 300 });
 			tiles.forEach((t) => t.setAttribute('aria-pressed', String(t.dataset.ease === name)));
 			place();
@@ -194,7 +197,7 @@ const ghosts = Array.from({ length: 11 }, (_, i) => i);
 	.graph svg {
 		width: 100%;
 		display: block;
-		overflow: visible;
+		overflow: hidden;
 	}
 	.grid {
 		stroke: var(--tw-grid);
@@ -223,6 +226,11 @@ const ghosts = Array.from({ length: 11 }, (_, i) => i);
 	}
 	.lane {
 		margin-top: 0.5rem;
+	}
+	.zone {
+		fill: none;
+		stroke: color-mix(in oklab, var(--tw-amber) 30%, transparent);
+		stroke-dasharray: 3 5;
 	}
 	.rail {
 		stroke: var(--tw-outline);

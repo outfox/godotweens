@@ -60,29 +60,29 @@ const ghosts = Array.from({ length: 11 }, (_, i) => i);
 		</figcaption>
 
 		<svg class="lane" viewBox="0 0 400 84" aria-hidden="true">
-			<line class="rail" x1="36" y1="46" x2="364" y2="46"></line>
-			<circle class="endpoint" cx="36" cy="46" r="5"></circle>
-			<circle class="endpoint" cx="364" cy="46" r="5"></circle>
-			<text class="endlabel" x="36" y="80">From</text>
-			<text class="endlabel" x="364" y="80">To</text>
+			<rect class="overshoot" x="286" y="26" width="104" height="40" rx="20"></rect>
+			<text class="endlabel faint" x="338" y="80">overshoot</text>
+			<line class="rail" x1="30" y1="46" x2="280" y2="46"></line>
+			<circle class="endpoint" cx="30" cy="46" r="5"></circle>
+			<circle class="endpoint" cx="280" cy="46" r="5"></circle>
+			<text class="endlabel" x="30" y="80">From</text>
+			<text class="endlabel" x="280" y="80">To</text>
 			<g data-ghosts>
-				{ghosts.map(() => <circle class="ghost" cy="46" r="13" />)}
+				{ghosts.map(() => <circle class="ghost" cy="46" r="12" />)}
 			</g>
-			<g data-ball transform="translate(36 46)">
+			<g data-ball transform="translate(30 46)">
 				<g data-squash>
-					<circle class="ball" r="15"></circle>
+					<circle class="ball" r="14"></circle>
 					<circle class="shine" cx="-5" cy="-5" r="4"></circle>
 				</g>
 			</g>
 		</svg>
 
 		<div class="plot">
-			<svg viewBox="0 0 240 120" aria-hidden="true">
-				<path class="grid" d="M0 100H240M0 20H240M0 60H240"></path>
-				<g data-plot-flip>
-					<path class="curve" data-curve d=""></path>
-					<circle class="tracer" data-tracer r="5" cx="0" cy="100"></circle>
-				</g>
+			<svg viewBox="0 0 240 114" aria-hidden="true">
+				<path class="grid" d="M0 106H240M0 36H240"></path>
+				<path class="curve" data-curve d=""></path>
+				<circle class="tracer" data-tracer r="5" cx="0" cy="106"></circle>
 			</svg>
 			<div class="readout">
 				<span class="tw-chip"><span class="k">progress</span> <span data-progress>0.00</span></span>
@@ -103,7 +103,24 @@ const ghosts = Array.from({ length: 11 }, (_, i) => i);
 </div>
 
 <script>
-	import { EASES, type EaseName, curvePath, loop, reducedMotion } from '../../scripts/motion';
+	import { EASES, type EaseName, loop, reducedMotion } from '../../scripts/motion';
+
+	// Lane and plot leave room for the largest overshoot among the presets (ElasticOut peaks near 1.37).
+	const FROM = 30;
+	const TO = 280;
+	const HOLD = 0.25;
+	const LEG = 0.9;
+	const REST = 0.8;
+	const REWIND = 0.35;
+	const CYCLE = HOLD + LEG + REST + REWIND;
+	const laneX = (w: number) => FROM + (TO - FROM) * w;
+	const plotY = (w: number) => 106 - w * 70;
+
+	const plotPath = (name: EaseName) => {
+		let d = '';
+		for (let i = 0; i <= 96; i++) d += `${i ? 'L' : 'M'}${(i * 2.5).toFixed(1)} ${plotY(EASES[name](i / 96)).toFixed(2)}`;
+		return d;
+	};
 
 	for (const stage of document.querySelectorAll<HTMLElement>('[data-stage]')) {
 		const $ = <T extends Element>(s: string) => stage.querySelector<T>(s)!;
@@ -113,76 +130,66 @@ const ghosts = Array.from({ length: 11 }, (_, i) => i);
 		const ghosts = [...stage.querySelectorAll<SVGCircleElement>('.ghost')];
 		const curve = $<SVGPathElement>('[data-curve]');
 		const tracer = $<SVGCircleElement>('[data-tracer]');
-		const flip = $<SVGGElement>('[data-plot-flip]');
 		const progressOut = $<HTMLElement>('[data-progress]');
 		const weightOut = $<HTMLElement>('[data-weight]');
 		const picks = [...stage.querySelectorAll<HTMLButtonElement>('.pick')];
+		const names = picks.map((p) => p.dataset.ease as EaseName);
 
-		const FROM = 36;
-		const TO = 364;
-		const HOLD = 0.2;
-		const LEG = 0.8;
-		const REST = 0.7;
-		const CYCLE = HOLD + LEG + REST;
-		const plotY = (w: number) => 100 - w * 80;
-
-		let names = picks.map((p) => p.dataset.ease as EaseName);
 		let index = 0;
 		let auto = true;
-		let legStart = 0;
-		let leg = 0;
+		let now = 0;
+		let cycleStart = 0;
+		let rewindFrom = TO;
 		let lastX = FROM;
 
 		const setEase = (i: number) => {
 			index = i;
-			const name = names[index];
-			label.textContent = name;
-			label.animate(
-				[
-					{ transform: 'translateY(-0.6em)', opacity: 0 },
-					{ transform: 'none', opacity: 1 },
-				],
-				{ duration: 420, easing: 'cubic-bezier(0.34, 1.56, 0.64, 1)' },
-			);
-			curve.setAttribute('d', curvePath(name, 240, 120, 20));
-			picks.forEach((p, k) => p.setAttribute('aria-pressed', String(k === index)));
+			label.textContent = names[i];
+			curve.setAttribute('d', plotPath(names[i]));
+			picks.forEach((p, k) => p.setAttribute('aria-pressed', String(k === i)));
+			for (const g of ghosts) g.style.opacity = '0';
 		};
 
 		const frame = (t: number) => {
-			let local = t - legStart;
+			now = t;
+			let local = t - cycleStart;
 			if (local >= CYCLE) {
-				legStart = t;
+				cycleStart = t;
 				local = 0;
-				leg++;
-				if (auto && leg % 2 === 0) setEase((index + 1) % names.length);
-				for (const g of ghosts) g.style.opacity = '0';
+				if (auto) setEase((index + 1) % names.length);
 			}
-			const forward = leg % 2 === 0;
-			const p = Math.min(1, Math.max(0, (local - HOLD) / LEG));
 			const name = names[index];
-			const w = EASES[name](forward ? p : 1 - p);
-			const x = FROM + (TO - FROM) * w;
+			const p = Math.min(1, Math.max(0, (local - HOLD) / LEG));
+			const w = EASES[name](p);
+			let x = laneX(w);
+
+			// After resting at the end, the ball slides home quickly and the onion skin clears.
+			const r = (local - HOLD - LEG - REST) / REWIND;
+			if (r > 0) {
+				if (r < 0.05) for (const g of ghosts) g.style.opacity = '0';
+				x = rewindFrom + (FROM - rewindFrom) * EASES.CubicInOut(Math.min(1, r));
+			} else {
+				rewindFrom = x;
+				// Onion skin: one ring per tenth of the leg's time.
+				ghosts.forEach((g, k) => {
+					const gp = k / (ghosts.length - 1);
+					if (p >= gp && g.style.opacity === '0') {
+						g.setAttribute('cx', laneX(EASES[name](gp)).toFixed(2));
+						g.style.opacity = '1';
+					}
+				});
+			}
 
 			// Squash and stretch from horizontal speed, preserving area.
-			const speed = Math.abs(x - lastX);
+			const stretch = 1 + Math.min(0.45, Math.abs(x - lastX) / 24);
 			lastX = x;
-			const stretch = 1 + Math.min(0.55, speed / 22);
 			ball.setAttribute('transform', `translate(${x.toFixed(2)} 46)`);
 			squash.setAttribute('transform', `scale(${stretch.toFixed(3)} ${(1 / stretch).toFixed(3)})`);
 
-			// Onion skin: one ghost per tenth of the leg's time, left where the ball was.
-			ghosts.forEach((g, k) => {
-				const gp = k / (ghosts.length - 1);
-				if (p >= gp && g.style.opacity === '0') {
-					g.setAttribute('cx', String(FROM + (TO - FROM) * EASES[name](forward ? gp : 1 - gp)));
-					g.style.opacity = '1';
-				}
-			});
-
-			flip.setAttribute('transform', forward ? '' : 'translate(240 0) scale(-1 1)');
-			tracer.setAttribute('cx', String(p * 240));
-			tracer.setAttribute('cy', String(plotY(EASES[name](p)).toFixed(2)));
-			progressOut.textContent = (forward ? p : 1 - p).toFixed(2);
+			tracer.style.opacity = r > 0 ? '0' : '1';
+			tracer.setAttribute('cx', (p * 240).toFixed(2));
+			tracer.setAttribute('cy', plotY(w).toFixed(2));
+			progressOut.textContent = p.toFixed(2);
 			weightOut.textContent = w.toFixed(2);
 		};
 
@@ -190,21 +197,16 @@ const ghosts = Array.from({ length: 11 }, (_, i) => i);
 			p.addEventListener('click', () => {
 				auto = false;
 				setEase(k);
+				// Restart the leg from From so the new curve never starts mid-flight.
+				cycleStart = now;
+				lastX = FROM;
+				if (reducedMotion()) frame(HOLD + LEG);
 			}),
 		);
 
-		for (const g of ghosts) g.style.opacity = '0';
 		setEase(0);
-		if (reducedMotion()) {
-			// A still frame that still teaches: the full onion skin of one leg.
-			frame(HOLD + LEG);
-			picks.forEach((p) => p.addEventListener('click', () => {
-				for (const g of ghosts) g.style.opacity = '0';
-				frame(HOLD + LEG);
-			}));
-		} else {
-			loop(stage, frame);
-		}
+		if (reducedMotion()) frame(HOLD + LEG);
+		else loop(stage, frame);
 	}
 </script>
 
@@ -244,10 +246,11 @@ const ghosts = Array.from({ length: 11 }, (_, i) => i);
 	.ch {
 		display: inline-block;
 		transform-origin: 50% 100%;
-		animation:
-			drop 0.9s var(--ease-bounce-out) both,
-			squash 0.9s ease-out both;
-		animation-delay: calc(0.1s + var(--i) * 55ms);
+	}
+	/* The wordmark waits for a hover, then each letter hops in turn. */
+	h1:hover .ch {
+		animation: hop 0.6s ease-out both;
+		animation-delay: calc(var(--i) * 45ms);
 	}
 	.ext {
 		color: var(--tw-mint-ink);
@@ -259,44 +262,23 @@ const ghosts = Array.from({ length: 11 }, (_, i) => i);
 		margin-inline: 0.04em 0.05em;
 		border-radius: 50%;
 		background: var(--tw-mint);
-		animation: dot-in 1.3s var(--ease-elastic-out) both;
-		animation-delay: calc(0.3s + var(--i) * 55ms);
+		transition: scale 0.5s var(--ease-elastic-out);
 	}
-	@keyframes drop {
-		from {
-			translate: 0 -1.1em;
-			opacity: 0;
-		}
-		10% {
-			opacity: 1;
-		}
-		to {
-			translate: 0 0;
-			opacity: 1;
-		}
+	h1:hover .dot {
+		scale: 1.35;
 	}
-	@keyframes squash {
+	@keyframes hop {
 		0% {
-			scale: 0.88 1.2;
+			translate: 0 0;
+			scale: 1.1 0.9;
 		}
-		35% {
-			scale: 1.14 0.84;
-		}
-		65% {
-			scale: 0.97 1.03;
+		30% {
+			translate: 0 -0.28em;
+			scale: 0.94 1.08;
 		}
 		100% {
-			scale: 1;
-		}
-	}
-	@keyframes dot-in {
-		from {
-			scale: 0;
-			translate: -1.5em 0;
-		}
-		to {
-			scale: 1;
 			translate: 0 0;
+			scale: 1;
 		}
 	}
 	.tagline {
@@ -358,7 +340,7 @@ const ghosts = Array.from({ length: 11 }, (_, i) => i);
 	}
 	.lane {
 		width: 100%;
-		overflow: visible;
+		overflow: hidden;
 		margin-top: 0.5rem;
 	}
 	.rail {
@@ -369,6 +351,16 @@ const ghosts = Array.from({ length: 11 }, (_, i) => i);
 	}
 	.endpoint {
 		fill: var(--tw-muted);
+	}
+	.overshoot {
+		fill: none;
+		stroke: color-mix(in oklab, var(--tw-amber) 35%, transparent);
+		stroke-dasharray: 3 5;
+	}
+	.endlabel.faint {
+		fill: var(--tw-amber-ink);
+		font-weight: 500;
+		opacity: 0.8;
 	}
 	.endlabel {
 		fill: var(--tw-muted);
@@ -401,7 +393,7 @@ const ghosts = Array.from({ length: 11 }, (_, i) => i);
 	.plot svg {
 		width: 100%;
 		max-height: 9rem;
-		overflow: visible;
+		overflow: hidden;
 	}
 	.plot .grid {
 		stroke: var(--tw-grid);
@@ -414,6 +406,7 @@ const ghosts = Array.from({ length: 11 }, (_, i) => i);
 		stroke-linecap: round;
 	}
 	.tracer {
+		transition: opacity 0.2s;
 		fill: var(--sl-color-white);
 		stroke: var(--tw-blue);
 		stroke-width: 3;
@@ -471,8 +464,7 @@ const ghosts = Array.from({ length: 11 }, (_, i) => i);
 		}
 	}
 	@media (prefers-reduced-motion: reduce) {
-		.ch,
-		.dot {
+		h1:hover .ch {
 			animation: none;
 		}
 	}

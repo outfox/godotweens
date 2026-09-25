@@ -8,7 +8,6 @@ give it a texture, and attach this script as `MoveAndFade.cs`. Run the scene in
 your matching Godot host.
 
 ```csharp title="MoveAndFade.cs"
-using System;
 using Godot;
 using tweens.gd;
 
@@ -16,25 +15,19 @@ public partial class MoveAndFade : Sprite2D
 {
     public override async void _Ready()
     {
-        try
+        var tween = new Position2DTween
         {
-            var movement = this.Tween(new Position2DTween
-            {
-                To = Position + new Vector2(240, 0),
-                Duration = 0.6,
-                Ease = EaseType.CubicOut,
-            });
+            To = Position + new Vector2(240, 0),
+            Duration = 0.6,
+            Ease = EaseType.CubicOut,
+        };
+        var movement = this.Tween(tween);
 
-            var reason = await movement.Completion;
-            if (reason != TweenCompletionReason.Completed)
-                return;
+        var reason = await movement.Completion;
+        if (reason != TweenCompletionReason.Completed)
+            return;
 
-            await this.TweenModulateAlpha(0, 0.3).Completion;
-        }
-        catch (Exception error)
-        {
-            GD.PushError(error.ToString());
-        }
+        await this.TweenModulateAlpha(0, 0.3).Completion;
     }
 }
 ```

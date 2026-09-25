@@ -19,7 +19,7 @@ const section: Section | undefined = id.startsWith('concepts/')
 					? 'dock'
 					: undefined;
 
-// Letters drop in one after another, like a staggered tween list.
+// Letters are split so a hover can ripple through them like a staggered tween list.
 let i = 0;
 const words = title.split(' ').map((word) => [...word].map((ch) => ({ ch, i: i++ })));
 ---
@@ -78,36 +78,23 @@ const words = title.split(' ').map((word) => [...word].map((ch) => ({ ch, i: i++
 	.ch {
 		display: inline-block;
 		transform-origin: 50% 100%;
-		animation:
-			ch-drop 0.7s var(--ease-bounce-out) both,
-			ch-squash 0.7s ease-out both;
-		animation-delay: calc(var(--i) * 22ms);
 	}
-	@keyframes ch-drop {
-		from {
-			translate: 0 -0.9em;
-			opacity: 0;
-		}
-		12% {
-			opacity: 1;
-		}
-		to {
-			translate: 0 0;
-			opacity: 1;
-		}
+	/* Titles sit still on load; hovering one sends a hop through its letters. */
+	h1:hover .ch {
+		animation: hop 0.6s ease-out both;
+		animation-delay: calc(var(--i) * 18ms);
 	}
-	@keyframes ch-squash {
+	@keyframes hop {
 		0% {
-			scale: 0.9 1.25;
+			translate: 0 0;
 		}
-		40% {
-			scale: 1.12 0.86;
-		}
-		70% {
-			scale: 0.97 1.04;
+		30% {
+			translate: 0 -0.18em;
+			scale: 0.96 1.06;
 		}
 		100% {
-			scale: 1 1;
+			translate: 0 0;
+			scale: 1;
 		}
 	}
 	.art {
@@ -125,7 +112,7 @@ const words = title.split(' ').map((word) => [...word].map((ch) => ({ ch, i: i++
 		}
 	}
 	@media (prefers-reduced-motion: reduce) {
-		.ch {
+		h1:hover .ch {
 			animation: none;
 		}
 	}

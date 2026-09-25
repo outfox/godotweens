@@ -1,0 +1,12 @@
+---
+import Default from '@astrojs/starlight/components/Head.astro';
+import display from '@fontsource-variable/bricolage-grotesque/files/bricolage-grotesque-latin-standard-normal.woff2?url';
+import body from '@fontsource-variable/figtree/files/figtree-latin-wght-normal.woff2?url';
+import mono from '@fontsource-variable/jetbrains-mono/files/jetbrains-mono-latin-wght-normal.woff2?url';
+
+// Preloading the Latin faces lets first paint use them, so text does not reflow when fonts swap in.
+const fonts = [display, body, mono];
+---
+
+<Default />
+{fonts.map((href) => <link rel="preload" href={href} as="font" type="font/woff2" crossorigin />)}
