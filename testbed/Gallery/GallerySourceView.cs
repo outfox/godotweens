@@ -18,11 +18,11 @@ public partial class GallerySourceView : VBoxContainer
 
     public override void _Ready()
     {
-        CustomMinimumSize = new Vector2(420, 420);
+        CustomMinimumSize = new Vector2(480, 320);
         SizeFlagsHorizontal = SizeFlags.ExpandFill;
         SizeFlagsVertical = SizeFlags.ExpandFill;
-        SizeFlagsStretchRatio = 1.6f;
-        AddThemeConstantOverride("separation", 10);
+        SizeFlagsStretchRatio = 1.35f;
+        AddThemeConstantOverride("separation", 8);
 
         var toolbar = this.Add(new HBoxContainer());
         files = toolbar.Add(new OptionButton { SizeFlagsHorizontal = SizeFlags.ExpandFill });
@@ -30,6 +30,14 @@ public partial class GallerySourceView : VBoxContainer
         files.ItemSelected += index => ShowFile((int)index);
         copy = toolbar.Add(new Button { Text = "Copy file", TooltipText = "Copy the complete source file" });
         copy.Pressed += () => { DisplayServer.ClipboardSet(Code.Text); copy.Text = "Copied!"; };
+        entry = toolbar.Add(new Button { Text = "Tween entry", TooltipText = "Jump to Animate(), where this example starts its tweens" });
+        entry.Pressed += JumpToTween;
+        var top = toolbar.Add(new Button { Text = "File start" });
+        top.Pressed += () => Jump(0);
+        var wrap = toolbar.Add(new CheckBox { Text = "Wrap", ButtonPressed = true });
+        wrap.Toggled += enabled => Code.WrapMode = enabled ? TextEdit.LineWrappingMode.Boundary : TextEdit.LineWrappingMode.None;
+        foreach (var control in toolbar.GetChildren())
+            if (control is Control item) item.AddThemeFontSizeOverride("font_size", 12);
 
         path = this.Add(GalleryTheme.Label("", 12, Palette.Muted));
         path.TextOverrunBehavior = TextServer.OverrunBehavior.TrimEllipsis;
@@ -43,7 +51,7 @@ public partial class GallerySourceView : VBoxContainer
         });
         var font = Own(GD.Load<FontFile>("res://Fonts/JetBrainsMono-Regular.ttf"));
         Code.AddThemeFontOverride("font", font);
-        Code.AddThemeFontSizeOverride("font_size", 13);
+        Code.AddThemeFontSizeOverride("font_size", 14);
         Code.AddThemeColorOverride("font_color", Palette.Soft);
         Code.AddThemeColorOverride("font_readonly_color", Palette.Soft);
         Code.AddThemeColorOverride("line_number_color", Palette.Muted);
@@ -58,14 +66,7 @@ public partial class GallerySourceView : VBoxContainer
         Code.AddThemeStyleboxOverride("focus", focus);
         Code.SyntaxHighlighter = Own(CreateHighlighter());
 
-        var actions = this.Add(new HBoxContainer());
-        entry = actions.Add(new Button { Text = "Tween entry", TooltipText = "Jump to Animate(), where this example starts its tweens" });
-        entry.Pressed += JumpToTween;
-        var top = actions.Add(new Button { Text = "File start" });
-        top.Pressed += () => Jump(0);
-        var wrap = actions.Add(new CheckBox { Text = "Wrap", ButtonPressed = true });
-        wrap.Toggled += enabled => Code.WrapMode = enabled ? TextEdit.LineWrappingMode.Boundary : TextEdit.LineWrappingMode.None;
-        this.Add(GalleryTheme.Label("Full source from this build · select text to copy", 12, Palette.Muted));
+        Code.TooltipText = "Full source from this build. Select text to copy, or drag the divider to resize the panes.";
     }
 
     public void ShowEffect(GalleryEffect effect)

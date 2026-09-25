@@ -23,8 +23,6 @@ public partial class TweenDemo : Control
         ("Materials", () => new MaterialsPage()),
         ("Shaders", () => new ShadersPage()),
     ];
-    private static readonly EaseType[] EaseChoices =
-        [EaseType.CubicInOut, EaseType.Linear, EaseType.SineInOut, EaseType.BackOut, EaseType.ElasticOut, EaseType.BounceOut];
 
     public static readonly string[] PageNames = Pages.Select(p => p.Name).ToArray();
 
@@ -33,9 +31,7 @@ public partial class TweenDemo : Control
     private VBoxContainer content = null!;
     private Label status = null!, durationLabel = null!;
     private Button pause = null!;
-    private OptionButton ease = null!;
     private HSlider duration = null!;
-    private CheckBox pingPong = null!;
     private GalleryPage? page;
     private bool paused;
     private int revision;
@@ -63,17 +59,16 @@ public partial class TweenDemo : Control
         var margin = new MarginContainer();
         AddChild(margin);
         margin.SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
-        foreach (var side in new[] { "left", "right", "top", "bottom" }) margin.AddThemeConstantOverride("margin_" + side, 24);
+        foreach (var side in new[] { "left", "right", "top", "bottom" }) margin.AddThemeConstantOverride("margin_" + side, 16);
 
         var layout = new VBoxContainer();
-        layout.AddThemeConstantOverride("separation", 14);
+        layout.AddThemeConstantOverride("separation", 10);
         margin.AddChild(layout);
         layout.AddChild(BuildHeader());
-        layout.AddChild(BuildSettings());
         layout.AddChild(new HSeparator());
 
         var body = new HBoxContainer { SizeFlagsVertical = SizeFlags.ExpandFill };
-        body.AddThemeConstantOverride("separation", 20);
+        body.AddThemeConstantOverride("separation", 16);
         layout.AddChild(body);
         body.AddChild(BuildSidebar());
         var scroll = new ScrollContainer
@@ -88,27 +83,22 @@ public partial class TweenDemo : Control
         layout.AddChild(BuildActions());
     }
 
-    private static HBoxContainer BuildHeader()
+    private HBoxContainer BuildHeader()
     {
         var header = new HBoxContainer();
-        var title = GalleryTheme.Label("tweens.gd / testbed", 30);
-        title.SizeFlagsHorizontal = SizeFlags.ExpandFill;
+        header.AddThemeConstantOverride("separation", 24);
+        var title = GalleryTheme.Label("tweens.gd / testbed", 22);
         header.AddChild(title);
-        header.AddChild(GalleryTheme.Label("C# / GODOT", 14, Palette.Mint));
+        var settings = BuildSettings();
+        settings.SizeFlagsHorizontal = SizeFlags.ExpandFill;
+        header.AddChild(settings);
         return header;
     }
 
     private HBoxContainer BuildSettings()
     {
         var settings = new HBoxContainer();
-        settings.AddThemeConstantOverride("separation", 14);
-
-        settings.AddChild(GalleryTheme.Label("Easing", 16, Palette.Muted));
-        ease = new OptionButton { CustomMinimumSize = new Vector2(180, 38) };
-        foreach (var choice in EaseChoices) ease.AddItem(choice.ToString(), (int)choice);
-        ease.ItemSelected += _ => RestartDemo();
-        settings.AddChild(ease);
-        settings.AddChild(new Control { CustomMinimumSize = new Vector2(8, 0) });
+        settings.AddThemeConstantOverride("separation", 10);
 
         settings.AddChild(GalleryTheme.Label("Leg duration", 16, Palette.Muted));
         durationLabel = GalleryTheme.Label("1.8 s", 16);
@@ -117,7 +107,7 @@ public partial class TweenDemo : Control
         duration = new HSlider
         {
             MinValue = 0.4, MaxValue = 4, Step = 0.1, Value = 1.8,
-            CustomMinimumSize = new Vector2(150, 38), SizeFlagsHorizontal = SizeFlags.ExpandFill,
+            CustomMinimumSize = new Vector2(120, 34), SizeFlagsHorizontal = SizeFlags.ExpandFill,
         };
         duration.ValueChanged += seconds =>
         {
@@ -126,15 +116,12 @@ public partial class TweenDemo : Control
         };
         settings.AddChild(duration);
 
-        pingPong = new CheckBox { Text = "Ping-pong", ButtonPressed = true };
-        pingPong.Toggled += _ => RestartDemo();
-        settings.AddChild(pingPong);
         return settings;
     }
 
     private VBoxContainer BuildSidebar()
     {
-        var sidebar = new VBoxContainer { CustomMinimumSize = new Vector2(214, 0) };
+        var sidebar = new VBoxContainer { CustomMinimumSize = new Vector2(194, 0) };
         sidebar.AddThemeConstantOverride("separation", 6);
         sidebar.AddChild(GalleryTheme.Label("EXAMPLES", 12, Palette.Muted));
 
@@ -150,13 +137,13 @@ public partial class TweenDemo : Control
             var button = new Button
             {
                 Text = $"{i + 1:00}  {PageNames[i]}", ToggleMode = true, FocusMode = FocusModeEnum.None,
-                Alignment = HorizontalAlignment.Left, CustomMinimumSize = new Vector2(214, 44),
+                Alignment = HorizontalAlignment.Left, CustomMinimumSize = new Vector2(194, 38),
             };
             button.AddThemeStyleboxOverride("normal", idle);
             button.AddThemeStyleboxOverride("hover", hover);
             button.AddThemeStyleboxOverride("pressed", selected);
             button.AddThemeStyleboxOverride("hover_pressed", selected);
-            button.AddThemeFontSizeOverride("font_size", 15);
+            button.AddThemeFontSizeOverride("font_size", 14);
             button.Pressed += () => SelectPage(index);
             sidebar.AddChild(button);
             navigation.Add(button);
@@ -183,7 +170,7 @@ public partial class TweenDemo : Control
 
     private static Button ActionButton(HBoxContainer row, string text, Action action)
     {
-        var button = new Button { Text = text, CustomMinimumSize = new Vector2(110, 40) };
+        var button = new Button { Text = text, CustomMinimumSize = new Vector2(100, 34) };
         button.Pressed += action;
         row.AddChild(button);
         return button;
@@ -213,7 +200,7 @@ public partial class TweenDemo : Control
         if (!IsInsideTree() || selection != revision || page is null) return;
         try
         {
-            page.Start(duration.Value, (EaseType)ease.GetSelectedId(), pingPong.ButtonPressed);
+            page.Start(duration.Value, EaseType.CubicInOut, pingPong: true);
             IsPlaying = true;
             paused = false;
             pause.Text = "Pause";
