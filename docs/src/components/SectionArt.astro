@@ -28,12 +28,25 @@ const { kind } = Astro.props;
 	{
 		kind === 'hop' && (
 			<>
-				<path class="trail" d="M28 76Q80 -4 132 76" />
+				<defs>
+					<mask id="hop-lit">
+						<path class="hop-mask" d="M28 69Q80 -11 132 69" pathLength="100" stroke-dashoffset="100">
+							<animate attributeName="stroke-dashoffset" dur="2.4s" repeatCount="indefinite" values="100;100;0;0;100;100" keyTimes="0;0.12;0.45;0.62;0.95;1" calcMode="spline" keySplines="0 0 1 1;0.45 0 0.55 1;0 0 1 1;0.45 0 0.55 1;0 0 1 1" />
+						</path>
+					</mask>
+				</defs>
 				<rect class="pad" x="12" y="80" width="32" height="6" rx="3" />
 				<rect class="pad" x="116" y="80" width="32" height="6" rx="3" />
-				<g class="hop-x">
-					<g class="hop-y">
-						<rect class="hopper" x="-11" y="-22" width="22" height="22" rx="6" />
+				<path class="trail" d="M28 69Q80 -11 132 69" />
+				<g>
+					<path class="trail lit" d="M28 69Q80 -11 132 69" mask="url(#hop-lit)" />
+					{/* One SMIL clock drives position, trail and squash; the box's bottom rides 11 units under the arc. */}
+					<g>
+						<animateMotion dur="2.4s" repeatCount="indefinite" path="M28 80Q80 0 132 80" keyPoints="0;0;1;1;0;0" keyTimes="0;0.12;0.45;0.62;0.95;1" calcMode="spline" keySplines="0 0 1 1;0.45 0 0.55 1;0 0 1 1;0.45 0 0.55 1;0 0 1 1" />
+						<g>
+							<animateTransform attributeName="transform" type="scale" dur="2.4s" repeatCount="indefinite" values="1 1;1 1;1.25 0.75;0.85 1.2;1 1;1 1;1.3 0.7;1 1;1 1;1.25 0.75;0.85 1.2;1 1;1 1;1.3 0.7;1 1" keyTimes="0;0.04;0.1;0.15;0.25;0.43;0.47;0.54;0.56;0.6;0.65;0.75;0.93;0.97;1" />
+							<rect class="hopper" x="-11" y="-22" width="22" height="22" rx="6" />
+						</g>
 					</g>
 				</g>
 			</>
@@ -71,12 +84,16 @@ const { kind } = Astro.props;
 			<>
 				<defs>
 					<mask id="sketch-reveal">
-						<path class="sketch-mask" d="M14 82C50 82 48 18 84 18S120 50 146 26" pathLength="100" />
+						<path class="sketch-mask" d="M14 82C50 82 48 18 84 18S120 50 146 26" pathLength="100" stroke-dashoffset="100">
+							<animate attributeName="stroke-dashoffset" dur="3.2s" repeatCount="indefinite" values="100;0;0" keyTimes="0;0.7;1" calcMode="spline" keySplines="0.16 1 0.3 1;0 0 1 1" />
+						</path>
 					</mask>
 				</defs>
 				<path class="sketch-ghost" d="M14 82C50 82 48 18 84 18S120 50 146 26" />
 				<path class="sketch-line" d="M14 82C50 82 48 18 84 18S120 50 146 26" mask="url(#sketch-reveal)" />
-				<circle class="sketch-tip" r="5" />
+				<circle class="sketch-tip" r="5">
+					<animateMotion dur="3.2s" repeatCount="indefinite" path="M14 82C50 82 48 18 84 18S120 50 146 26" keyPoints="0;1;1" keyTimes="0;0.7;1" calcMode="spline" keySplines="0.16 1 0.3 1;0 0 1 1" />
+				</circle>
 			</>
 		)
 	}
@@ -94,6 +111,15 @@ const { kind } = Astro.props;
 		)
 	}
 </svg>
+
+<script>
+	// SMIL ignores the motion preference; hold its clock at the resting first frame instead.
+	if (matchMedia('(prefers-reduced-motion: reduce)').matches)
+		for (const svg of document.querySelectorAll<SVGSVGElement>('svg.art')) {
+			svg.pauseAnimations();
+			svg.setCurrentTime(0);
+		}
+</script>
 
 <style>
 	.art {
@@ -164,86 +190,16 @@ const { kind } = Astro.props;
 	}
 	.hopper {
 		fill: var(--tw-amber);
-		transform-box: fill-box;
-		transform-origin: 50% 100%;
-		animation: hop-squash 2.4s infinite;
 	}
-	.hop-x {
-		animation: hop-x 2.4s var(--ease-expo-out) infinite;
+	.trail.lit {
+		stroke: var(--tw-amber);
 	}
-	.hop-y {
-		animation: hop-y 2.4s infinite;
+	.hop-mask {
+		stroke: #fff;
+		stroke-width: 8;
+		fill: none;
+		stroke-dasharray: 100 100;
 	}
-	@keyframes hop-x {
-		0%,
-		12% {
-			transform: translateX(28px);
-		}
-		45%,
-		62% {
-			transform: translateX(132px);
-		}
-		95%,
-		100% {
-			transform: translateX(28px);
-		}
-	}
-	@keyframes hop-y {
-		0%,
-		12% {
-			transform: translateY(80px);
-			animation-timing-function: cubic-bezier(0.2, 0.7, 0.4, 1);
-		}
-		26% {
-			transform: translateY(18px);
-			animation-timing-function: cubic-bezier(0.6, 0, 0.8, 0.4);
-		}
-		40%,
-		62% {
-			transform: translateY(80px);
-			animation-timing-function: cubic-bezier(0.2, 0.7, 0.4, 1);
-		}
-		76% {
-			transform: translateY(18px);
-			animation-timing-function: cubic-bezier(0.6, 0, 0.8, 0.4);
-		}
-		90%,
-		100% {
-			transform: translateY(80px);
-		}
-	}
-	@keyframes hop-squash {
-		0%,
-		8% {
-			transform: scale(1.25, 0.75);
-		}
-		14% {
-			transform: scale(0.85, 1.2);
-		}
-		24% {
-			transform: scale(1);
-		}
-		40% {
-			transform: scale(1.3, 0.7);
-		}
-		50%,
-		58% {
-			transform: scale(1);
-		}
-		64% {
-			transform: scale(0.85, 1.2);
-		}
-		74% {
-			transform: scale(1);
-		}
-		90% {
-			transform: scale(1.3, 0.7);
-		}
-		100% {
-			transform: scale(1.25, 0.75);
-		}
-	}
-
 	/* catalog: each cell tweens one property */
 	.cell {
 		fill: color-mix(in oklab, var(--tw-raised) 55%, transparent);
@@ -335,30 +291,9 @@ const { kind } = Astro.props;
 		stroke: #fff;
 		stroke-width: 10;
 		stroke-dasharray: 100 100;
-		animation: sketch-draw 3.2s var(--ease-expo-out) infinite;
 	}
 	.sketch-tip {
 		fill: var(--tw-amber);
-		offset-path: path('M14 82C50 82 48 18 84 18S120 50 146 26');
-		animation: sketch-tip 3.2s var(--ease-expo-out) infinite;
-	}
-	@keyframes sketch-draw {
-		from {
-			stroke-dashoffset: 100;
-		}
-		70%,
-		to {
-			stroke-dashoffset: 0;
-		}
-	}
-	@keyframes sketch-tip {
-		from {
-			offset-distance: 0%;
-		}
-		70%,
-		to {
-			offset-distance: 100%;
-		}
 	}
 
 	/* dock: the plug slides home with an overshoot and a spark */
