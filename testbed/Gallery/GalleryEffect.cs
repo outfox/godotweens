@@ -98,6 +98,12 @@ public abstract partial class GalleryEffect
         return handle;
     }
 
+    /// <summary>Registers a group with the testbed's pause, cancellation, and error controls.</summary>
+    protected void TrackTweens(IEnumerable<TweenInstance> tweens)
+    {
+        foreach (var tween in tweens) Keep(tween);
+    }
+
     protected T Own<T>(T resource) where T : Resource
     {
         resources.Add(resource);
@@ -114,7 +120,7 @@ public abstract partial class GalleryEffect
     /// <summary>Tracks a newly created group for the playback controls, then awaits its completion results.</summary>
     protected Task<bool> Finished(params TweenInstance[] tweens)
     {
-        foreach (var tween in tweens) Keep(tween);
+        TrackTweens(tweens);
         return Finished(Generation, tweens);
     }
 
