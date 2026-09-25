@@ -1,17 +1,28 @@
 // SPDX-License-Identifier: MIT
 // SPDX-FileCopyrightText: 2026 Moritz Voss
 
-using System.Collections.Generic;
+using System.Threading.Tasks;
 using Godot;
 using tweens.gd;
 namespace testbed;
 
-// Scene setup and playback bookkeeping are in SharedMaterial.cs.
+// Scene setup is in SharedMaterial.cs.
 public sealed partial class SharedMaterial
 {
-    private IEnumerable<TweenInstance> CreateAnimation()
+    private async Task AnimateAsync()
     {
-        yield return material.TweenAlbedoColor(Palette.Amber, Seconds, Stage, Cycle);
-        yield return material.TweenRoughness(0.95f, Seconds, Stage, Cycle);
+        await Group.Of([
+            material.TweenAlbedoColor(Palette.Amber, Seconds, Stage, Cycle),
+            material.TweenRoughness(0.95f, Seconds, Stage, Cycle),
+        ]).End;
+    }
+
+    private void Cycle(TweenOptions options)
+    {
+        options.Ease = Ease;
+        options.UsePingPong = PingPong;
+        options.Repeats = TweenOptions.Infinite;
+        options.RepeatInterval = 0.25;
+        options.PingPongInterval = 0.15;
     }
 }

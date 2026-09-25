@@ -5,14 +5,12 @@ using Godot;
 using tweens.gd;
 namespace testbed;
 
-/// <summary>Also freezes the particle simulation itself while paused or stopped.</summary>
 public sealed partial class ParticleStream : GalleryEffect
 {
     private CpuParticles2D particles = null!;
-    private double speedBeforePause = 1;
 
     public override string Title => "CPUParticles2D";
-    public override string Caption => "Spread, gravity, color, and position. Pause stops simulation.";
+    public override string Caption => "Spread, gravity, color, and position.";
 
     protected override void Build()
     {
@@ -30,22 +28,5 @@ public sealed partial class ParticleStream : GalleryEffect
         Blob(particles, 3, 3, Colors.White);
     }
 
-    protected override void Animate() => TrackTweens(CreateAnimation());
-
-    public override void Pause(bool paused)
-    {
-        base.Pause(paused);
-        if (paused)
-        {
-            speedBeforePause = particles.SpeedScale;
-            particles.SpeedScale = 0;
-        }
-        else particles.SpeedScale = speedBeforePause;
-    }
-
-    public override void Stop()
-    {
-        base.Stop();
-        if (GodotObject.IsInstanceValid(particles)) particles.SpeedScale = 0;
-    }
+    protected override void Animate() => Sequence = Run(AnimateAsync());
 }

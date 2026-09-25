@@ -27,5 +27,5 @@ public sealed partial class TextReveal : GalleryEffect
         });
     }
 
-    protected override void Animate() => TrackTweens(CreateAnimation());
+    protected override void Animate() => Sequence = Run(AnimateAsync());
 }

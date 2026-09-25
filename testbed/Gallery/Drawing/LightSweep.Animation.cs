@@ -1,18 +1,29 @@
 // SPDX-License-Identifier: MIT
 // SPDX-FileCopyrightText: 2026 Moritz Voss
 
-using System.Collections.Generic;
+using System.Threading.Tasks;
 using Godot;
 using tweens.gd;
 namespace testbed;
 
-// Scene setup and playback bookkeeping are in LightSweep.cs.
+// Scene setup is in LightSweep.cs.
 public sealed partial class LightSweep
 {
-    private IEnumerable<TweenInstance> CreateAnimation()
+    private async Task AnimateAsync()
     {
-        yield return light.TweenTextureScale(2.5f, Seconds, Cycle);
-        yield return light.TweenEnergy(2, Seconds, Cycle);
-        yield return light.TweenPositionX(100, Seconds, Cycle);
+        await Group.Of([
+            light.TweenTextureScale(2.5f, Seconds, Cycle),
+            light.TweenEnergy(2, Seconds, Cycle),
+            light.TweenPositionX(100, Seconds, Cycle),
+        ]).End;
+    }
+
+    private void Cycle(TweenOptions options)
+    {
+        options.Ease = Ease;
+        options.UsePingPong = PingPong;
+        options.Repeats = TweenOptions.Infinite;
+        options.RepeatInterval = 0.25;
+        options.PingPongInterval = 0.15;
     }
 }

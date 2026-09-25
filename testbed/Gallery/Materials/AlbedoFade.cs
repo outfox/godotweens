@@ -24,5 +24,5 @@ public sealed partial class AlbedoFade : GalleryEffect
         Mesh(scene.View, new SphereMesh { Radius = 0.8f, Height = 1.6f }, material);
     }
 
-    protected override void Animate() => TrackTweens(CreateAnimation());
+    protected override void Animate() => Sequence = Run(AnimateAsync());
 }

@@ -3,61 +3,89 @@
 
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using Godot;
 using tweens.gd;
 namespace testbed;
 
-// Scene setup and playback bookkeeping are in BouncingBall.cs.
+// Scene setup is in BouncingBall.cs.
 public sealed partial class BouncingBall
 {
+    private async Task<bool> Bounce()
+    {
+        var air = 0.36 * Tempo;
+        if (Math.Abs(ball.Position.X + direction * Stride) > Bounds) direction = -direction;
+        var target = ball.Position.X + direction * Stride;
+
+        if (await Crouch().End != Reason.Completed) return false;
+
+        _ = Run(Travel(target, air * 2));
+
+        if (!await Rise(air)) return false;
+        if (!await Fall(air)) return false;
+
+        _ = Run(Ripple(target));
+        _ = Run(KickUpDust(target));
+        return await Squash().End == Reason.Completed;
+    }
+
     private const float Ground = 62, Apex = Ground - 96, Stride = 75, Bounds = 151;
     private static readonly Vector2 Crouched = new(0.72f, 1.32f), Falling = new(0.8f, 1.25f), Squashed = new(1.55f, 0.55f);
 
     private TweenInstance Crouch() =>
-        ball.TweenScale(Crouched, 0.07 * Tempo, t => t.Ease = EaseType.QuadOut);
+        ball.TweenScale(Crouched, 0.07 * Tempo, options => options.Ease = EaseType.QuadOut);
 
-    private TweenInstance[] Travel(float target, double duration) =>
-    [
-        spin.TweenRotation(spin.Rotation + direction * MathF.PI, duration),
-        ball.TweenPositionX(target, duration),
-        shadow.TweenPositionX(target, duration),
-    ];
-
-    private TweenInstance[] Rise(double air)
+    private async Task<bool> Travel(float target, double duration)
     {
-        void Rising(TweenOptions t) => t.Ease = EaseType.QuadOut;
-        return
-        [
-            ball.TweenPositionY(Apex, air, Rising),
-            ball.TweenScale(Vector2.One, air, Rising),
-            shadow.TweenScale(new Vector2(0.4f, 0.4f), air, Rising),
-        ];
+        return await Group.Of([
+            spin.TweenRotation(spin.Rotation + direction * MathF.PI, duration),
+            ball.TweenPositionX(target, duration),
+            shadow.TweenPositionX(target, duration),
+        ]).End == Reason.Completed;
     }
 
-    private TweenInstance[] Fall(double air)
+    private async Task<bool> Rise(double air)
     {
-        void Dropping(TweenOptions t) => t.Ease = EaseType.QuadIn;
-        return
-        [
-            ball.TweenPositionY(Ground, air, Dropping),
-            ball.TweenScale(Falling, air, Dropping),
-            shadow.TweenScale(Vector2.One, air, Dropping),
-        ];
+        return await Group.Of([
+            ball.TweenPositionY(Apex, air, options => options.Ease = EaseType.QuadOut),
+            ball.TweenScale(Vector2.One, air, options => options.Ease = EaseType.QuadOut),
+            shadow.TweenScale(new Vector2(0.4f, 0.4f), air, options => options.Ease = EaseType.QuadOut),
+        ]).End == Reason.Completed;
+    }
+
+    private async Task<bool> Fall(double air)
+    {
+        return await Group.Of([
+            ball.TweenPositionY(Ground, air, options => options.Ease = EaseType.QuadIn),
+            ball.TweenScale(Falling, air, options => options.Ease = EaseType.QuadIn),
+            shadow.TweenScale(Vector2.One, air, options => options.Ease = EaseType.QuadIn),
+        ]).End == Reason.Completed;
     }
 
     private TweenInstance Squash() =>
-        ball.TweenScale(Squashed, 0.06 * Tempo, t => t.Ease = EaseType.QuadOut);
+        ball.TweenScale(Squashed, 0.06 * Tempo, options => options.Ease = EaseType.QuadOut);
 
-    private IEnumerable<TweenInstance> Ripple(float x)
+    private async Task Ripple(float x)
     {
         var duration = 0.5 * Tempo;
         ring.Position = new Vector2(x, Ground);
-        yield return ring.TweenScale(new Vector2(2.2f, 2.2f), duration, t => { t.From = new Vector2(0.4f, 0.4f); t.Ease = EaseType.QuartOut; });
-        yield return ring.TweenModulateAlpha(0, duration, t => { t.From = 1; t.Ease = EaseType.QuadIn; });
+        await Group.Of([
+            ring.TweenScale(new Vector2(2.2f, 2.2f), duration, options =>
+            {
+                options.From = new Vector2(0.4f, 0.4f);
+                options.Ease = EaseType.QuartOut;
+            }),
+            ring.TweenModulateAlpha(0, duration, options =>
+            {
+                options.From = 1;
+                options.Ease = EaseType.QuadIn;
+            }),
+        ]).End;
     }
 
-    private IEnumerable<TweenInstance> KickUpDust(float x)
+    private async Task KickUpDust(float x)
     {
+        var tweens = new List<TweenInstance>();
         var duration = 0.45 * Tempo;
         for (var i = 0; i < dust.Length; i++)
         {
@@ -66,8 +94,13 @@ public sealed partial class BouncingBall
             var landing = new Vector2(x + side * (26 + row * 16), Ground - 10 - row * 5);
             dust[i].Position = new Vector2(x + side * 14, Ground - 3);
             dust[i].Scale = Vector2.One * (1.4f - row * 0.3f);
-            yield return dust[i].TweenPosition(landing, duration, t => t.Ease = EaseType.QuartOut);
-            yield return dust[i].TweenModulateAlpha(0, duration, t => { t.From = 0.9f; t.Ease = EaseType.QuadIn; });
+            tweens.Add(dust[i].TweenPosition(landing, duration, options => options.Ease = EaseType.QuartOut));
+            tweens.Add(dust[i].TweenModulateAlpha(0, duration, options =>
+            {
+                options.From = 0.9f;
+                options.Ease = EaseType.QuadIn;
+            }));
         }
+        await Group.Of([.. tweens]).End;
     }
 }

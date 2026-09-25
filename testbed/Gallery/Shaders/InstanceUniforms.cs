@@ -22,5 +22,5 @@ public sealed partial class InstanceUniforms : GalleryEffect
         SplitPanel.Caption(view, "INSTANCE A", "INSTANCE B");
     }
 
-    protected override void Animate() => TrackTweens(CreateAnimation());
+    protected override void Animate() => Sequence = Run(AnimateAsync());
 }

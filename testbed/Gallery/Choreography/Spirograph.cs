@@ -38,5 +38,5 @@ public sealed partial class Spirograph : GalleryEffect
         Gradient = Own(new Gradient { Colors = [color with { A = 0 }, color], Offsets = [0, 1] }),
     });
 
-    protected override void Animate() => TrackTweens(CreateAnimation());
+    protected override void Animate() => Sequence = Run(AnimateAsync());
 }

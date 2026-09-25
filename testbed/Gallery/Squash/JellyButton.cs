@@ -3,7 +3,6 @@
 
 using System;
 using System.Linq;
-using System.Threading.Tasks;
 using Godot;
 using tweens.gd;
 namespace testbed;
@@ -43,7 +42,7 @@ public sealed partial class JellyButton : GalleryEffect
         })).ToArray();
 
         button = shaker.Add(BuildButton());
-        button.Pressed += () => Pop(Generation);
+        button.Pressed += () => _ = Run(Pop());
 
         bonus = GalleryTheme.Label($"+{Points}", 22, Palette.Amber);
         bonus.Modulate = Colors.Transparent;
@@ -90,30 +89,4 @@ public sealed partial class JellyButton : GalleryEffect
     }
 
     protected override void Animate() => Sequence = Repeat(AutoTap);
-
-    private async Task<bool> AutoTap(int run)
-    {
-        if (!await Wait(run, 1.5 * Tempo)) return false;
-        Pop(run);
-        return true;
-    }
-
-    private void Pop(int run)
-    {
-        Squish(run);
-        TrackTweens(Flash());
-        foreach (var shard in shards) TrackTweens(Throw(shard));
-        TrackTweens(FloatBonus());
-        TrackTweens(AddToScore());
-    }
-
-    /// <summary>Flattens the button, then springs it back unless the effect was stopped in between.</summary>
-    private void Squish(int run)
-    {
-        squish?.Cancel();
-        squish = Keep(Flatten(() =>
-        {
-            if (run == Generation) squish = Keep(SpringBack());
-        }));
-    }
 }

@@ -27,5 +27,5 @@ public sealed partial class CombinedTransforms : GalleryEffect
         Blob(shape, 4, 4, Palette.Amber);
     }
 
-    protected override void Animate() => TrackTweens(CreateAnimation());
+    protected override void Animate() => Sequence = Run(AnimateAsync());
 }

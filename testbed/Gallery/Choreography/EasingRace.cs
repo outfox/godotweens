@@ -35,5 +35,5 @@ public sealed partial class EasingRace : GalleryEffect
         }).ToArray();
     }
 
-    protected override void Animate() => TrackTweens(CreateAnimation());
+    protected override void Animate() => Sequence = Run(AnimateAsync());
 }

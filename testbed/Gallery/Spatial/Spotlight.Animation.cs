@@ -1,18 +1,29 @@
 // SPDX-License-Identifier: MIT
 // SPDX-FileCopyrightText: 2026 Moritz Voss
 
-using System.Collections.Generic;
+using System.Threading.Tasks;
 using Godot;
 using tweens.gd;
 namespace testbed;
 
-// Scene setup and playback bookkeeping are in Spotlight.cs.
+// Scene setup is in Spotlight.cs.
 public sealed partial class Spotlight
 {
-    private IEnumerable<TweenInstance> CreateAnimation()
+    private async Task AnimateAsync()
     {
-        yield return spot.TweenSpotAngle(52, Seconds, Cycle);
-        yield return spot.TweenLightColor(Palette.Blue, Seconds, Cycle);
-        yield return spot.TweenLightEnergy(3, Seconds, Cycle);
+        await Group.Of([
+            spot.TweenSpotAngle(52, Seconds, Cycle),
+            spot.TweenLightColor(Palette.Blue, Seconds, Cycle),
+            spot.TweenLightEnergy(3, Seconds, Cycle),
+        ]).End;
+    }
+
+    private void Cycle(TweenOptions options)
+    {
+        options.Ease = Ease;
+        options.UsePingPong = PingPong;
+        options.Repeats = TweenOptions.Infinite;
+        options.RepeatInterval = 0.25;
+        options.PingPongInterval = 0.15;
     }
 }

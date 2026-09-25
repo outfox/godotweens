@@ -1,19 +1,30 @@
 // SPDX-License-Identifier: MIT
 // SPDX-FileCopyrightText: 2026 Moritz Voss
 
-using System.Collections.Generic;
+using System.Threading.Tasks;
 using Godot;
 using tweens.gd;
 namespace testbed;
 
-// Scene setup and playback bookkeeping are in ParticleStream.cs.
+// Scene setup is in ParticleStream.cs.
 public sealed partial class ParticleStream
 {
-    private IEnumerable<TweenInstance> CreateAnimation()
+    private async Task AnimateAsync()
     {
-        yield return particles.TweenSpread(75, Seconds, Cycle);
-        yield return particles.TweenGravity(new Vector2(15, -55), Seconds, Cycle);
-        yield return particles.TweenColor(Palette.Amber, Seconds, Cycle);
-        yield return particles.TweenPositionY(-30, Seconds, Cycle);
+        await Group.Of([
+            particles.TweenSpread(75, Seconds, Cycle),
+            particles.TweenGravity(new Vector2(15, -55), Seconds, Cycle),
+            particles.TweenColor(Palette.Amber, Seconds, Cycle),
+            particles.TweenPositionY(-30, Seconds, Cycle),
+        ]).End;
+    }
+
+    private void Cycle(TweenOptions options)
+    {
+        options.Ease = Ease;
+        options.UsePingPong = PingPong;
+        options.Repeats = TweenOptions.Infinite;
+        options.RepeatInterval = 0.25;
+        options.PingPongInterval = 0.15;
     }
 }

@@ -3,7 +3,6 @@
 
 using System;
 using System.Linq;
-using System.Threading.Tasks;
 using Godot;
 using tweens.gd;
 namespace testbed;
@@ -45,22 +44,4 @@ public sealed partial class BouncingBall : GalleryEffect
     }
 
     protected override void Animate() => Sequence = Repeat(Bounce);
-
-    private async Task<bool> Bounce(int run)
-    {
-        var air = 0.36 * Tempo;
-        if (Math.Abs(ball.Position.X + direction * Stride) > Bounds) direction = -direction;
-        var target = ball.Position.X + direction * Stride;
-
-        if (!await Finished(run, Crouch())) return false;
-
-        TrackTweens(Travel(target, air * 2));
-
-        if (!await Finished(run, Rise(air))) return false;
-        if (!await Finished(run, Fall(air))) return false;
-
-        TrackTweens(Ripple(target));
-        TrackTweens(KickUpDust(target));
-        return await Finished(run, Squash());
-    }
 }

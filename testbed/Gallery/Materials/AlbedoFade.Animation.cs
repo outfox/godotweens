@@ -1,16 +1,27 @@
 // SPDX-License-Identifier: MIT
 // SPDX-FileCopyrightText: 2026 Moritz Voss
 
-using System.Collections.Generic;
+using System.Threading.Tasks;
 using Godot;
 using tweens.gd;
 namespace testbed;
 
-// Scene setup and playback bookkeeping are in AlbedoFade.cs.
+// Scene setup is in AlbedoFade.cs.
 public sealed partial class AlbedoFade
 {
-    private IEnumerable<TweenInstance> CreateAnimation() =>
-    [
-        material.TweenAlbedoAlpha(0.08f, Seconds, Stage, Cycle),
-    ];
+    private async Task AnimateAsync()
+    {
+        await Group.Of([
+            material.TweenAlbedoAlpha(0.08f, Seconds, Stage, Cycle),
+        ]).End;
+    }
+
+    private void Cycle(TweenOptions options)
+    {
+        options.Ease = Ease;
+        options.UsePingPong = PingPong;
+        options.Repeats = TweenOptions.Infinite;
+        options.RepeatInterval = 0.25;
+        options.PingPongInterval = 0.15;
+    }
 }

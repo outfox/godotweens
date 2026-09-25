@@ -3,7 +3,6 @@
 
 using System;
 using System.Linq;
-using System.Threading.Tasks;
 using Godot;
 using tweens.gd;
 namespace testbed;
@@ -42,28 +41,5 @@ public sealed partial class SlimeHop : GalleryEffect
         .Select(a => new Vector2(MathF.Cos(a) * 36, MathF.Sin(a) * (MathF.Sin(a) > 0 ? 20 : 38)))
         .ToArray();
 
-    protected override void Animate()
-    {
-        Keep(Blink());
-        Sequence = Repeat(Hop);
-    }
-
-    private async Task<bool> Hop(int run)
-    {
-        var air = 0.32 * Tempo;
-        if (Math.Abs(slime.Position.X + direction * Stride) > Bounds) direction = -direction;
-        var target = slime.Position.X + direction * Stride;
-
-        Keep(LookAhead());
-        if (!await Finished(run, Crouch())) return false;
-        if (!await Finished(run, Launch())) return false;
-
-        TrackTweens(Travel(target, air * 2));
-        if (!await Finished(run, Rise(air))) return false;
-        if (!await Finished(run, Fall(air))) return false;
-
-        TrackTweens(Splash(target));
-        if (!await Finished(run, Squash())) return false;
-        return await Finished(run, Recover());
-    }
+    protected override void Animate() => Sequence = Run(AnimateAsync());
 }

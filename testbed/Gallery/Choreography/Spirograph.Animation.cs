@@ -2,33 +2,34 @@
 // SPDX-FileCopyrightText: 2026 Moritz Voss
 
 using System;
-using System.Collections.Generic;
+using System.Threading.Tasks;
 using Godot;
 using tweens.gd;
 namespace testbed;
 
-// Scene setup and playback bookkeeping are in Spirograph.cs.
+// Scene setup is in Spirograph.cs.
 public sealed partial class Spirograph
 {
     private const int TrailLength = 420;
 
-    private IEnumerable<TweenInstance> CreateAnimation()
+    private async Task AnimateAsync()
     {
         var pulse = 0.6 * Tempo;
-        yield return sun.TweenScale(new Vector2(1.35f, 1.35f), pulse, t =>
-        {
-            t.Ease = EaseType.SineInOut;
-            t.UsePingPong = true;
-            t.Repeats = TweenOptions.Infinite;
-        });
-
         var revolution = 7 * Tempo;
-        yield return Stage.TweenFloat(1, revolution, t =>
-        {
-            t.From = 0;
-            t.Repeats = TweenOptions.Infinite;
-            t.OnUpdate = (_, progress) => Draw(progress);
-        });
+        await Group.Of([
+            sun.TweenScale(new Vector2(1.35f, 1.35f), pulse, options =>
+            {
+                options.Ease = EaseType.SineInOut;
+                options.UsePingPong = true;
+                options.Repeats = TweenOptions.Infinite;
+            }),
+            Stage.TweenFloat(1, revolution, options =>
+            {
+                options.From = 0;
+                options.Repeats = TweenOptions.Infinite;
+                options.OnUpdate = (_, progress) => Draw(progress);
+            }),
+        ]).End;
     }
 
     private void Draw(float progress)

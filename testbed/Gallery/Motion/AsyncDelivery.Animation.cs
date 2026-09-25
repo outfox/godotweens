@@ -3,30 +3,57 @@
 
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using Godot;
 using tweens.gd;
 namespace testbed;
 
-// Scene setup and playback bookkeeping are in AsyncDelivery.cs.
+// Scene setup is in AsyncDelivery.cs.
 public sealed partial class AsyncDelivery
 {
+    private async Task Deliver()
+    {
+        try
+        {
+            _ = Run(Report(0, "1 / Position"));
+            if (await Outward().End != Reason.Completed) return;
+
+            _ = Run(Report(1, "2 / Position + rotation"));
+            if (!await ReturnAndTurn()) return;
+
+            await Report(2, "3 / Complete");
+        }
+        catch (Exception error)
+        {
+            GD.PushError(error.ToString());
+        }
+    }
+
     private const float Left = -150, Right = 150, Rail = 15;
 
-    private TweenInstance Outward() => courier.TweenPositionX(Right, Seconds, t => t.Ease = Ease);
+    private TweenInstance Outward() => courier.TweenPositionX(Right, Seconds, options => options.Ease = Ease);
 
-    // Both tweens start together after the outward leg completes (see Deliver in AsyncDelivery.cs).
-    private TweenInstance[] ReturnAndTurn() =>
-    [
-        courier.TweenPositionX(Left, Seconds, t => t.Ease = Ease),
-        courier.TweenRotation(Mathf.Tau, Seconds, t => t.Ease = Ease),
-    ];
+    // Both tweens start together after the outward leg completes.
+    private async Task<bool> ReturnAndTurn()
+    {
+        return await Group.Of([
+            courier.TweenPositionX(Left, Seconds, options => options.Ease = Ease),
+            courier.TweenRotation(Mathf.Tau, Seconds, options => options.Ease = Ease),
+        ]).End == Reason.Completed;
+    }
 
     /// <summary>Shows the step's label and lights its progress dot, and every dot before it.</summary>
-    private IEnumerable<TweenInstance> Report(int step, string text)
+    private async Task Report(int step, string text)
     {
+        var tweens = new List<TweenInstance>();
         status.Text = text;
         for (var i = 0; i < steps.Length; i++)
-            yield return steps[i].TweenColor(i <= step ? Palette.Mint : Palette.Outline, 0.2);
-        yield return steps[step].TweenScale(Vector2.One, 0.5, t => { t.From = new Vector2(2, 2); t.Ease = EaseType.ElasticOut; });
+            tweens.Add(steps[i].TweenColor(i <= step ? Palette.Mint : Palette.Outline, 0.2));
+        tweens.Add(steps[step].TweenScale(Vector2.One, 0.5, options =>
+        {
+            options.From = new Vector2(2, 2);
+            options.Ease = EaseType.ElasticOut;
+        }));
+        await Group.Of([.. tweens]).End;
     }
 }

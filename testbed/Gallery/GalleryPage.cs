@@ -29,9 +29,6 @@ public abstract partial class GalleryPage : VBoxContainer
     public abstract string Heading { get; }
     public abstract string Description { get; }
     public Task? SequenceTask { get; private set; }
-    public int ActiveCount => effects.Sum(e => e.ActiveCount);
-    public bool AllPaused => effects.All(e => e.AllPaused);
-    public string? Error => effects.Select(e => e.Error).FirstOrDefault(error => error is not null);
 
     protected abstract GalleryEffect[] CreateEffects();
 
@@ -106,18 +103,6 @@ public abstract partial class GalleryPage : VBoxContainer
         var sequences = effects.Select(e => e.Sequence).OfType<Task>().ToArray();
         SequenceTask = sequences.Length > 0 ? Task.WhenAll(sequences) : null;
     }
-
-    public void Pause(bool paused)
-    {
-        foreach (var effect in effects) effect.Pause(paused);
-    }
-
-    public void Stop()
-    {
-        foreach (var effect in effects) effect.Stop();
-    }
-
-    public override void _ExitTree() => Stop();
 
     /// <summary>Called after Free(), so children have relinquished their native resource references.</summary>
     public void ReleaseResources()

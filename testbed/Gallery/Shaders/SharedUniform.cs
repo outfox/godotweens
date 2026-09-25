@@ -21,5 +21,5 @@ public sealed partial class SharedUniform : GalleryEffect
         SplitPanel.Caption(view, "SAME MATERIAL", "SAME VALUE");
     }
 
-    protected override void Animate() => TrackTweens(CreateAnimation());
+    protected override void Animate() => Sequence = Run(AnimateAsync());
 }

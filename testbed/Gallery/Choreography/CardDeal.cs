@@ -3,7 +3,6 @@
 
 using System;
 using System.Linq;
-using System.Threading.Tasks;
 using Godot;
 using tweens.gd;
 namespace testbed;
@@ -58,42 +57,4 @@ public sealed partial class CardDeal : GalleryEffect
     }
 
     protected override void Animate() => Sequence = Repeat(Deal);
-
-    private void Reset()
-    {
-        foreach (var card in deck)
-        {
-            card.Body.Position = DeckPosition;
-            card.Body.Rotation = 0;
-            card.Body.Scale = Vector2.One;
-            card.Body.Modulate = Colors.White;
-            card.Show(faceUp: false);
-        }
-    }
-
-    private async Task<bool> Deal()
-    {
-        Reset();
-        return await Finished(Spread())
-            && await FlipAll(faceUp: true, stagger: 0.09 * Tempo)
-            && await Finished(LiftHero())
-            && await Wait(0.6 * Tempo)
-            && await Finished(Gather())
-            && await FlipAll(faceUp: false, stagger: 0)
-            && await Finished(Toss());
-    }
-
-    private async Task<bool> FlipAll(bool faceUp, double stagger)
-    {
-        var flips = await Task.WhenAll(deck.Select((card, i) => Flip(card, i * stagger, faceUp)));
-        return flips.All(completed => completed);
-    }
-
-    /// <summary>Squeezes the card to zero width, swaps its side, then springs it back open.</summary>
-    private async Task<bool> Flip(PlayingCard card, double delay, bool faceUp)
-    {
-        if (!await Finished(Fold(card, delay))) return false;
-        card.Show(faceUp);
-        return await Finished(Unfold(card));
-    }
 }

@@ -21,5 +21,5 @@ public sealed partial class ParentedRotation : GalleryEffect
         Mesh(parent, new SphereMesh { Radius = 0.16f, Height = 0.32f }, Surface(Palette.Amber), new Vector3(1, 0, 0));
     }
 
-    protected override void Animate() => TrackTweens(CreateAnimation());
+    protected override void Animate() => Sequence = Run(AnimateAsync());
 }

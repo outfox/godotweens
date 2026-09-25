@@ -66,13 +66,12 @@ internal static class Program
             }
             if (gallerySnapshots is not null && frame % 60 == 0 && gallery is not null)
             {
-                if (gallery.CurrentPage?.Error is { } error) throw new InvalidOperationException(error);
                 using var image = engine.Tree.Root.GetTexture().GetImage();
                 if (image.IsEmpty()) throw new InvalidOperationException("Gallery capture requires a renderer.");
                 Directory.CreateDirectory(gallerySnapshots);
                 var target = Path.Combine(gallerySnapshots, $"{capturedPages + 1:00}.png");
                 if (image.SavePng(target) != Error.Ok) throw new IOException("Could not save " + target);
-                Console.WriteLine($"Captured {testbed.TweenDemo.PageNames[capturedPages]} ({gallery.DemoTweenCount} tweens)");
+                Console.WriteLine($"Captured {testbed.TweenDemo.PageNames[capturedPages]}");
                 if (++capturedPages == testbed.TweenDemo.PageNames.Length) engine.Tree.Quit();
                 else
                 {

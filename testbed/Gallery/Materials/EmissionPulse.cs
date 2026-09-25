@@ -24,5 +24,5 @@ public sealed partial class EmissionPulse : GalleryEffect
         torus.RotationDegrees = new Vector3(65, 0, 15);
     }
 
-    protected override void Animate() => TrackTweens(CreateAnimation());
+    protected override void Animate() => Sequence = Run(AnimateAsync());
 }

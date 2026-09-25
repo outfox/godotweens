@@ -28,7 +28,9 @@ public class GallerySourceTests(HeadlessFixture godot)
             Assert.Contains("public sealed partial class " + type.Name, animation.Text);
             Assert.Contains("public sealed partial class " + type.Name, setup.Text);
             Assert.Contains(".Tween", animation.Text);
-            foreach (var hidden in new[] { "Keep(", "TrackTweens(", "Generation", "protected override void Build(" })
+            Assert.Contains("async Task", animation.Text);
+            Assert.Contains("Group.Of(", animation.Text);
+            foreach (var hidden in new[] { "Play(", "Keep(", "TrackTweens(", "Generation", "protected override void Build(", "IEnumerable<TweenInstance>", "yield return" })
                 Assert.DoesNotContain(hidden, animation.Text);
             foreach (var source in new[] { animation, setup })
                 Assert.Equal(FileAccess.GetFileAsString("res://" + source.Path).Replace("\r\n", "\n"), source.Text);
@@ -49,7 +51,6 @@ public class GallerySourceTests(HeadlessFixture godot)
                 var buttons = Descendants(page).OfType<Button>().Where(b => b.Text == "View C#").ToArray();
                 Assert.NotEmpty(buttons);
                 var sequence = page.SequenceTask;
-                var count = page.ActiveCount;
                 for (var effect = 0; effect < buttons.Length; effect++)
                 {
                     buttons[effect].EmitSignal(BaseButton.SignalName.Pressed);
@@ -63,8 +64,6 @@ public class GallerySourceTests(HeadlessFixture godot)
                     Assert.True(view.Source.TweenLine > 0);
                     Assert.Equal(view.Source.TweenLine, view.Code.GetCaretLine());
                     Assert.Same(sequence, page.SequenceTask);
-                    Assert.Equal(count, page.ActiveCount);
-                    Assert.Null(page.Error);
                 }
                 page.ShowGallery();
                 Assert.Equal(-1, page.SelectedEffect);
@@ -78,7 +77,7 @@ public class GallerySourceTests(HeadlessFixture godot)
     }
 
     [Fact]
-    public void HelpersAndSourceSelectionSurvivePlaybackControlsAndDisposeWithThePage()
+    public void HelpersAndSourceSelectionSurviveRestartAndDisposeWithThePage()
     {
         var demo = new TweenDemo();
         godot.Tree.Root.AddChild(demo); Pump();
@@ -98,13 +97,9 @@ public class GallerySourceTests(HeadlessFixture godot)
                 Assert.Equal(Math.Max(0, view.Source.TweenLine), view.Code.GetCaretLine());
                 if (i == 1) Assert.Equal(animationPath.Replace(".Animation.cs", ".cs"), view.Source.Path);
             }
-            demo.TogglePause(); Assert.True(demo.CurrentPage.AllPaused);
             demo.RestartDemo(); Pump();
             Assert.False(GodotObject.IsInstanceValid(view));
             Assert.Equal(1, demo.CurrentPage!.SelectedEffect);
-            Assert.True(demo.CurrentPage.SourceView.Visible);
-            Assert.True(demo.IsPlaying);
-            demo.StopDemo(); Assert.Equal(0, demo.DemoTweenCount);
             Assert.True(demo.CurrentPage.SourceView.Visible);
             demo.SelectPage(2); Pump();
             Assert.Equal(-1, demo.CurrentPage!.SelectedEffect);

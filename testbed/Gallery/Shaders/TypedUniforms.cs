@@ -38,5 +38,5 @@ public sealed partial class TypedUniforms : GalleryEffect
         });
     }
 
-    protected override void Animate() => TrackTweens(CreateAnimation());
+    protected override void Animate() => Sequence = Run(AnimateAsync());
 }

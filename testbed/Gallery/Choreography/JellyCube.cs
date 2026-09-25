@@ -2,7 +2,6 @@
 // SPDX-FileCopyrightText: 2026 Moritz Voss
 
 using System;
-using System.Threading.Tasks;
 using Godot;
 using tweens.gd;
 namespace testbed;
@@ -44,20 +43,4 @@ public sealed partial class JellyCube : GalleryEffect
     }
 
     protected override void Animate() => Sequence = Repeat(Jump);
-
-    private async Task<bool> Jump(int run)
-    {
-        var air = 0.36 * Tempo;
-        if (!await Finished(run, Crouch())) return false;
-        if (!await Finished(run, Launch())) return false;
-
-        Keep(Turn(air * 2));
-        if (!await Finished(run, Rise(air))) return false;
-        if (!await Finished(run, Fall(air))) return false;
-
-        tumble.Rotation = Vector3.Zero;
-        TrackTweens(Land());
-        if (!await Finished(run, Squash())) return false;
-        return await Finished(run, Recover());
-    }
 }

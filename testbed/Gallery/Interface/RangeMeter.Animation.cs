@@ -1,18 +1,29 @@
 // SPDX-License-Identifier: MIT
 // SPDX-FileCopyrightText: 2026 Moritz Voss
 
-using System.Collections.Generic;
+using System.Threading.Tasks;
 using Godot;
 using tweens.gd;
 namespace testbed;
 
-// Scene setup and playback bookkeeping are in RangeMeter.cs.
+// Scene setup is in RangeMeter.cs.
 public sealed partial class RangeMeter
 {
-    private IEnumerable<TweenInstance> CreateAnimation()
+    private async Task AnimateAsync()
     {
-        yield return progress.TweenValue(100, Seconds, Cycle);
-        yield return swatch.TweenColor(Palette.Blue, Seconds, Cycle);
-        yield return swatch.TweenSelfModulateAlpha(0.25f, Seconds, Cycle);
+        await Group.Of([
+            progress.TweenValue(100, Seconds, Cycle),
+            swatch.TweenColor(Palette.Blue, Seconds, Cycle),
+            swatch.TweenSelfModulateAlpha(0.25f, Seconds, Cycle),
+        ]).End;
+    }
+
+    private void Cycle(TweenOptions options)
+    {
+        options.Ease = Ease;
+        options.UsePingPong = PingPong;
+        options.Repeats = TweenOptions.Infinite;
+        options.RepeatInterval = 0.25;
+        options.PingPongInterval = 0.15;
     }
 }

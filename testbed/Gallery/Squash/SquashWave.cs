@@ -40,5 +40,5 @@ public sealed partial class SquashWave : GalleryEffect
         return bottom.Concat(top).OrderBy(p => MathF.Atan2(p.Y + 18, p.X)).ToArray();
     }
 
-    protected override void Animate() => TrackTweens(CreateAnimation());
+    protected override void Animate() => Sequence = Run(AnimateAsync());
 }

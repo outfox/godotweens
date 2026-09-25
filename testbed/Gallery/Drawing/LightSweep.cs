@@ -37,5 +37,5 @@ public sealed partial class LightSweep : GalleryEffect
         Blob(light, 3, 3, Colors.White);
     }
 
-    protected override void Animate() => TrackTweens(CreateAnimation());
+    protected override void Animate() => Sequence = Run(AnimateAsync());
 }

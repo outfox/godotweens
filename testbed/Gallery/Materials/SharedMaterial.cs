@@ -23,5 +23,5 @@ public sealed partial class SharedMaterial : GalleryEffect
         cube.Rotation = new Vector3(0.3f, 0.5f, 0);
     }
 
-    protected override void Animate() => TrackTweens(CreateAnimation());
+    protected override void Animate() => Sequence = Run(AnimateAsync());
 }

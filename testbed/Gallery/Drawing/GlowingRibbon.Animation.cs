@@ -1,19 +1,30 @@
 // SPDX-License-Identifier: MIT
 // SPDX-FileCopyrightText: 2026 Moritz Voss
 
-using System.Collections.Generic;
+using System.Threading.Tasks;
 using Godot;
 using tweens.gd;
 namespace testbed;
 
-// Scene setup and playback bookkeeping are in GlowingRibbon.cs.
+// Scene setup is in GlowingRibbon.cs.
 public sealed partial class GlowingRibbon
 {
-    private IEnumerable<TweenInstance> CreateAnimation()
+    private async Task AnimateAsync()
     {
-        yield return ribbon.TweenWidth(16, Seconds, Cycle);
-        yield return ribbon.TweenDefaultColor(Palette.Blue, Seconds, Cycle);
-        yield return glow.TweenWidth(40, Seconds, Cycle);
-        yield return glow.TweenDefaultColor(Palette.Blue with { A = 0.28f }, Seconds, Cycle);
+        await Group.Of([
+            ribbon.TweenWidth(16, Seconds, Cycle),
+            ribbon.TweenDefaultColor(Palette.Blue, Seconds, Cycle),
+            glow.TweenWidth(40, Seconds, Cycle),
+            glow.TweenDefaultColor(Palette.Blue with { A = 0.28f }, Seconds, Cycle),
+        ]).End;
+    }
+
+    private void Cycle(TweenOptions options)
+    {
+        options.Ease = Ease;
+        options.UsePingPong = PingPong;
+        options.Repeats = TweenOptions.Infinite;
+        options.RepeatInterval = 0.25;
+        options.PingPongInterval = 0.15;
     }
 }

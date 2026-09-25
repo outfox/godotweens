@@ -4,7 +4,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
 using Godot;
 using tweens.gd;
 namespace testbed;
@@ -29,17 +28,12 @@ public partial class TweenDemo : Control
     private readonly List<Button> navigation = [];
     private readonly List<Resource> themeResources = [];
     private VBoxContainer content = null!;
-    private Label status = null!, durationLabel = null!;
-    private Button pause = null!;
+    private Label durationLabel = null!;
     private HSlider duration = null!;
     private GalleryPage? page;
-    private bool paused;
     private int revision;
 
     public int SelectedPage { get; private set; }
-    public bool IsPlaying { get; private set; }
-    public int DemoTweenCount => page?.ActiveCount ?? 0;
-    public Task? ChainTask => page?.SequenceTask;
     public GalleryPage? CurrentPage => page;
 
     public override void _Ready()
@@ -158,13 +152,7 @@ public partial class TweenDemo : Control
     {
         var actions = new HBoxContainer();
         actions.AddThemeConstantOverride("separation", 10);
-        pause = ActionButton(actions, "Pause", TogglePause);
-        ActionButton(actions, "Cancel", StopDemo);
         ActionButton(actions, "Restart page", RestartDemo);
-        status = GalleryTheme.Label("Starting…", 15, Palette.Mint);
-        status.SizeFlagsHorizontal = SizeFlags.ExpandFill;
-        status.HorizontalAlignment = HorizontalAlignment.Right;
-        actions.AddChild(status);
         return actions;
     }
 
@@ -180,7 +168,6 @@ public partial class TweenDemo : Control
     {
         if (index < 0 || index >= Pages.Length) throw new ArgumentOutOfRangeException(nameof(index));
         if (!IsInsideTree()) return;
-        StopDemo();
         DestroyPage();
         SelectedPage = index;
         for (var i = 0; i < navigation.Count; i++) navigation[i].SetPressedNoSignal(i == index);
@@ -194,22 +181,17 @@ public partial class TweenDemo : Control
         CallDeferred(MethodName.StartSelectedPage, ++revision);
     }
 
-    /// <summary>Starts the current page, unless a newer selection or a stop superseded <paramref name="selection"/>.</summary>
+    /// <summary>Starts the current page, unless a newer selection superseded <paramref name="selection"/>.</summary>
     private void StartSelectedPage(int selection)
     {
         if (!IsInsideTree() || selection != revision || page is null) return;
         try
         {
             page.Start(duration.Value, EaseType.CubicInOut, pingPong: true);
-            IsPlaying = true;
-            paused = false;
-            pause.Text = "Pause";
-            pause.Disabled = false;
         }
         catch (Exception error)
         {
-            page.Stop();
-            status.Text = "Could not start this page: " + error.Message;
+            DestroyPage();
             GD.PushError(error.ToString());
         }
     }
@@ -222,33 +204,6 @@ public partial class TweenDemo : Control
         if (selectedEffect >= 0) page?.ShowSource(selectedEffect);
     }
 
-    public void TogglePause()
-    {
-        if (!IsPlaying) return;
-        paused = !paused;
-        page?.Pause(paused);
-        pause.Text = paused ? "Resume" : "Pause";
-    }
-
-    public void StopDemo()
-    {
-        revision++;
-        IsPlaying = false;
-        page?.Stop();
-        if (pause is not null)
-        {
-            pause.Text = "Pause";
-            pause.Disabled = true;
-        }
-        if (status is not null) status.Text = "Cancelled · values retained";
-    }
-
-    public override void _Process(double delta)
-    {
-        if (page?.Error is { } error) status.Text = "Tween error: " + error;
-        else if (IsPlaying) status.Text = $"{(paused ? "Paused" : "Playing")}  ·  {DemoTweenCount} active tweens";
-    }
-
     private void DestroyPage()
     {
         if (page is null) return;
@@ -259,7 +214,6 @@ public partial class TweenDemo : Control
 
     public override void _ExitTree()
     {
-        StopDemo();
         // Children are still valid during tree exit; release page-owned resources after their deletion.
         DestroyPage();
         foreach (var resource in themeResources) resource.Dispose();

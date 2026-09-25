@@ -3,7 +3,6 @@
 
 using System;
 using System.Linq;
-using System.Threading.Tasks;
 using Godot;
 using tweens.gd;
 namespace testbed;
@@ -34,23 +33,5 @@ public sealed partial class AsyncDelivery : GalleryEffect
         steps = Enumerable.Range(0, 3).Select(i => Blob(view, 5, 5, Palette.Outline, new Vector2(110 + i * 18, -58))).ToArray();
     }
 
-    protected override void Animate() => Sequence = Deliver(Generation);
-
-    private async Task Deliver(int run)
-    {
-        try
-        {
-            TrackTweens(Report(0, "1 / Position"));
-            if (!await Finished(run, Outward())) return;
-
-            TrackTweens(Report(1, "2 / Position + rotation"));
-            if (!await Finished(run, ReturnAndTurn())) return;
-
-            TrackTweens(Report(2, "3 / Complete"));
-        }
-        catch (Exception error)
-        {
-            GD.PushError(error.ToString());
-        }
-    }
+    protected override void Animate() => Sequence = Deliver();
 }

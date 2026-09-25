@@ -48,6 +48,5 @@ public sealed partial class CurveFollower2D : GalleryEffect
         Diamond(ship, Vector2.Zero, new Color("c3f5df"), 6);
     }
 
-    // Only the testbed needs tracking; the animation itself returns ordinary tween handles.
-    protected override void Animate() => TrackTweens(FollowPath(Seconds, Ease, PingPong));
+    protected override void Animate() => Sequence = Run(FollowPath());
 }

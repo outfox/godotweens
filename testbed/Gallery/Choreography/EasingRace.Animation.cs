@@ -2,11 +2,12 @@
 // SPDX-FileCopyrightText: 2026 Moritz Voss
 
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using Godot;
 using tweens.gd;
 namespace testbed;
 
-// Scene setup and playback bookkeeping are in EasingRace.cs.
+// Scene setup is in EasingRace.cs.
 public sealed partial class EasingRace
 {
     private const float StartLine = -120, FinishLine = 120, LaneHeight = 24;
@@ -16,23 +17,24 @@ public sealed partial class EasingRace
         (EaseType.BackInOut, "Back"), (EaseType.ElasticOut, "Elastic"), (EaseType.BounceOut, "Bounce"),
     ];
 
-    private IEnumerable<TweenInstance> CreateAnimation()
+    private async Task AnimateAsync()
     {
+        var tweens = new List<TweenInstance>();
         for (var lane = 0; lane < racers.Length; lane++)
             for (var position = 0; position < racers[lane].Length; position++)
             {
                 var ease = Lanes[lane].Ease;
                 var delay = position * 0.05;
-                void Race(TweenOptions t)
+                tweens.Add(racers[lane][position].TweenPositionX(FinishLine, Seconds, options =>
                 {
-                    t.Ease = ease;
-                    t.UsePingPong = true;
-                    t.Repeats = TweenOptions.Infinite;
-                    t.PingPongInterval = 0.3;
-                    t.RepeatInterval = 0.3;
-                    t.Delay = delay;
-                }
-                yield return racers[lane][position].TweenPositionX(FinishLine, Seconds, Race);
+                    options.Ease = ease;
+                    options.UsePingPong = true;
+                    options.Repeats = TweenOptions.Infinite;
+                    options.PingPongInterval = 0.3;
+                    options.RepeatInterval = 0.3;
+                    options.Delay = delay;
+                }));
             }
+        await Group.Of([.. tweens]).End;
     }
 }

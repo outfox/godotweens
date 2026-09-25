@@ -25,5 +25,5 @@ public sealed partial class CameraLens : GalleryEffect
         }
     }
 
-    protected override void Animate() => TrackTweens(CreateAnimation());
+    protected override void Animate() => Sequence = Run(AnimateAsync());
 }

@@ -51,5 +51,5 @@ public sealed partial class CurveFollower3D : GalleryEffect
     private static PathFollow3D Follower(Path3D path)
         => path.Add(new PathFollow3D { Loop = false, RotationMode = PathFollow3D.RotationModeEnum.None });
 
-    protected override void Animate() => TrackTweens(CreateAnimation());
+    protected override void Animate() => Sequence = Run(AnimateAsync());
 }

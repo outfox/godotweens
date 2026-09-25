@@ -1,17 +1,28 @@
 // SPDX-License-Identifier: MIT
 // SPDX-FileCopyrightText: 2026 Moritz Voss
 
-using System.Collections.Generic;
+using System.Threading.Tasks;
 using Godot;
 using tweens.gd;
 namespace testbed;
 
-// Scene setup and playback bookkeeping are in CameraLens.cs.
+// Scene setup is in CameraLens.cs.
 public sealed partial class CameraLens
 {
-    private IEnumerable<TweenInstance> CreateAnimation()
+    private async Task AnimateAsync()
     {
-        yield return camera.TweenFov(65, Seconds, Cycle);
-        yield return camera.TweenHOffset(0.7f, Seconds, Cycle);
+        await Group.Of([
+            camera.TweenFov(65, Seconds, Cycle),
+            camera.TweenHOffset(0.7f, Seconds, Cycle),
+        ]).End;
+    }
+
+    private void Cycle(TweenOptions options)
+    {
+        options.Ease = Ease;
+        options.UsePingPong = PingPong;
+        options.Repeats = TweenOptions.Infinite;
+        options.RepeatInterval = 0.25;
+        options.PingPongInterval = 0.15;
     }
 }

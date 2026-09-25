@@ -9,16 +9,35 @@ namespace testbed.Tests;
 
 
 [Collection<HeadlessCollection>]
-public class DemoTests(HeadlessFixture godot)
+public class DemoTests
 {
+    private readonly HeadlessFixture godot;
+
+    public DemoTests(HeadlessFixture godot)
+    {
+        this.godot = godot;
+        // The fixture boots the main scene. Remove it before checking the shared scheduler.
+        Pump();
+        if (godot.Tree.CurrentScene is TweenDemo demo) demo.Free();
+    }
+
     private void Pump() { for (var i = 0; i < 3; i++) godot.Engine.Iteration(); }
 
     [Theory]
     [InlineData(nameof(BouncingBall))] [InlineData(nameof(SlimeHop))] [InlineData(nameof(JellyCube))]
     [InlineData(nameof(JellyButton))] [InlineData(nameof(AsyncDelivery))]
-    public void AnimationPartialsRemainTrackedAcrossPhasesAndCallbackCreatedTweens(string name)
+    [InlineData(nameof(SquashWave))] [InlineData(nameof(EasingRace))] [InlineData(nameof(Spirograph))]
+    [InlineData(nameof(CombinedTransforms))] [InlineData(nameof(CameraPan))] [InlineData(nameof(CurveFollower2D))]
+    [InlineData(nameof(TextReveal))] [InlineData(nameof(ScrollingList))] [InlineData(nameof(RangeMeter))]
+    [InlineData(nameof(OffsetTransforms))] [InlineData(nameof(GlowingRibbon))] [InlineData(nameof(LightSweep))]
+    [InlineData(nameof(ParticleStream))] [InlineData(nameof(PolygonEchoes))] [InlineData(nameof(CameraLens))]
+    [InlineData(nameof(CurveFollower3D))] [InlineData(nameof(ParentedRotation))] [InlineData(nameof(Spotlight))]
+    [InlineData(nameof(AlbedoFade))] [InlineData(nameof(EmissionPulse))] [InlineData(nameof(SharedMaterial))]
+    [InlineData(nameof(UvScroll))]
+    [InlineData(nameof(CardDeal))]
+    public void FreeingTheStageSettlesAnimationTasksThroughoutTheirPhases(string name)
     {
-        // Sample launch, flight, impact, recovery, and subsequent repeats; include the button's OnEnd tween.
+        // Sample launch, flight, impact, recovery, and subsequent repeats, including awaited button phases.
         for (var updates = 0; updates <= 100; updates += 4)
         {
             var stage = new Control { Size = new Vector2(600, 300) };
@@ -30,37 +49,50 @@ public class DemoTests(HeadlessFixture godot)
             try
             {
                 effect.Start(1.8, EaseType.CubicInOut, true);
-                var sequence = effect.Sequence!;
+                var sequence = Assert.IsAssignableFrom<Task>(effect.Sequence);
                 for (var i = 0; i < updates; i++) scheduler.Update(0.05);
-                Assert.Null(effect.Error);
-                effect.Pause(true);
-                Assert.True(effect.AllPaused);
-                var active = effect.ActiveCount;
-                scheduler.Update(5);
-                Assert.Equal(active, effect.ActiveCount);
-
-                effect.Stop();
+                Assert.False(sequence.IsFaulted);
+                stage.Free();
                 Assert.True(sequence.IsCompletedSuccessfully);
                 scheduler.Update(5);
                 Assert.Equal(0, scheduler.ActiveCount);
-                Assert.Equal(0, effect.ActiveCount);
-
-                effect.Start(1.8, EaseType.CubicInOut, true);
-                Assert.True(effect.ActiveCount > 0);
-                Assert.NotSame(sequence, effect.Sequence);
-                effect.Stop();
-                Assert.True(effect.Sequence!.IsCompletedSuccessfully);
-                scheduler.Update(5);
-                Assert.Equal(0, scheduler.ActiveCount);
             }
-            finally { effect.Stop(); stage.Free(); effect.ReleaseResources(); }
+            finally
+            {
+                if (GodotObject.IsInstanceValid(stage)) stage.Free();
+                effect.ReleaseResources();
+            }
         }
         Pump();
         Assert.Empty(godot.Errors.Drain());
     }
 
     [Fact]
-    public void PathTweenGroupPreservesTrailingTimingPauseAndCancellation()
+    public void DeliveryTaskIncludesTheFinalStatusAnimation()
+    {
+        var stage = new Control { Size = new Vector2(600, 300) };
+        godot.Tree.Root.AddChild(stage);
+        var effect = new AsyncDelivery();
+        effect.Attach(stage);
+        var scheduler = TweenRuntime.GetRunner(stage).Scheduler;
+        try
+        {
+            effect.Start(1, EaseType.Linear, false);
+            var sequence = Assert.IsAssignableFrom<Task>(effect.Sequence);
+            for (var i = 0; i < 41; i++) scheduler.Update(0.05);
+            Assert.True(scheduler.ActiveCount > 0);
+            Assert.False(sequence.IsCompleted);
+            for (var i = 0; i < 11; i++) scheduler.Update(0.05);
+            Assert.True(sequence.IsCompletedSuccessfully);
+            Assert.Equal(0, scheduler.ActiveCount);
+        }
+        finally { stage.Free(); effect.ReleaseResources(); }
+        Pump();
+        Assert.Empty(godot.Errors.Drain());
+    }
+
+    [Fact]
+    public void PathTweenGroupPreservesTrailingTimingAndPingPong()
     {
         var stage = new Control { Size = new Vector2(600, 300) };
         godot.Tree.Root.AddChild(stage);
@@ -73,117 +105,58 @@ public class DemoTests(HeadlessFixture godot)
         try
         {
             effect.Start(1, EaseType.Linear, true);
-            Assert.Equal(9, effect.ActiveCount);
             scheduler.Update(0.17);
             Assert.True(leader.ProgressRatio > followers[0].ProgressRatio);
             Assert.True(followers[0].ProgressRatio > followers[1].ProgressRatio);
             Assert.True(followers[1].ProgressRatio > 0);
             Assert.Equal(0, followers[2].ProgressRatio);
 
-            var progress = followers.Select(f => f.ProgressRatio).ToArray();
-            effect.Pause(true);
-            Assert.True(effect.AllPaused);
-            scheduler.Update(5);
-            Assert.Equal(progress, followers.Select(f => f.ProgressRatio).ToArray());
-            effect.Pause(false);
             scheduler.Update(0.33);
             Assert.InRange(leader.ProgressRatio, 0.499f, 0.501f);
             scheduler.Update(0.5);
             Assert.InRange(leader.ProgressRatio, 0.999f, 1);
             scheduler.Update(0.65);
             Assert.InRange(leader.ProgressRatio, 0.499f, 0.501f);
-            Assert.Null(effect.Error);
-
-            effect.Stop();
-            Assert.Equal(0, effect.ActiveCount);
-            scheduler.Update(5);
-            Assert.Equal(0, scheduler.ActiveCount);
-            Assert.InRange(leader.ProgressRatio, 0.499f, 0.501f);
         }
-        finally { effect.Stop(); stage.Free(); effect.ReleaseResources(); }
-        Pump();
-        Assert.Empty(godot.Errors.Drain());
-    }
-
-    [Theory]
-    [InlineData(0)] [InlineData(12)] [InlineData(24)] [InlineData(36)] [InlineData(48)]
-    [InlineData(60)] [InlineData(72)] [InlineData(84)] [InlineData(96)]
-    public void CardCompletionGroupsPauseCancelAndRestartThroughoutTheSequence(int updates)
-    {
-        var stage = new Control { Size = new Vector2(600, 300) };
-        godot.Tree.Root.AddChild(stage);
-        var cards = new CardDeal();
-        cards.Attach(stage);
-        var scheduler = TweenRuntime.GetRunner(stage).Scheduler;
-        try
-        {
-            cards.Start(1.8, EaseType.CubicInOut, true);
-            Assert.Equal(10, cards.ActiveCount);
-            var firstRun = cards.Sequence!;
-            for (var i = 0; i < updates; i++) scheduler.Update(0.05);
-            Assert.False(firstRun.IsCompleted);
-            Assert.True(cards.ActiveCount > 0);
-            Assert.Null(cards.Error);
-
-            cards.Pause(true);
-            Assert.True(cards.AllPaused);
-            var active = cards.ActiveCount;
-            scheduler.Update(5);
-            Assert.Equal(active, cards.ActiveCount);
-            Assert.False(firstRun.IsCompleted);
-            cards.Pause(false);
-
-            cards.Stop();
-            Assert.True(firstRun.IsCompletedSuccessfully);
-            Assert.Equal(0, cards.ActiveCount);
-            scheduler.Update(5);
-            Assert.Equal(0, scheduler.ActiveCount);
-
-            cards.Start(1.8, EaseType.CubicInOut, true);
-            Assert.Equal(10, cards.ActiveCount);
-            Assert.NotSame(firstRun, cards.Sequence);
-            cards.Stop();
-            Assert.True(cards.Sequence!.IsCompletedSuccessfully);
-            scheduler.Update(5);
-            Assert.Equal(0, scheduler.ActiveCount);
-        }
-        finally { cards.Stop(); stage.Free(); cards.ReleaseResources(); }
+        finally { stage.Free(); effect.ReleaseResources(); }
         Pump();
         Assert.Empty(godot.Errors.Drain());
     }
 
     [Fact]
-    public void GalleryNavigationPauseCancelAndRestartDoNotLeakPlayback()
+    public void GalleryNavigationAndRestartDisposeThePreviousAnimation()
     {
-        var scene = GD.Load<PackedScene>("res://main.tscn");
-        var demo = scene.Instantiate<testbed.TweenDemo>();
+        var demo = GD.Load<PackedScene>("res://main.tscn").Instantiate<TweenDemo>();
         godot.Tree.Root.AddChild(demo);
         try
         {
-            Pump(); Assert.True(demo.IsPlaying); Assert.True(demo.DemoTweenCount >= 9);
-            var sequence = demo.ChainTask!;
-            demo.TogglePause(); Assert.True(demo.CurrentPage!.AllPaused);
-            demo.StopDemo(); Assert.False(demo.IsPlaying); Assert.Equal(0, demo.DemoTweenCount);
-            Assert.True(sequence.IsCompletedSuccessfully);
-            // Repeat navigation exercises both owner-bound material cleanup and deferred page starts.
+            Pump();
             for (var round = 0; round < 2; round++)
-            for (var index = 0; index < testbed.TweenDemo.PageNames.Length; index++)
+            for (var index = 0; index < TweenDemo.PageNames.Length; index++)
             {
                 var old = demo.CurrentPage!;
+                var sequence = old.SequenceTask;
                 demo.SelectPage(index); Pump();
-                Assert.False(GodotObject.IsInstanceValid(old)); Assert.Equal(0, old.ActiveCount);
-                Assert.Equal(index, demo.SelectedPage); Assert.Null(demo.CurrentPage!.Error);
-                if (demo.CurrentPage is not ShadersPage) Assert.True(demo.DemoTweenCount >= 7);
-                demo.TogglePause(); Assert.True(demo.CurrentPage.AllPaused);
-                demo.TogglePause();
-                demo.RestartDemo(); Pump(); Assert.Null(demo.CurrentPage!.Error);
-                demo.StopDemo(); Assert.Equal(0, demo.DemoTweenCount);
+                Assert.False(GodotObject.IsInstanceValid(old));
+                if (sequence is not null) Assert.True(sequence.IsCompletedSuccessfully);
+                Assert.Equal(index, demo.SelectedPage);
+
+                var current = demo.CurrentPage!;
+                var animation = current.SequenceTask;
+                demo.RestartDemo(); Pump();
+                Assert.False(GodotObject.IsInstanceValid(current));
+                if (animation is not null) Assert.True(animation.IsCompletedSuccessfully);
+                if (demo.CurrentPage is not ShadersPage)
+                    Assert.False(Assert.IsAssignableFrom<Task>(demo.CurrentPage!.SequenceTask).IsCompleted);
             }
             demo.SelectPage(1); demo.SelectPage(4); demo.SelectPage(0); Pump();
-            Assert.Equal(0, demo.SelectedPage); Assert.True(demo.DemoTweenCount >= 9);
+            Assert.Equal(0, demo.SelectedPage);
+            Assert.False(demo.CurrentPage!.SequenceTask!.IsCompleted);
             Assert.Throws<ArgumentOutOfRangeException>(() => demo.SelectPage(99));
         }
         finally { demo.Free(); }
+        Pump();
+        Assert.Empty(godot.Errors.Drain());
     }
     [Fact]
     public void FreeingBeforeThePageStartsDropsTheDeferredStart()
@@ -197,9 +170,9 @@ public class DemoTests(HeadlessFixture godot)
     public void LeavingDuringAnAwaitedSequenceSettlesItAndDisposesThePage()
     {
         var demo = new testbed.TweenDemo(); godot.Tree.Root.AddChild(demo); Pump();
-        var sequence = demo.ChainTask!; var page = demo.CurrentPage!;
+        var page = demo.CurrentPage!; var sequence = page.SequenceTask!;
         demo.Free();
         Assert.True(sequence.IsCompletedSuccessfully);
-        Assert.False(GodotObject.IsInstanceValid(page)); Assert.Equal(0, page.ActiveCount);
+        Assert.False(GodotObject.IsInstanceValid(page));
     }
 }

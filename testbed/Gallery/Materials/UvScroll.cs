@@ -24,5 +24,5 @@ public sealed partial class UvScroll : GalleryEffect
         Mesh(scene.View, new QuadMesh { Size = new Vector2(3.8f, 1.35f) }, material);
     }
 
-    protected override void Animate() => TrackTweens(CreateAnimation());
+    protected override void Animate() => Sequence = Run(AnimateAsync());
 }

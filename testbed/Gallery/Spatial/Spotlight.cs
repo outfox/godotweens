@@ -37,5 +37,5 @@ public sealed partial class Spotlight : GalleryEffect
         Mesh(spot, new SphereMesh { Radius = 0.12f, Height = 0.24f }, bulb);
     }
 
-    protected override void Animate() => TrackTweens(CreateAnimation());
+    protected override void Animate() => Sequence = Run(AnimateAsync());
 }

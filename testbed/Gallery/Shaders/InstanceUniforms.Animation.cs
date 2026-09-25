@@ -1,17 +1,28 @@
 // SPDX-License-Identifier: MIT
 // SPDX-FileCopyrightText: 2026 Moritz Voss
 
-using System.Collections.Generic;
+using System.Threading.Tasks;
 using Godot;
 using tweens.gd;
 namespace testbed;
 
-// Scene setup and playback bookkeeping are in InstanceUniforms.cs.
+// Scene setup is in InstanceUniforms.cs.
 public sealed partial class InstanceUniforms
 {
-    private IEnumerable<TweenInstance> CreateAnimation()
+    private async Task AnimateAsync()
     {
-        yield return first.TweenInstanceShaderParameter("amount", 0.85f, Seconds, Cycle);
-        yield return second.TweenInstanceShaderParameter("amount", 0.15f, Seconds, Cycle);
+        await Group.Of([
+            first.TweenInstanceShaderParameter("amount", 0.85f, Seconds, Cycle),
+            second.TweenInstanceShaderParameter("amount", 0.15f, Seconds, Cycle),
+        ]).End;
+    }
+
+    private void Cycle(TweenOptions options)
+    {
+        options.Ease = Ease;
+        options.UsePingPong = PingPong;
+        options.Repeats = TweenOptions.Infinite;
+        options.RepeatInterval = 0.25;
+        options.PingPongInterval = 0.15;
     }
 }

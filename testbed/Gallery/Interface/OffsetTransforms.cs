@@ -38,5 +38,5 @@ public sealed partial class OffsetTransforms : GalleryEffect
         return tile;
     }
 
-    protected override void Animate() => TrackTweens(CreateAnimation());
+    protected override void Animate() => Sequence = Run(AnimateAsync());
 }
