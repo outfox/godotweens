@@ -5,7 +5,7 @@ using System;
 using System.Linq;
 using System.Threading.Tasks;
 using Godot;
-using godotweens;
+using tweens.gd;
 namespace testbed;
 
 /// <summary>A one-shot sequence: restart the page to replay it.</summary>

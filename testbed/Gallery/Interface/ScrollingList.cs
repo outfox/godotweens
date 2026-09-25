@@ -2,7 +2,7 @@
 // SPDX-FileCopyrightText: 2026 Moritz Voss
 
 using Godot;
-using godotweens;
+using tweens.gd;
 namespace testbed;
 
 public sealed class ScrollingList : GalleryEffect

@@ -12,8 +12,8 @@ function Invoke-WebRequest {
 }
 function Get-ChildItem {
     param($Path, [switch] $File)
-    [pscustomobject]@{ FullName = 'godotweens.0.1.0.nupkg' }
-    [pscustomobject]@{ FullName = 'godotweens.0.1.0.snupkg' }
+    [pscustomobject]@{ FullName = 'tweens.gd.0.1.0.nupkg' }
+    [pscustomobject]@{ FullName = 'tweens.gd.0.1.0.snupkg' }
 }
 function gh {
     $releaseTestState.Commands.Add(@($args))

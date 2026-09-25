@@ -5,7 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Godot;
-using godotweens;
+using tweens.gd;
 namespace testbed;
 
 /// <summary>One disposable playground: a grid of effect cards. Only the selected page is instantiated.</summary>

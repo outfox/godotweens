@@ -3,7 +3,7 @@
 
 using System.Reflection;
 using Godot;
-using godotweens;
+using tweens.gd;
 using twodog.Testing;
 using twodog.Testing.Xunit;
 

@@ -14,7 +14,7 @@
         <DefaultItemExcludes>$(DefaultItemExcludes);testbed.2dog/**;testbed.tests/**</DefaultItemExcludes>
     </PropertyGroup>
     <ItemGroup>
-        <ProjectReference Include="../godotweens/godotweens.csproj" />
+        <ProjectReference Include="../csharp/tweens.gd.csproj" />
     </ItemGroup>
     <ItemGroup>
         <!-- Web bootstrap lives in the web host folder but must compile into THIS assembly: scripts resolve

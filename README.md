@@ -1,32 +1,42 @@
-# godotweens
+# tweens.gd
 
-A typed C# tween library for GodotSharp and 2dog, inspired by Jeffrey Lanters' **unity-tweens**. Reuse definitions, control independent playback handles, and compose animations with `async`/`await`.
+Tween libraries for Godot, inspired by Jeffrey Lanters' **unity-tweens**. The C# NuGet package supersedes `godotweens`; a GDScript addon with equivalent functionality is planned.
+
+| Project | Location | Status |
+| --- | --- | --- |
+| C# NuGet package `tweens.gd` | `csharp/` | Implemented; examples below |
+| GDScript Godot addon | `addons/tweens_gd/` (planned) | Backend and performance evaluation pending |
+| Public documentation | `docs/` | Astro/Starlight template; content pending |
+
+Internal working documents live in the gitignored `docs-internal/` directory. See [Migrating from godotweens](MIGRATING.md) for package, namespace, and project-reference changes. The following documentation describes the C# implementation.
+
+Reuse definitions, control independent playback handles, and compose animations with `async`/`await`.
 
 Targets **.NET 10 / GodotSharp 4.7.2**. The included testbed uses a floating `2dog 4.7.2.*` package version. The library has no dependency on 2dog, native engine packages, or editor assemblies; your application supplies the engine. Use matching GodotSharp/engine versions. Other Godot versions and trimmed/AOT/web exports have not been validated.
 
 ## Run the testbed
 
 ```powershell
-dotnet build godotweens.slnx
+dotnet build tweens.gd.slnx
 dotnet test testbed/testbed.tests/testbed.tests.csproj
 dotnet run --project testbed/testbed.2dog
 ```
 
-The testbed is a six-page gallery with 24 examples: motion and paths, interface, drawing and particles, a 3D stage, materials, and shaders. Change easing and duration, pause/resume, cancel, or restart the current page. See the [gallery guide](docs/TESTBED-GALLERY.md) for the examples, controls and capture commands. From `testbed/`, `dotnet test` and `dotnet run --project testbed.2dog` also work.
+The testbed is a six-page gallery with 24 examples: motion and paths, interface, drawing and particles, a 3D stage, materials, and shaders. Change easing and duration, pause/resume, cancel, or restart the current page. From `testbed/`, `dotnet test` and `dotnet run --project testbed.2dog` also work.
 
 ## Use the library
 
-Add a project reference to `godotweens/godotweens.csproj` (as the testbed does), or consume a locally built package:
+Add a project reference to `csharp/tweens.gd.csproj` (as the testbed does), or consume a locally built package:
 
 ```powershell
-dotnet pack godotweens/godotweens.csproj -c Release -o artifacts/packages
+dotnet pack csharp/tweens.gd.csproj -c Release -o artifacts/packages
 ```
 
 Create a tween from `_Ready` or later on a node inside the tree:
 
 ```csharp
 using Godot;
-using godotweens;
+using tweens.gd;
 
 var movement = sprite.Tween(new Position2DTween
 {
@@ -130,7 +140,7 @@ label.TweenVisibleRatio(1, 1.5, options => options.From = 0);
 audio.TweenVolumeDb(-20, 1);
 ```
 
-The catalog now also covers cameras, paths, 3D appearance, Control pivots and offset transforms, drawing, canvas/parallax, spatial audio, additional lights, animation, particles, decals, fog volumes, spring arms and integer frame/scroll/text properties. See the [complete node/extension catalog](docs/NODE-TWEENS.md) for definitions, units and constraints, and [material and shader tweens](docs/MATERIAL-TWEENS.md) for resource properties and typed uniforms.
+The catalog now also covers cameras, paths, 3D appearance, Control pivots and offset transforms, drawing, canvas/parallax, spatial audio, additional lights, animation, particles, decals, fog volumes, spring arms and integer frame/scroll/text properties. Detailed adapter documentation will be published in the public documentation site.
 
 ### Materials and shader uniforms
 
@@ -143,7 +153,7 @@ shaderMaterial.TweenShaderParameter("dissolve", 1f, 0.5, GetTree());
 mesh.TweenInstanceShaderParameter("pulse", 1f, 0.5);
 ```
 
-Includes 25 BaseMaterial3D adapters and float/double, int, vector and color shader uniforms. Defaults and explicit override state are preserved during non-retaining completion. See [material lifetime, rendering prerequisites and examples](docs/MATERIAL-TWEENS.md).
+Includes 25 BaseMaterial3D adapters and float/double, int, vector and color shader uniforms. Defaults and explicit override state are preserved during non-retaining completion.
 
 ### Custom properties and values
 
@@ -179,10 +189,10 @@ Unity coroutine APIs, the editor inspector, component lookup, and Unity-specific
 
 ## Validation and known limits
 
-GitHub Actions builds and tests the solution, verifies the `godotweens` NuGet package,
+GitHub Actions builds and tests the solution, verifies the `tweens.gd` NuGet package,
 and uploads package artifacts. Version tags create GitHub releases with package and
-symbol downloads. See [Releasing godotweens](https://github.com/outfox/godotweens/blob/main/docs/RELEASING.md) for the release process
-and NuGet trusted-publishing setup.
+symbol downloads. Maintainer release instructions and NuGet trusted-publishing
+setup are kept locally in `docs-internal/RELEASING.md`.
 
 Tests cover deterministic playback, easing and overshoot, callback mutation/faults, snapshots, async completion, main-thread continuation, node lifetime/pause, adapter families, the demo, and scheduler steady-state allocations. Material tests cover shared-resource ownership, disposal and all property/context overloads. Run `dotnet test testbed/testbed.tests/testbed.tests.csproj -c Release -p:RenderingTests=true` separately for shader contracts and rendered pixel checks (requires graphics/display). The desktop testbed has also been rendered with the OpenGL compatibility renderer. The library is packaged independently of its testbed and the gitignored Unity reference.
 

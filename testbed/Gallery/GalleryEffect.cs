@@ -6,7 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Godot;
-using godotweens;
+using tweens.gd;
 namespace testbed;
 
 /// <summary>One card of a gallery page: builds its visuals on a stage, then plays and owns its tweens.</summary>

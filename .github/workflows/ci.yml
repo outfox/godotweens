@@ -42,29 +42,29 @@ jobs:
         run: |
           $version = $env:RELEASE_VERSION
           if (!$version) {
-            $project = [xml](Get-Content godotweens/godotweens.csproj -Raw)
+            $project = [xml](Get-Content csharp/tweens.gd.csproj -Raw)
             $version = $project.Project.PropertyGroup.Version
           }
           "PACKAGE_VERSION=$version" >> $env:GITHUB_ENV
       - name: Restore
-        run: dotnet restore godotweens.slnx -p:Configuration=Release
+        run: dotnet restore tweens.gd.slnx -p:Configuration=Release
       - name: Check release failure handling
         run: ./.github/scripts/Test-ReleasePublishing.ps1
       - name: Build
-        run: dotnet build godotweens.slnx -c Release --no-restore -p:ContinuousIntegrationBuild=true -p:Version=$env:PACKAGE_VERSION
+        run: dotnet build tweens.gd.slnx -c Release --no-restore -p:ContinuousIntegrationBuild=true -p:Version=$env:PACKAGE_VERSION
       - name: Test
         run: dotnet test testbed/testbed.tests/testbed.tests.csproj -c Release --no-build --no-restore --logger 'trx;LogFileName=tests.trx' --results-directory artifacts/test-results
       - name: Run headless testbed
         timeout-minutes: 2
         run: dotnet run --project testbed/testbed.2dog -c Release --no-build --no-restore -- --headless --quit-after 12
       - name: Pack
-        run: dotnet pack godotweens/godotweens.csproj -c Release --no-build --no-restore -p:ContinuousIntegrationBuild=true -p:Version=$env:PACKAGE_VERSION -o artifacts/packages
+        run: dotnet pack csharp/tweens.gd.csproj -c Release --no-build --no-restore -p:ContinuousIntegrationBuild=true -p:Version=$env:PACKAGE_VERSION -o artifacts/packages
       - name: Verify package and compile a package consumer
         run: ./.github/scripts/Verify-Package.ps1 -Version $env:PACKAGE_VERSION
       - name: Upload packages
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: godotweens-packages
+          name: tweens.gd-packages
           path: |
             artifacts/packages/*.nupkg
             artifacts/packages/*.snupkg
