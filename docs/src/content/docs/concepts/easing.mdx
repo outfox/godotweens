@@ -3,6 +3,8 @@ title: Easing
 description: Built-in easing families, overshoot, custom functions, and Godot curves.
 ---
 
+import EasingPlayground from '../../../components/EasingPlayground.astro';
+
 Easing maps normalized leg progress to an interpolation weight. It changes how
 motion accelerates and decelerates while keeping the same timing. The C# library
 provides 31 easing functions; GDScript equivalents are planned.
@@ -11,6 +13,9 @@ provides 31 easing functions; GDScript equivalents are planned.
 
 `EaseType.Linear` is the default. Each other family has `In`, `Out`, and `InOut`
 variants, for example `EaseType.CubicOut`.
+
+<EasingPlayground />
+
 
 | Family | Character |
 | --- | --- |

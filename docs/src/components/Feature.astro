@@ -1,0 +1,460 @@
+---
+// One landing-page feature: a looping vignette that acts out the claim, then the words.
+interface Props {
+	title: string;
+	art: 'reuse' | 'control' | 'properties' | 'materials';
+}
+const { title, art } = Astro.props;
+---
+
+<article class="feature">
+	<div class:list={['vignette', art]} aria-hidden="true">
+		{
+			art === 'reuse' && (
+				<>
+					<div class="def">
+						<i />
+						<i />
+						<i />
+					</div>
+					<div class="lanes">
+						{[0, 1, 2].map((n) => (
+							<div class="lane" style={`--n:${n}`}>
+								<b />
+							</div>
+						))}
+					</div>
+				</>
+			)
+		}
+		{
+			art === 'control' && (
+				<>
+					<div class="lane">
+						<b />
+					</div>
+					<div class="transport">
+						<span class="key k-play">
+							<svg viewBox="0 0 16 16">
+								<path d="M5 3l8 5-8 5z" />
+							</svg>
+						</span>
+						<span class="key k-pause">
+							<svg viewBox="0 0 16 16">
+								<path d="M4 3h3v10H4zM9 3h3v10H9z" />
+							</svg>
+						</span>
+						<span class="key k-stop">
+							<svg viewBox="0 0 16 16">
+								<path d="M4 4h8v8H4z" />
+							</svg>
+						</span>
+					</div>
+				</>
+			)
+		}
+		{
+			art === 'properties' && (
+				<>
+					<div class="ghost-sprite" />
+					<div class="sprite" />
+					<div class="props">
+						<span>position</span>
+						<span>rotation</span>
+						<span>scale</span>
+						<span>modulate</span>
+					</div>
+				</>
+			)
+		}
+		{
+			art === 'materials' && (
+				<>
+					<div class="mesh" />
+					<div class="mesh" />
+					<div class="shared">
+						<svg viewBox="0 0 120 30">
+							<path d="M10 4C10 20 60 12 60 26M110 4C110 20 60 12 60 26" />
+						</svg>
+						<span class="swatch" />
+					</div>
+				</>
+			)
+		}
+	</div>
+	<h3>{title}</h3>
+	<div class="body"><slot /></div>
+</article>
+
+<style>
+	.feature {
+		display: grid;
+		grid-template-rows: auto auto 1fr;
+		gap: 0.6rem;
+		margin: 0 !important;
+	}
+	h3 {
+		margin: 0.4rem 0 0 !important;
+		font-size: var(--sl-text-xl);
+		font-weight: 740;
+		font-stretch: 92%;
+		color: var(--sl-color-white);
+	}
+	.body :global(p) {
+		margin: 0;
+		color: var(--tw-soft);
+	}
+	.vignette {
+		position: relative;
+		height: 9.5rem;
+		border-radius: 1.1rem;
+		background:
+			linear-gradient(var(--tw-grid) 1px, transparent 1px) 0 0 / 100% 1.5rem,
+			var(--tw-stage);
+		border: 1px solid var(--tw-outline);
+		overflow: hidden;
+		transition: translate 0.45s var(--ease-back-out);
+	}
+	.feature:hover .vignette {
+		translate: 0 -4px;
+	}
+
+	/* reuse: one definition, three independent playbacks starting at different times */
+	.reuse {
+		display: grid;
+		grid-template-columns: 4.5rem 1fr;
+		align-items: center;
+		gap: 1rem;
+		padding-inline: 1rem;
+	}
+	.def {
+		display: grid;
+		gap: 0.35rem;
+		padding: 0.7rem;
+		border-radius: 0.7rem;
+		background: var(--tw-surface);
+		border: 1px solid var(--tw-outline);
+		animation: stamp 3s var(--ease-back-out) infinite;
+	}
+	.def i {
+		display: block;
+		height: 0.35rem;
+		border-radius: 1rem;
+		background: var(--tw-amber);
+	}
+	.def i:nth-child(2) {
+		width: 70%;
+		background: var(--tw-blue);
+	}
+	.def i:nth-child(3) {
+		width: 45%;
+		background: var(--tw-mint);
+	}
+	@keyframes stamp {
+		0%,
+		100% {
+			scale: 1;
+		}
+		8% {
+			scale: 0.9;
+		}
+		18% {
+			scale: 1;
+		}
+	}
+	.lanes {
+		display: grid;
+		gap: 1rem;
+	}
+	.lane {
+		position: relative;
+		height: 2px;
+		background: var(--tw-outline);
+		border-radius: 2px;
+	}
+	.lane b {
+		position: absolute;
+		left: 0;
+		top: -7px;
+		width: 16px;
+		height: 16px;
+		border-radius: 50%;
+		background: var(--tw-mint);
+		animation: run 3s var(--ease-back-out) infinite both;
+		animation-delay: calc(var(--n, 0) * 0.35s);
+	}
+	@keyframes run {
+		0%,
+		10% {
+			left: 0;
+			opacity: 0;
+			scale: 0.3;
+		}
+		14% {
+			opacity: 1;
+			scale: 1;
+		}
+		55%,
+		85% {
+			left: calc(100% - 16px);
+			opacity: 1;
+			scale: 1;
+		}
+		100% {
+			left: calc(100% - 16px);
+			opacity: 0;
+			scale: 0.3;
+		}
+	}
+
+	/* control: the ball runs, pauses, resumes, then a cancel freezes it where it is */
+	.control {
+		display: grid;
+		align-content: center;
+		gap: 1.6rem;
+		padding-inline: 1.4rem;
+	}
+	.control .lane b {
+		animation: controlled 4.8s linear infinite;
+		background: var(--tw-blue);
+	}
+	@keyframes controlled {
+		0% {
+			left: 0;
+			background: var(--tw-blue);
+		}
+		25%,
+		45% {
+			left: 35%;
+		}
+		68% {
+			left: 62%;
+			background: var(--tw-blue);
+		}
+		70%,
+		96% {
+			left: 62%;
+			background: var(--tw-muted);
+		}
+		100% {
+			left: 0;
+			background: var(--tw-blue);
+		}
+	}
+	.transport {
+		display: flex;
+		gap: 0.5rem;
+		justify-content: center;
+	}
+	.key {
+		display: grid;
+		place-items: center;
+		width: 2.2rem;
+		height: 2.2rem;
+		border-radius: 50%;
+		background: var(--tw-raised);
+		fill: var(--tw-soft);
+	}
+	.key svg {
+		width: 0.9rem;
+	}
+	.k-play {
+		animation: press-play 4.8s infinite;
+	}
+	.k-pause {
+		animation: press-pause 4.8s infinite;
+	}
+	.k-stop {
+		animation: press-stop 4.8s infinite;
+	}
+	@keyframes press-play {
+		0%,
+		3%,
+		45%,
+		49% {
+			background: var(--tw-mint);
+			fill: var(--tw-on-accent);
+			scale: 0.9;
+		}
+		8%,
+		40%,
+		54%,
+		100% {
+			background: var(--tw-raised);
+			fill: var(--tw-soft);
+			scale: 1;
+		}
+	}
+	@keyframes press-pause {
+		0%,
+		22% {
+			background: var(--tw-raised);
+			fill: var(--tw-soft);
+			scale: 1;
+		}
+		25%,
+		44% {
+			background: var(--tw-amber);
+			fill: #231705;
+			scale: 0.9;
+		}
+		48%,
+		100% {
+			background: var(--tw-raised);
+			fill: var(--tw-soft);
+			scale: 1;
+		}
+	}
+	@keyframes press-stop {
+		0%,
+		66% {
+			background: var(--tw-raised);
+			fill: var(--tw-soft);
+			scale: 1;
+		}
+		69%,
+		74% {
+			background: var(--tw-rose);
+			fill: #2a0710;
+			scale: 0.9;
+		}
+		80%,
+		100% {
+			background: var(--tw-raised);
+			fill: var(--tw-soft);
+			scale: 1;
+		}
+	}
+
+	/* properties: one sprite, four tweens composing on it */
+	.properties .sprite,
+	.properties .ghost-sprite {
+		position: absolute;
+		left: 18%;
+		top: 50%;
+		width: 2.6rem;
+		height: 2.6rem;
+		margin-top: -1.3rem;
+		border-radius: 0.6rem;
+	}
+	.properties .ghost-sprite {
+		border: 2px dashed var(--tw-outline);
+	}
+	.properties .sprite {
+		background: var(--tw-amber);
+		animation: compose 2.6s var(--ease-elastic-out) infinite alternate;
+	}
+	@keyframes compose {
+		from {
+			translate: 0 0;
+			rotate: 0deg;
+			scale: 1;
+			background: var(--tw-amber);
+		}
+		to {
+			translate: 7rem 0;
+			rotate: 135deg;
+			scale: 1.35;
+			background: var(--tw-blue);
+		}
+	}
+	.props {
+		position: absolute;
+		right: 0.8rem;
+		top: 0.8rem;
+		display: grid;
+		gap: 0.25rem;
+		justify-items: end;
+	}
+	.props span {
+		font-family: var(--sl-font-mono);
+		font-size: 0.66rem;
+		padding: 0.05rem 0.45rem;
+		border-radius: 1rem;
+		background: color-mix(in oklab, var(--tw-bg) 80%, transparent);
+		color: var(--tw-muted);
+		animation: tick 2.6s infinite alternate;
+	}
+	.props span:nth-child(2) {
+		animation-delay: 0.15s;
+	}
+	.props span:nth-child(3) {
+		animation-delay: 0.3s;
+	}
+	.props span:nth-child(4) {
+		animation-delay: 0.45s;
+	}
+	@keyframes tick {
+		0%,
+		40% {
+			color: var(--tw-muted);
+		}
+		60%,
+		100% {
+			color: var(--tw-mint);
+		}
+	}
+
+	/* materials: two meshes share one material, so both change together */
+	.materials {
+		display: flex;
+		justify-content: center;
+		align-items: flex-start;
+		gap: 3.2rem;
+		padding-top: 1.2rem;
+	}
+	.mesh {
+		width: 3.6rem;
+		height: 3.6rem;
+		border-radius: 50%;
+		background: radial-gradient(circle at 32% 30%, #fff8 0 8%, transparent 30%), var(--albedo);
+		box-shadow: 0 0 var(--glow) color-mix(in oklab, var(--albedo) 70%, transparent);
+		animation: albedo 3.2s ease-in-out infinite alternate;
+	}
+	.mesh + .mesh {
+		border-radius: 0.9rem;
+	}
+	@property --albedo {
+		syntax: '<color>';
+		inherits: false;
+		initial-value: #79deb4;
+	}
+	@property --glow {
+		syntax: '<length>';
+		inherits: false;
+		initial-value: 0px;
+	}
+	@keyframes albedo {
+		from {
+			--albedo: #79deb4;
+			--glow: 0px;
+		}
+		to {
+			--albedo: #f2bc74;
+			--glow: 22px;
+		}
+	}
+	.shared {
+		position: absolute;
+		bottom: 0.7rem;
+		left: 50%;
+		translate: -50% 0;
+		display: grid;
+		justify-items: center;
+	}
+	.shared svg {
+		width: 7.5rem;
+		fill: none;
+		stroke: var(--tw-outline);
+		stroke-width: 2;
+		stroke-dasharray: 3 4;
+	}
+	.swatch {
+		width: 1.4rem;
+		height: 1.4rem;
+		border-radius: 0.35rem;
+		background: var(--albedo);
+		animation: albedo 3.2s ease-in-out infinite alternate;
+		border: 2px solid var(--tw-surface);
+	}
+</style>

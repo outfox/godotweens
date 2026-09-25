@@ -1,0 +1,426 @@
+---
+// Small looping illustration that marks which part of the docs a page belongs to.
+export type Section = 'curve' | 'hop' | 'catalog' | 'sketch' | 'dock';
+interface Props {
+	kind: Section;
+}
+const { kind } = Astro.props;
+---
+
+<svg class:list={['art', `art-${kind}`]} viewBox="0 0 160 100" aria-hidden="true" focusable="false">
+	{
+		kind === 'curve' && (
+			<>
+				<path class="grid" d="M10 90H130M10 10H130M10 50H130M130 10V90M10 10V90" />
+				<path class="track" d="M10 90C40 90 44 -6 76 8S112 10 130 10" />
+				<g class="curve-x">
+					<g class="curve-y">
+						<circle class="dot mint" r="6" />
+					</g>
+				</g>
+				<line class="axis" x1="146" y1="10" x2="146" y2="90" />
+				<g class="curve-y value">
+					<circle class="dot blue" cx="146" r="5" />
+				</g>
+			</>
+		)
+	}
+	{
+		kind === 'hop' && (
+			<>
+				<path class="trail" d="M28 76Q80 -4 132 76" />
+				<rect class="pad" x="12" y="80" width="32" height="6" rx="3" />
+				<rect class="pad" x="116" y="80" width="32" height="6" rx="3" />
+				<g class="hop-x">
+					<g class="hop-y">
+						<rect class="hopper" x="-11" y="-22" width="22" height="22" rx="6" />
+					</g>
+				</g>
+			</>
+		)
+	}
+	{
+		kind === 'catalog' && (
+			<>
+				{[0, 1, 2].map((c) =>
+					[0, 1].map((r) => <rect class="cell" x={8 + c * 50} y={6 + r * 46} width="44" height="42" rx="8" />),
+				)}
+				<g transform="translate(30 27)">
+					<circle class="c-move mint-fill" r="6" />
+				</g>
+				<g transform="translate(80 27)">
+					<rect class="c-rotate amber-fill" x="-8" y="-8" width="16" height="16" rx="3" />
+				</g>
+				<g transform="translate(130 27)">
+					<circle class="c-scale blue-fill" r="9" />
+				</g>
+				<g transform="translate(30 73)">
+					<rect class="c-color" x="-10" y="-8" width="20" height="16" rx="4" />
+				</g>
+				<g transform="translate(80 73)">
+					<circle class="c-fade mint-fill" r="9" />
+				</g>
+				<g transform="translate(130 73)">
+					<rect class="c-skew amber-fill" x="-9" y="-9" width="18" height="18" rx="3" />
+				</g>
+			</>
+		)
+	}
+	{
+		kind === 'sketch' && (
+			<>
+				<defs>
+					<mask id="sketch-reveal">
+						<path class="sketch-mask" d="M14 82C50 82 48 18 84 18S120 50 146 26" pathLength="100" />
+					</mask>
+				</defs>
+				<path class="sketch-ghost" d="M14 82C50 82 48 18 84 18S120 50 146 26" />
+				<path class="sketch-line" d="M14 82C50 82 48 18 84 18S120 50 146 26" mask="url(#sketch-reveal)" />
+				<circle class="sketch-tip" r="5" />
+			</>
+		)
+	}
+	{
+		kind === 'dock' && (
+			<>
+				<rect class="socket" x="96" y="26" width="52" height="48" rx="10" />
+				<rect class="socket-hole" x="96" y="40" width="20" height="20" rx="4" />
+				<g class="plug">
+					<rect class="plug-body" x="30" y="30" width="48" height="40" rx="10" />
+					<rect class="plug-pin" x="78" y="42" width="20" height="16" rx="3" />
+				</g>
+				<circle class="spark" cx="97" cy="50" r="18" />
+			</>
+		)
+	}
+</svg>
+
+<style>
+	.art {
+		width: 100%;
+		height: auto;
+		overflow: visible;
+		fill: none;
+		stroke-linecap: round;
+		stroke-linejoin: round;
+	}
+	.grid {
+		stroke: var(--tw-grid);
+		stroke-width: 1;
+	}
+	.track,
+	.trail {
+		stroke: var(--tw-track);
+		stroke-width: 2.5;
+	}
+	.trail {
+		stroke-dasharray: 2 7;
+	}
+	.axis {
+		stroke: var(--tw-outline);
+		stroke-width: 2;
+	}
+	.dot.mint,
+	.mint-fill {
+		fill: var(--tw-mint);
+	}
+	.dot.blue,
+	.blue-fill {
+		fill: var(--tw-blue);
+	}
+	.amber-fill {
+		fill: var(--tw-amber);
+	}
+
+	/* curve: x runs linearly in time, y follows BackOut-ish value, a value dot rides the axis */
+	.curve-x {
+		animation: curve-x 2.6s linear infinite;
+	}
+	.curve-y {
+		animation: curve-y 2.6s var(--ease-back-out) infinite;
+	}
+	@keyframes curve-x {
+		0% {
+			transform: translateX(10px);
+		}
+		70%,
+		100% {
+			transform: translateX(130px);
+		}
+	}
+	@keyframes curve-y {
+		0% {
+			transform: translateY(90px);
+		}
+		70%,
+		100% {
+			transform: translateY(10px);
+		}
+	}
+
+	/* hop: a sprite jumps pad to pad, squashing on each landing */
+	.pad {
+		fill: var(--tw-raised);
+	}
+	.hopper {
+		fill: var(--tw-amber);
+		transform-box: fill-box;
+		transform-origin: 50% 100%;
+		animation: hop-squash 2.4s infinite;
+	}
+	.hop-x {
+		animation: hop-x 2.4s var(--ease-expo-out) infinite;
+	}
+	.hop-y {
+		animation: hop-y 2.4s infinite;
+	}
+	@keyframes hop-x {
+		0%,
+		12% {
+			transform: translateX(28px);
+		}
+		45%,
+		62% {
+			transform: translateX(132px);
+		}
+		95%,
+		100% {
+			transform: translateX(28px);
+		}
+	}
+	@keyframes hop-y {
+		0%,
+		12% {
+			transform: translateY(80px);
+			animation-timing-function: cubic-bezier(0.2, 0.7, 0.4, 1);
+		}
+		26% {
+			transform: translateY(18px);
+			animation-timing-function: cubic-bezier(0.6, 0, 0.8, 0.4);
+		}
+		40%,
+		62% {
+			transform: translateY(80px);
+			animation-timing-function: cubic-bezier(0.2, 0.7, 0.4, 1);
+		}
+		76% {
+			transform: translateY(18px);
+			animation-timing-function: cubic-bezier(0.6, 0, 0.8, 0.4);
+		}
+		90%,
+		100% {
+			transform: translateY(80px);
+		}
+	}
+	@keyframes hop-squash {
+		0%,
+		8% {
+			transform: scale(1.25, 0.75);
+		}
+		14% {
+			transform: scale(0.85, 1.2);
+		}
+		24% {
+			transform: scale(1);
+		}
+		40% {
+			transform: scale(1.3, 0.7);
+		}
+		50%,
+		58% {
+			transform: scale(1);
+		}
+		64% {
+			transform: scale(0.85, 1.2);
+		}
+		74% {
+			transform: scale(1);
+		}
+		90% {
+			transform: scale(1.3, 0.7);
+		}
+		100% {
+			transform: scale(1.25, 0.75);
+		}
+	}
+
+	/* catalog: each cell tweens one property */
+	.cell {
+		fill: color-mix(in oklab, var(--tw-raised) 55%, transparent);
+	}
+	.art-catalog :is(.c-move, .c-rotate, .c-scale, .c-color, .c-fade, .c-skew) {
+		transform-box: fill-box;
+		transform-origin: center;
+	}
+	.c-move {
+		animation: c-move 1.6s var(--ease-back-out) infinite alternate;
+	}
+	.c-rotate {
+		animation: c-rotate 2.2s var(--ease-elastic-out) infinite;
+	}
+	.c-scale {
+		animation: c-scale 1.6s var(--ease-bounce-out) infinite alternate;
+	}
+	.c-color {
+		animation: c-color 1.6s ease-in-out infinite alternate;
+	}
+	.c-fade {
+		animation: c-fade 1.6s ease-in-out infinite alternate;
+	}
+	.c-skew {
+		animation: c-skew 1.6s var(--ease-back-out) infinite alternate;
+	}
+	@keyframes c-move {
+		from {
+			transform: translateX(-12px);
+		}
+		to {
+			transform: translateX(12px);
+		}
+	}
+	@keyframes c-rotate {
+		from {
+			transform: rotate(0deg);
+		}
+		60%,
+		to {
+			transform: rotate(90deg);
+		}
+	}
+	@keyframes c-scale {
+		from {
+			transform: scale(0.35);
+		}
+		to {
+			transform: scale(1);
+		}
+	}
+	@keyframes c-color {
+		from {
+			fill: var(--tw-mint);
+		}
+		to {
+			fill: var(--tw-blue);
+		}
+	}
+	@keyframes c-fade {
+		from {
+			opacity: 1;
+		}
+		to {
+			opacity: 0.12;
+		}
+	}
+	@keyframes c-skew {
+		from {
+			transform: skewX(-22deg);
+		}
+		to {
+			transform: skewX(22deg);
+		}
+	}
+
+	/* sketch: a dashed path still being drawn, for work that is planned */
+	.sketch-ghost {
+		stroke: var(--tw-outline);
+		stroke-width: 2;
+		stroke-dasharray: 3 6;
+	}
+	.sketch-line {
+		stroke: var(--tw-amber);
+		stroke-width: 3.5;
+		stroke-dasharray: 9 7;
+	}
+	.sketch-mask {
+		stroke: #fff;
+		stroke-width: 10;
+		stroke-dasharray: 100 100;
+		animation: sketch-draw 3.2s var(--ease-expo-out) infinite;
+	}
+	.sketch-tip {
+		fill: var(--tw-amber);
+		offset-path: path('M14 82C50 82 48 18 84 18S120 50 146 26');
+		animation: sketch-tip 3.2s var(--ease-expo-out) infinite;
+	}
+	@keyframes sketch-draw {
+		from {
+			stroke-dashoffset: 100;
+		}
+		70%,
+		to {
+			stroke-dashoffset: 0;
+		}
+	}
+	@keyframes sketch-tip {
+		from {
+			offset-distance: 0%;
+		}
+		70%,
+		to {
+			offset-distance: 100%;
+		}
+	}
+
+	/* dock: the plug slides home with an overshoot and a spark */
+	.socket {
+		fill: var(--tw-raised);
+	}
+	.socket-hole {
+		fill: var(--tw-stage);
+	}
+	.plug-body {
+		fill: var(--tw-mint);
+	}
+	.plug-pin {
+		fill: var(--tw-blue);
+	}
+	.plug {
+		animation: dock 2.8s infinite;
+	}
+	.spark {
+		stroke: var(--tw-mint);
+		stroke-width: 3;
+		transform-box: fill-box;
+		transform-origin: center;
+		animation: spark 2.8s var(--ease-expo-out) infinite;
+	}
+	@keyframes dock {
+		0%,
+		10% {
+			transform: translateX(-24px);
+			animation-timing-function: var(--ease-back-out);
+		}
+		40%,
+		80% {
+			transform: translateX(0);
+			animation-timing-function: var(--ease-back-in);
+		}
+		100% {
+			transform: translateX(-24px);
+		}
+	}
+	@keyframes spark {
+		0%,
+		34% {
+			transform: scale(0.2);
+			opacity: 0;
+		}
+		38% {
+			opacity: 1;
+		}
+		62%,
+		100% {
+			transform: scale(1.4);
+			opacity: 0;
+		}
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.curve-x {
+			transform: translateX(130px);
+		}
+		.curve-y {
+			transform: translateY(10px);
+		}
+	}
+</style>

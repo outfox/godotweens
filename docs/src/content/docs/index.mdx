@@ -1,5 +1,6 @@
 ---
 title: Reusable tweens for Godot
+template: splash
 description: Animate nodes, values, materials, and shader uniforms with reusable definitions and independent playback.
 hero:
   title: tweens.gd
@@ -13,7 +14,9 @@ hero:
       variant: secondary
 ---
 
-import { Card, CardGrid, Tabs, TabItem } from '@astrojs/starlight/components';
+import { Tabs, TabItem } from '@astrojs/starlight/components';
+import Feature from '../../components/Feature.astro';
+import FeatureReel from '../../components/FeatureReel.astro';
 
 Animate positions, colors, UI, audio, materials, and shader uniforms with typed
 tween definitions. Each playback has its own handle for pausing, cancellation,
@@ -57,27 +60,27 @@ supported exports will be documented once implemented and tested.
 
 ## Build an animation
 
-<CardGrid>
-  <Card title="Reuse definitions" icon="document">
+<FeatureReel>
+  <Feature title="Reuse definitions" art="reuse">
     Keep the endpoints, easing, and timing together. Starting a tween snapshots
     that definition into an independent playback.
     [Understand definitions](/concepts/definitions/).
-  </Card>
-  <Card title="Control playback" icon="rocket">
+  </Feature>
+  <Feature title="Control playback" art="control">
     Pause, resume, cancel, and await completion. Node ownership stops work when
     a scene leaves the tree.
     [Control a C# tween](/csharp/playback/).
-  </Card>
-  <Card title="Animate Godot properties" icon="setting">
+  </Feature>
+  <Feature title="Animate Godot properties" art="properties">
     Use typed adapters for transforms, UI, lights, audio, particles, and more.
     [Browse the C# catalog](/csharp/nodes/).
-  </Card>
-  <Card title="Work with materials" icon="star">
+  </Feature>
+  <Feature title="Work with materials" art="materials">
     Animate a shared resource or a per-instance shader uniform with explicit
     ownership and restoration behavior.
     [Explore material tweens](/csharp/materials/).
-  </Card>
-</CardGrid>
+  </Feature>
+</FeatureReel>
 
 ## Compatibility
 

@@ -3,9 +3,14 @@ title: C# playback and async
 description: Control handles, compose animations, await completion, and handle cancellation and faults.
 ---
 
+import PlaybackRemote from '../../../components/PlaybackRemote.astro';
+
 Every addition returns a `TweenInstance<TTarget, TValue>`. Keep it to pause,
 resume, cancel, inspect progress, or await completion. Instances share the
 non-generic `TweenInstance` base, useful for storing different tween types together.
+
+<PlaybackRemote />
+
 
 The snippets below run in an async Node method with an in-tree `Sprite2D` named
 `sprite`. Import `Godot`, `tweens.gd`, and `System`; the cancellation example

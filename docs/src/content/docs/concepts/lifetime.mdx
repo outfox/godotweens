@@ -3,6 +3,8 @@ title: Lifetime and ownership
 description: Targets, owners, scene trees, pause policies, and completion.
 ---
 
+import OwnershipDemo from '../../../components/OwnershipDemo.astro';
+
 The **target** receives values. The **owner** determines when playback should
 stop. For a node tween, the node is normally both target and owner. Resource
 tweens can bind to a separate owner or to the scene tree.
@@ -43,6 +45,9 @@ Handles retain their target for inspection. Release handles you no longer need.
 Pausing the handle always stops advancement, even with `Always`. A node's
 `SetProcess(false)` does not disable bound tweens; its `ProcessMode` and the tree
 pause state determine `CanProcess()`.
+
+<OwnershipDemo />
+
 
 ## Completion and cleanup
 

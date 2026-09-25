@@ -3,6 +3,8 @@ title: C# gallery
 description: Run eight pages and 32 tween examples, from squash and stretch to shader uniforms.
 ---
 
+import GalleryReel from '../../../components/GalleryReel.astro';
+
 Run the interactive testbed:
 
 ~~~powershell
@@ -10,6 +12,9 @@ dotnet run --project testbed/testbed.2dog
 ~~~
 
 The gallery contains eight pages and 32 examples. Each page is a separate C# Control subtree; only the current page is instantiated. Small SubViewports isolate the cameras, lights and 3D worlds in individual cards.
+
+<GalleryReel />
+
 
 | Page | Examples and combinations |
 | --- | --- |

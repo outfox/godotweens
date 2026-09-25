@@ -1,0 +1,132 @@
+---
+import SectionArt, { type Section } from '../SectionArt.astro';
+
+const PAGE_TITLE_ID = '_top'; // Starlight's skip-link target
+
+const { id, entry } = Astro.locals.starlightRoute;
+const title = entry.data.title;
+
+const reference = ['csharp/api', 'csharp/nodes', 'csharp/materials', 'csharp/shaders'];
+const section: Section | undefined = id.startsWith('concepts/')
+	? 'curve'
+	: reference.includes(id)
+		? 'catalog'
+		: id.startsWith('csharp/')
+			? 'hop'
+			: id.startsWith('gdscript')
+				? 'sketch'
+				: id === 'compatibility'
+					? 'dock'
+					: undefined;
+
+// Letters drop in one after another, like a staggered tween list.
+let i = 0;
+const words = title.split(' ').map((word) => [...word].map((ch) => ({ ch, i: i++ })));
+---
+
+<div class="title-row">
+	<h1 id={PAGE_TITLE_ID}>
+		<span class="sr-only">{title}</span>
+		<span class="letters" aria-hidden="true">
+			{
+				words.map((letters, w) => (
+					<>
+						{w > 0 && ' '}
+						<span class="word">
+							{letters.map(({ ch, i }) => (
+								<span class="ch" style={`--i:${i}`}>
+									{ch}
+								</span>
+							))}
+						</span>
+					</>
+				))
+			}
+		</span>
+	</h1>
+	{
+		section && (
+			<div class="art">
+				<SectionArt kind={section} />
+			</div>
+		)
+	}
+</div>
+
+<style>
+	.title-row {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 1.5rem;
+		margin-top: 1rem;
+	}
+	h1 {
+		margin: 0;
+		font-size: var(--sl-text-h1);
+		line-height: 1.05;
+		font-weight: 780;
+		font-stretch: 88%;
+		letter-spacing: -0.03em;
+		color: var(--sl-color-white);
+		text-wrap: balance;
+	}
+	.word {
+		display: inline-block;
+		white-space: nowrap;
+	}
+	.ch {
+		display: inline-block;
+		transform-origin: 50% 100%;
+		animation:
+			ch-drop 0.7s var(--ease-bounce-out) both,
+			ch-squash 0.7s ease-out both;
+		animation-delay: calc(var(--i) * 22ms);
+	}
+	@keyframes ch-drop {
+		from {
+			translate: 0 -0.9em;
+			opacity: 0;
+		}
+		12% {
+			opacity: 1;
+		}
+		to {
+			translate: 0 0;
+			opacity: 1;
+		}
+	}
+	@keyframes ch-squash {
+		0% {
+			scale: 0.9 1.25;
+		}
+		40% {
+			scale: 1.12 0.86;
+		}
+		70% {
+			scale: 0.97 1.04;
+		}
+		100% {
+			scale: 1 1;
+		}
+	}
+	.art {
+		flex: 0 0 auto;
+		width: clamp(5.5rem, 16vw, 9rem);
+	}
+	@media (max-width: 30rem) {
+		.title-row {
+			flex-direction: column-reverse;
+			align-items: flex-start;
+			gap: 0.75rem;
+		}
+		.art {
+			width: 5.5rem;
+		}
+	}
+	@media (prefers-reduced-motion: reduce) {
+		.ch {
+			animation: none;
+		}
+	}
+</style>

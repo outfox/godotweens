@@ -1,0 +1,386 @@
+---
+// Interactive timeline for the timing rules on concepts/timing. Defaults match the page's 2.7 s example.
+const MAX_LOOPS = 4;
+const slots = 1 + MAX_LOOPS * 3 + (MAX_LOOPS - 1);
+---
+
+<div class="tw-widget tl not-content" data-timing-lab>
+	<div class="stage">
+		<svg class="lane" viewBox="0 0 400 60" aria-hidden="true">
+			<line class="rail" x1="20" x2="380" y1="30" y2="30"></line>
+			<circle class="end" cx="20" cy="30" r="4"></circle>
+			<circle class="end" cx="380" cy="30" r="4"></circle>
+			<g data-ball transform="translate(20 30)"><circle class="ball" r="13"></circle></g>
+		</svg>
+		<div class="chips">
+			<span class="tw-chip phase" data-phase>Delay</span>
+			<span class="tw-chip">Progress <b data-progress>0.00</b></span>
+			<span class="tw-chip">Cycle <b data-cycle>1 / 2</b></span>
+			<span class="tw-chip">t = <b data-time>0.00</b> s</span>
+		</div>
+	</div>
+
+	<div class="timeline" data-timeline role="slider" tabindex="0" aria-label="Timeline position" aria-valuemin="0" aria-valuenow="0">
+		<div class="segments">
+			{Array.from({ length: slots }, () => <span class="seg" />)}
+		</div>
+		<span class="playhead" data-playhead></span>
+	</div>
+	<p class="total"><span data-formula></span></p>
+
+	<div class="legend">
+		<span><i class="sw delay"></i>Delay</span>
+		<span><i class="sw forward"></i>Forward leg</span>
+		<span><i class="sw turn"></i>Ping-pong interval</span>
+		<span><i class="sw backward"></i>Backward leg</span>
+		<span><i class="sw repeat"></i>Repeat interval</span>
+	</div>
+
+	<div class="controls">
+		<label class="tw-field"><span><code>Delay</code> <output data-out="delay"></output></span><input type="range" min="0" max="1" step="0.1" value="0" data-in="delay" /></label>
+		<label class="tw-field"><span><code>Duration</code> <output data-out="duration"></output></span><input type="range" min="0.1" max="1.5" step="0.1" value="0.5" data-in="duration" /></label>
+		<label class="tw-field"><span><code>LoopCount</code> <output data-out="loops"></output></span><input type="range" min="1" max={MAX_LOOPS} step="1" value="2" data-in="loops" /></label>
+		<label class="tw-field"><span><code>PingPongInterval</code> <output data-out="turn"></output></span><input type="range" min="0" max="1" step="0.1" value="0.2" data-in="turn" /></label>
+		<label class="tw-field"><span><code>RepeatInterval</code> <output data-out="repeat"></output></span><input type="range" min="0" max="1" step="0.1" value="0.3" data-in="repeat" /></label>
+		<label class="check"><input type="checkbox" checked data-in="pingpong" /> <code>UsePingPong</code></label>
+	</div>
+</div>
+
+<script>
+	import { EASES, loop, reducedMotion } from '../scripts/motion';
+
+	type Kind = 'delay' | 'forward' | 'turn' | 'backward' | 'repeat';
+	interface Seg {
+		kind: Kind;
+		start: number;
+		length: number;
+		cycle: number;
+	}
+	const LABEL: Record<Kind, string> = {
+		delay: 'Delay',
+		forward: 'Forward leg',
+		turn: 'Ping-pong interval',
+		backward: 'Backward leg',
+		repeat: 'Repeat interval',
+	};
+	const TAIL = 0.9;
+	const fmt = (n: number) => (Math.round(n * 100) / 100).toString();
+
+	for (const root of document.querySelectorAll<HTMLElement>('[data-timing-lab]')) {
+		const $ = <T extends Element>(s: string) => root.querySelector<T>(s)!;
+		const input = (k: string) => $<HTMLInputElement>(`[data-in="${k}"]`);
+		const segEls = [...root.querySelectorAll<HTMLElement>('.seg')];
+		const timeline = $<HTMLElement>('[data-timeline]');
+		const playhead = $<HTMLElement>('[data-playhead]');
+		const ball = $<SVGGElement>('[data-ball]');
+		const phase = $<HTMLElement>('[data-phase]');
+
+		let segs: Seg[] = [];
+		let total = 0;
+		let time = 0;
+		let scrubbing = false;
+
+		const read = () => ({
+			delay: Number(input('delay').value),
+			duration: Number(input('duration').value),
+			loops: Number(input('loops').value),
+			turn: Number(input('turn').value),
+			repeat: Number(input('repeat').value),
+			pingpong: input('pingpong').checked,
+		});
+
+		const build = () => {
+			const o = read();
+			input('turn').disabled = !o.pingpong;
+			for (const k of ['delay', 'duration', 'turn', 'repeat'] as const)
+				$(`[data-out="${k}"]`).textContent = `${o[k].toFixed(1)} s`;
+			$('[data-out="loops"]').textContent = String(o.loops);
+
+			segs = [];
+			let t = 0;
+			const push = (kind: Kind, length: number, cycle: number) => {
+				segs.push({ kind, start: t, length, cycle });
+				t += length;
+			};
+			push('delay', o.delay, 0);
+			for (let c = 0; c < o.loops; c++) {
+				push('forward', o.duration, c);
+				if (o.pingpong) {
+					push('turn', o.turn, c);
+					push('backward', o.duration, c);
+				}
+				if (c < o.loops - 1) push('repeat', o.repeat, c);
+			}
+			total = t;
+
+			// Keep a fixed pool of segment elements so widths can tween between configurations.
+			segEls.forEach((el, i) => {
+				const s = segs[i];
+				el.style.flexGrow = s ? String(s.length) : '0';
+				el.classList.remove('delay', 'forward', 'turn', 'backward', 'repeat', 'unused');
+				el.classList.add(s && s.length > 0 ? s.kind : 'unused');
+				el.title = s ? `${LABEL[s.kind]}: ${fmt(s.length)} s` : '';
+				el.textContent = s && s.length / Math.max(total, 0.01) > 0.09 ? `${fmt(s.length)}` : '';
+			});
+
+			const cycleLen = o.duration * (o.pingpong ? 2 : 1) + (o.pingpong ? o.turn : 0);
+			$('[data-formula]').innerHTML =
+				`<code>Delay</code> ${fmt(o.delay)} + ${o.loops} × ${fmt(cycleLen)} s cycle` +
+				(o.loops > 1 ? ` + ${o.loops - 1} × ${fmt(o.repeat)} s repeat` : '') +
+				` = <b>${fmt(total)} s</b>`;
+			timeline.setAttribute('aria-valuemax', fmt(total));
+			if (time > total) time = 0;
+			draw(time);
+		};
+
+		const draw = (t: number) => {
+			const o = read();
+			const clamped = Math.min(t, total);
+			const seg = segs.find((s) => clamped < s.start + s.length) ?? segs.at(-1)!;
+			const local = seg.length ? (clamped - seg.start) / seg.length : 1;
+			let progress = 0;
+			if (seg.kind === 'forward') progress = local;
+			else if (seg.kind === 'turn') progress = 1;
+			else if (seg.kind === 'backward') progress = 1 - local;
+			else if (seg.kind === 'repeat') progress = o.pingpong ? 0 : 1;
+			if (t >= total) progress = o.pingpong ? 0 : 1;
+
+			const w = EASES.SineInOut(progress);
+			ball.setAttribute('transform', `translate(${(20 + w * 360).toFixed(2)} 30)`);
+			playhead.style.left = `${total ? (clamped / total) * 100 : 0}%`;
+			const label = t >= total ? 'Completed' : LABEL[seg.kind];
+			if (phase.textContent !== label) {
+				phase.textContent = label;
+				phase.dataset.kind = t >= total ? 'done' : seg.kind;
+				phase.animate([{ scale: 0.8 }, { scale: 1 }], { duration: 350, easing: 'cubic-bezier(0.34, 1.56, 0.64, 1)' });
+			}
+			$('[data-progress]').textContent = progress.toFixed(2);
+			$('[data-cycle]').textContent = `${Math.min(seg.cycle + 1, o.loops)} / ${o.loops}`;
+			$('[data-time]').textContent = clamped.toFixed(2);
+			timeline.setAttribute('aria-valuenow', clamped.toFixed(2));
+			timeline.setAttribute('aria-valuetext', `${clamped.toFixed(2)} seconds, ${label}`);
+			segEls.forEach((el, i) => el.classList.toggle('is-now', segs[i] === seg && t < total));
+		};
+
+		root.querySelectorAll('input').forEach((el) => el.addEventListener('input', build));
+
+		const scrubTo = (clientX: number) => {
+			const r = timeline.getBoundingClientRect();
+			time = Math.min(1, Math.max(0, (clientX - r.left) / r.width)) * total;
+			draw(time);
+		};
+		timeline.addEventListener('pointerdown', (e) => {
+			scrubbing = true;
+			timeline.setPointerCapture(e.pointerId);
+			scrubTo(e.clientX);
+		});
+		timeline.addEventListener('pointermove', (e) => scrubbing && scrubTo(e.clientX));
+		timeline.addEventListener('pointerup', () => (scrubbing = false));
+		timeline.addEventListener('keydown', (e) => {
+			const step = e.key === 'ArrowRight' ? 0.05 : e.key === 'ArrowLeft' ? -0.05 : 0;
+			if (!step) return;
+			e.preventDefault();
+			scrubbing = true;
+			time = Math.min(total, Math.max(0, time + step));
+			draw(time);
+		});
+		timeline.addEventListener('blur', () => (scrubbing = false));
+
+		build();
+		if (reducedMotion()) {
+			time = total * 0.4;
+			draw(time);
+		} else {
+			loop(root, (_, dt) => {
+				if (scrubbing) return;
+				time += dt;
+				if (time > total + TAIL) time = 0;
+				draw(time);
+			});
+		}
+	}
+</script>
+
+<style>
+	.tl {
+		padding: 1.25rem;
+		display: grid;
+		gap: 1rem;
+	}
+	.lane {
+		width: 100%;
+		overflow: visible;
+	}
+	.rail {
+		stroke: var(--tw-outline);
+		stroke-width: 3;
+		stroke-dasharray: 1 8;
+		stroke-linecap: round;
+	}
+	.end {
+		fill: var(--tw-muted);
+	}
+	.ball {
+		fill: var(--tw-mint);
+	}
+	.chips {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.4rem;
+		justify-content: center;
+	}
+	.chips b {
+		color: var(--tw-mint-ink);
+		font-weight: 700;
+	}
+	.phase {
+		font-weight: 700;
+		min-width: 9.5rem;
+		justify-content: center;
+	}
+	.phase[data-kind='forward'] {
+		background: var(--tw-mint);
+		color: #0b1a17;
+	}
+	.phase[data-kind='backward'] {
+		background: var(--tw-blue);
+		color: #0b1224;
+	}
+	.phase[data-kind='turn'] {
+		background: var(--tw-amber);
+		color: #231705;
+	}
+	.timeline {
+		position: relative;
+		padding-block: 0.4rem;
+		cursor: ew-resize;
+		touch-action: none;
+		border-radius: 0.6rem;
+	}
+	.timeline:focus-visible {
+		outline: 2px solid var(--tw-mint);
+		outline-offset: 4px;
+	}
+	.segments {
+		display: flex;
+		height: 2.4rem;
+		gap: 3px;
+	}
+	.seg {
+		flex: 0 1 0px;
+		min-width: 0;
+		display: grid;
+		place-items: center;
+		border-radius: 0.45rem;
+		font: 700 0.7rem var(--sl-font-mono);
+		color: #0b1a17;
+		overflow: hidden;
+		transition:
+			flex-grow 0.6s var(--ease-back-out),
+			filter 0.2s,
+			translate 0.3s var(--ease-back-out);
+	}
+	.seg.unused {
+		margin-inline-start: -3px;
+	}
+	.seg.is-now {
+		translate: 0 -3px;
+		filter: brightness(1.15);
+	}
+	.seg.forward,
+	.sw.forward {
+		background: var(--tw-mint);
+	}
+	.seg.backward,
+	.sw.backward {
+		background: var(--tw-blue);
+		color: #0b1224;
+	}
+	.seg.turn,
+	.sw.turn {
+		background: repeating-linear-gradient(-45deg, var(--tw-amber) 0 5px, color-mix(in oklab, var(--tw-amber) 55%, var(--tw-stage)) 5px 10px);
+		color: #231705;
+	}
+	.seg.delay,
+	.sw.delay,
+	.seg.repeat,
+	.sw.repeat {
+		background: repeating-linear-gradient(-45deg, var(--tw-raised) 0 5px, var(--tw-stage) 5px 10px);
+		color: var(--tw-soft);
+		box-shadow: inset 0 0 0 1px var(--tw-outline);
+	}
+	.seg.repeat,
+	.sw.repeat {
+		background: repeating-linear-gradient(45deg, var(--tw-raised-hover) 0 5px, var(--tw-stage) 5px 10px);
+	}
+	.playhead {
+		position: absolute;
+		top: 0;
+		bottom: 0;
+		width: 3px;
+		margin-left: -1.5px;
+		border-radius: 2px;
+		background: var(--sl-color-white);
+		box-shadow: 0 0 0 3px color-mix(in oklab, var(--tw-bg) 60%, transparent);
+		pointer-events: none;
+	}
+	.playhead::before {
+		content: '';
+		position: absolute;
+		top: -6px;
+		left: 50%;
+		translate: -50% 0;
+		border: 6px solid transparent;
+		border-top-color: var(--sl-color-white);
+	}
+	.total {
+		text-align: center;
+		color: var(--tw-muted);
+	}
+	.total :global(b) {
+		color: var(--sl-color-white);
+	}
+	.legend {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.4rem 1rem;
+		justify-content: center;
+		font-size: var(--sl-text-xs);
+		color: var(--tw-muted);
+	}
+	.legend span {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.35rem;
+	}
+	.sw {
+		width: 0.9rem;
+		height: 0.9rem;
+		border-radius: 0.25rem;
+	}
+	.controls {
+		display: grid;
+		grid-template-columns: repeat(auto-fill, minmax(12rem, 1fr));
+		gap: 0.9rem 1.25rem;
+		padding-top: 1rem;
+		border-top: 1px solid var(--tw-outline);
+	}
+	.controls code {
+		font-size: 0.72rem;
+		color: var(--sl-color-white);
+	}
+	.check {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+		font-size: var(--sl-text-xs);
+		cursor: pointer;
+	}
+	.check input {
+		width: 1.1rem;
+		height: 1.1rem;
+	}
+	.tw-field input:disabled {
+		opacity: 0.4;
+	}
+</style>

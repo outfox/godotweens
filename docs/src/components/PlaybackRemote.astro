@@ -1,0 +1,246 @@
+---
+// A toy handle mirroring TweenInstance: pause, resume, cancel, and a Completion that settles once.
+---
+
+<div class="tw-widget pr not-content" data-playback-remote>
+	<pre class="code" aria-hidden="true"><span data-line="start"><span class="kw">var</span> movement = sprite.<span class="fn">TweenPosition</span>(to, <span class="num">2.4</span>);</span>
+<span data-line="pause">movement.<span class="fn">Pause</span>();</span>
+<span data-line="resume">movement.<span class="fn">Resume</span>();</span>
+<span data-line="cancel">movement.<span class="fn">Cancel</span>();</span>
+<span data-line="await"><span class="kw">var</span> reason = <span class="kw">await</span> movement.Completion; <span class="cm">// <span data-reason>pending…</span></span></span></pre>
+
+	<svg class="lane" viewBox="0 0 400 64" aria-hidden="true">
+		<line class="rail" x1="24" x2="376" y1="32" y2="32"></line>
+		<line class="progress" data-progress-line x1="24" x2="24" y1="32" y2="32"></line>
+		<circle class="end" cx="376" cy="32" r="5"></circle>
+		<g data-sprite transform="translate(24 32)">
+			<rect class="sprite" x="-14" y="-14" width="28" height="28" rx="7"></rect>
+			<g class="pause-badge" data-pause-badge>
+				<rect x="-5" y="-6" width="3.5" height="12" rx="1"></rect>
+				<rect x="1.5" y="-6" width="3.5" height="12" rx="1"></rect>
+			</g>
+		</g>
+	</svg>
+
+	<div class="status">
+		<span class="tw-chip state" data-state>Ready</span>
+		<span class="tw-chip">Progress <b data-progress>0.00</b></span>
+	</div>
+
+	<div class="buttons">
+		<button type="button" class="tw-btn is-primary" data-act="start">Start</button>
+		<button type="button" class="tw-btn" data-act="pause" disabled>Pause</button>
+		<button type="button" class="tw-btn" data-act="resume" disabled>Resume</button>
+		<button type="button" class="tw-btn" data-act="cancel" disabled>Cancel</button>
+	</div>
+	<p class="sr-only" aria-live="polite" data-announce></p>
+</div>
+
+<script>
+	import { EASES, loop, reducedMotion } from '../scripts/motion';
+
+	const DURATION = 2.4;
+	type State = 'Ready' | 'Playing' | 'Paused' | 'Completed' | 'Cancelled';
+
+	for (const root of document.querySelectorAll<HTMLElement>('[data-playback-remote]')) {
+		const $ = <T extends Element>(s: string) => root.querySelector<T>(s)!;
+		const sprite = $<SVGGElement>('[data-sprite]');
+		const line = $<SVGLineElement>('[data-progress-line]');
+		const badge = $<SVGGElement>('[data-pause-badge]');
+		const stateOut = $<HTMLElement>('[data-state]');
+		const reasonOut = $<HTMLElement>('[data-reason]');
+		const announce = $<HTMLElement>('[data-announce]');
+		const btn = (a: string) => $<HTMLButtonElement>(`[data-act="${a}"]`);
+
+		let state: State = 'Ready';
+		let elapsed = 0;
+
+		const x = () => 24 + 352 * EASES.CubicInOut(elapsed / DURATION);
+		const render = () => {
+			const px = x();
+			sprite.setAttribute('transform', `translate(${px.toFixed(2)} 32)`);
+			line.setAttribute('x2', px.toFixed(2));
+			$('[data-progress]').textContent = (elapsed / DURATION).toFixed(2);
+		};
+
+		const highlight = (name: string) => {
+			const el = $<HTMLElement>(`[data-line="${name}"]`);
+			el.classList.remove('is-hit');
+			void el.offsetWidth;
+			el.classList.add('is-hit');
+		};
+
+		const setState = (next: State) => {
+			state = next;
+			stateOut.textContent = next;
+			stateOut.dataset.state = next;
+			stateOut.animate([{ scale: 0.75 }, { scale: 1 }], { duration: 420, easing: 'cubic-bezier(0.34, 1.56, 0.64, 1)' });
+			btn('pause').disabled = next !== 'Playing';
+			btn('resume').disabled = next !== 'Paused';
+			btn('cancel').disabled = next !== 'Playing' && next !== 'Paused';
+			btn('start').textContent = next === 'Ready' ? 'Start' : 'Start again';
+			badge.classList.toggle('is-on', next === 'Paused');
+			root.dataset.state = next;
+			if (next === 'Completed' || next === 'Cancelled') {
+				reasonOut.textContent = `TweenCompletionReason.${next}`;
+				reasonOut.parentElement!.classList.add('is-settled');
+				highlight('await');
+				announce.textContent = `Completion settled: ${next}`;
+			} else if (next === 'Playing' && elapsed === 0) {
+				reasonOut.textContent = 'pending…';
+				reasonOut.parentElement!.classList.remove('is-settled');
+			}
+		};
+
+		btn('start').addEventListener('click', () => {
+			elapsed = 0;
+			highlight('start');
+			setState('Playing');
+			if (reducedMotion()) {
+				elapsed = DURATION;
+				render();
+				setState('Completed');
+			}
+		});
+		btn('pause').addEventListener('click', () => (highlight('pause'), setState('Paused')));
+		btn('resume').addEventListener('click', () => (highlight('resume'), setState('Playing')));
+		// Cancellation holds the most recent sample.
+		btn('cancel').addEventListener('click', () => (highlight('cancel'), setState('Cancelled')));
+
+		loop(root, (_, dt) => {
+			if (state !== 'Playing') return;
+			elapsed = Math.min(DURATION, elapsed + dt);
+			render();
+			if (elapsed >= DURATION) setState('Completed');
+		});
+		render();
+	}
+</script>
+
+<style>
+	.pr {
+		padding: 1.25rem;
+		display: grid;
+		gap: 1rem;
+	}
+	.code {
+		margin: 0;
+		padding: 0.9rem 1rem;
+		border-radius: 0.8rem;
+		background: color-mix(in oklab, var(--tw-bg) 75%, transparent);
+		font: 0.8rem/1.9 var(--sl-font-mono);
+		color: var(--tw-soft);
+		overflow-x: auto;
+	}
+	.code > span {
+		display: inline-block;
+		padding-inline: 0.4rem;
+		margin-inline: -0.4rem;
+		border-radius: 0.3rem;
+	}
+	.code > span.is-hit {
+		animation: hit 1.2s var(--ease-expo-out);
+	}
+	@keyframes hit {
+		from {
+			background: color-mix(in oklab, var(--tw-mint) 35%, transparent);
+			translate: 6px 0;
+		}
+		to {
+			background: transparent;
+			translate: 0 0;
+		}
+	}
+	.kw {
+		color: var(--tw-blue-ink);
+	}
+	.fn {
+		color: var(--tw-amber-ink);
+	}
+	.num {
+		color: var(--tw-mint-ink);
+	}
+	.cm {
+		color: var(--tw-muted);
+	}
+	.cm.is-settled {
+		color: var(--tw-mint-ink);
+		font-weight: 700;
+	}
+	.lane {
+		width: 100%;
+		overflow: visible;
+	}
+	.rail {
+		stroke: var(--tw-outline);
+		stroke-width: 4;
+		stroke-linecap: round;
+	}
+	.progress {
+		stroke: var(--tw-blue);
+		stroke-width: 4;
+		stroke-linecap: round;
+	}
+	.end {
+		fill: var(--tw-muted);
+	}
+	.sprite {
+		fill: var(--tw-blue);
+		transition: fill 0.3s;
+	}
+	[data-state='Cancelled'] .sprite {
+		fill: var(--tw-muted);
+	}
+	[data-state='Completed'] .sprite {
+		fill: var(--tw-mint);
+	}
+	.pause-badge {
+		fill: #0b1224;
+		opacity: 0;
+		transform-box: fill-box;
+		transform-origin: center;
+		scale: 0.3;
+		transition:
+			opacity 0.2s,
+			scale 0.45s var(--ease-back-out);
+	}
+	.pause-badge.is-on {
+		opacity: 1;
+		scale: 1;
+	}
+	.status {
+		display: flex;
+		gap: 0.5rem;
+		justify-content: center;
+	}
+	.status b {
+		color: var(--tw-mint-ink);
+	}
+	.state {
+		min-width: 6.5rem;
+		justify-content: center;
+		font-weight: 700;
+	}
+	.state[data-state='Playing'] {
+		background: var(--tw-blue);
+		color: #0b1224;
+	}
+	.state[data-state='Paused'] {
+		background: var(--tw-amber);
+		color: #231705;
+	}
+	.state[data-state='Completed'] {
+		background: var(--tw-mint);
+		color: #0b1a17;
+	}
+	.state[data-state='Cancelled'] {
+		background: var(--tw-rose);
+		color: #2a0710;
+	}
+	.buttons {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.5rem;
+		justify-content: center;
+	}
+</style>

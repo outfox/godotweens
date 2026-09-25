@@ -3,6 +3,8 @@ title: Definitions and playback
 description: Reusable configurations, independent handles, snapshots, and competing property writes.
 ---
 
+import DefinitionStamp from '../../../components/DefinitionStamp.astro';
+
 A **definition** describes endpoints, timing, easing, and callbacks. A **playback
 instance** is one running use of that definition on a target. The behavior below
 is implemented in C# and is the intended model for the planned GDScript addon.
@@ -23,6 +25,9 @@ sprite.CancelTweens(includeChildren: true);
 ```
 
 Each addition snapshots options, endpoints, callbacks, and custom definition fields. Omitted `From`/`To` use the property's value captured once at addition. Editing the definition afterward does not alter a running tween. Custom reference-valued fields and objects captured by delegates are shared, just as ordinary C# closures are; keep them immutable if independent playback is required. Godot Curves are duplicated for each instance.
+
+<DefinitionStamp />
+
 
 Multiple tweens on the same property are allowed: the last application in insertion order wins. Axis and alpha adapters read the other components at application time so independent component tweens compose correctly.
 ## Choose a C# entry point

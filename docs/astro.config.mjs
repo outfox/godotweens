@@ -8,6 +8,33 @@ export default defineConfig({
 		starlight({
 			title: 'tweens.gd',
 			description: 'Reusable tweens for Godot. C# guides, playback concepts, and API reference.',
+			customCss: [
+				'@fontsource-variable/bricolage-grotesque/standard.css',
+				'@fontsource-variable/figtree',
+				'@fontsource-variable/jetbrains-mono',
+				'./src/styles/theme.css',
+			],
+			components: {
+				Hero: './src/components/overrides/Hero.astro',
+				PageTitle: './src/components/overrides/PageTitle.astro',
+				SiteTitle: './src/components/overrides/SiteTitle.astro',
+				MarkdownContent: './src/components/overrides/MarkdownContent.astro',
+			},
+			expressiveCode: {
+				themes: ['github-dark-default', 'github-light'],
+				styleOverrides: {
+					borderRadius: '0.9rem',
+					borderColor: 'var(--tw-outline)',
+					codeFontFamily: 'var(--__sl-font-mono)',
+					uiFontFamily: 'var(--__sl-font)',
+					codeBackground: 'var(--tw-stage)',
+					frames: {
+						editorTabBarBackground: 'var(--tw-surface)',
+						terminalTitlebarBackground: 'var(--tw-surface)',
+						frameBoxShadowCssValue: 'var(--tw-shadow)',
+					},
+				},
+			},
 			social: [{ icon: 'github', label: 'GitHub', href: 'https://github.com/outfox/godotweens' }],
 			sidebar: [
 				{ label: 'Overview', slug: '' },

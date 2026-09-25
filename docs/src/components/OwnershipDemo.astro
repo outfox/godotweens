@@ -1,0 +1,257 @@
+---
+// Owner exit and pause policy, acted out on a tiny scene tree (concepts/lifetime).
+---
+
+<div class="tw-widget od not-content" data-ownership>
+	<div class="scene">
+		<ul class="tree" aria-label="Scene tree">
+			<li class="node root"><span class="n">root</span> <span class="tag" data-paused-tag>paused</span></li>
+			<li class="node level"><span class="n">Level</span></li>
+			<li class="node owner" data-owner><span class="n">Sprite2D</span> <span class="tag own">owner + target</span></li>
+		</ul>
+		<svg class="lane" viewBox="0 0 260 120" aria-hidden="true">
+			<path class="orbit" d="M40 60a90 36 0 1 0 180 0a90 36 0 1 0 -180 0"></path>
+			<g data-sprite transform="translate(220 60)">
+				<rect class="sprite" x="-14" y="-14" width="28" height="28" rx="7"></rect>
+			</g>
+		</svg>
+	</div>
+
+	<div class="status">
+		<span class="tw-chip state" data-state>Playing</span>
+		<span class="tw-chip">Completion <b data-reason>pending…</b></span>
+	</div>
+
+	<div class="controls">
+		<label class="tw-field">
+			<span><code>TweenPauseMode</code></span>
+			<select data-mode>
+				<option value="Bound" selected>Bound (default)</option>
+				<option value="SceneTree">SceneTree</option>
+				<option value="Always">Always</option>
+			</select>
+		</label>
+		<div class="buttons">
+			<button type="button" class="tw-btn" data-act="pause" aria-pressed="false">Pause the tree</button>
+			<button type="button" class="tw-btn" data-act="exit">Remove Sprite2D</button>
+			<button type="button" class="tw-btn is-primary" data-act="reset">Reset</button>
+		</div>
+	</div>
+	<p class="sr-only" aria-live="polite" data-announce></p>
+</div>
+
+<script>
+	import { loop } from '../scripts/motion';
+
+	for (const root of document.querySelectorAll<HTMLElement>('[data-ownership]')) {
+		const $ = <T extends Element>(s: string) => root.querySelector<T>(s)!;
+		const sprite = $<SVGGElement>('[data-sprite]');
+		const owner = $<HTMLElement>('[data-owner]');
+		const stateOut = $<HTMLElement>('[data-state]');
+		const reasonOut = $<HTMLElement>('[data-reason]');
+		const mode = $<HTMLSelectElement>('[data-mode]');
+		const pauseBtn = $<HTMLButtonElement>('[data-act="pause"]');
+		const exitBtn = $<HTMLButtonElement>('[data-act="exit"]');
+		const announce = $<HTMLElement>('[data-announce]');
+
+		let angle = 0;
+		let treePaused = false;
+		let exited = false;
+
+		const running = () => !exited && (!treePaused || mode.value === 'Always');
+
+		const sync = () => {
+			const label = exited ? 'Cancelled' : running() ? 'Playing' : 'Paused by tree';
+			if (stateOut.textContent !== label) {
+				stateOut.textContent = label;
+				stateOut.dataset.state = exited ? 'done' : running() ? 'play' : 'paused';
+				stateOut.animate([{ scale: 0.75 }, { scale: 1 }], { duration: 420, easing: 'cubic-bezier(0.34, 1.56, 0.64, 1)' });
+			}
+			root.classList.toggle('tree-paused', treePaused);
+			pauseBtn.setAttribute('aria-pressed', String(treePaused));
+			pauseBtn.textContent = treePaused ? 'Unpause the tree' : 'Pause the tree';
+			exitBtn.disabled = exited;
+		};
+
+		pauseBtn.addEventListener('click', () => {
+			treePaused = !treePaused;
+			sync();
+		});
+		mode.addEventListener('change', sync);
+		exitBtn.addEventListener('click', () => {
+			exited = true;
+			owner.classList.add('is-gone');
+			root.classList.add('is-exited');
+			reasonOut.textContent = 'OwnerExited';
+			announce.textContent = 'Sprite2D left the tree. The tween stopped and Completion settled with OwnerExited.';
+			sync();
+		});
+		$('[data-act="reset"]').addEventListener('click', () => {
+			exited = false;
+			treePaused = false;
+			owner.classList.remove('is-gone');
+			root.classList.remove('is-exited');
+			reasonOut.textContent = 'pending…';
+			sync();
+		});
+
+		loop(root, (_, dt) => {
+			if (running()) angle += dt * 1.6;
+			const x = 130 + 90 * Math.cos(angle);
+			const y = 60 + 36 * Math.sin(angle);
+			sprite.setAttribute('transform', `translate(${x.toFixed(2)} ${y.toFixed(2)}) rotate(${((angle * 180) / Math.PI) % 360})`);
+		});
+		sync();
+	}
+</script>
+
+<style>
+	.od {
+		padding: 1.25rem;
+		display: grid;
+		gap: 1rem;
+	}
+	.scene {
+		display: grid;
+		gap: 1rem;
+		align-items: center;
+	}
+	@media (min-width: 36rem) {
+		.scene {
+			grid-template-columns: 13rem 1fr;
+		}
+	}
+	.tree {
+		list-style: none;
+		margin: 0;
+		padding: 0;
+		display: grid;
+		gap: 0.35rem;
+		font-family: var(--sl-font-mono);
+		font-size: 0.78rem;
+	}
+	.node {
+		position: relative;
+		display: flex;
+		align-items: center;
+		gap: 0.4rem;
+		padding: 0.35rem 0.6rem;
+		border-radius: 0.5rem;
+		background: var(--tw-surface);
+		color: var(--sl-color-white);
+		transition:
+			translate 0.7s var(--ease-back-in),
+			opacity 0.5s 0.2s,
+			rotate 0.7s var(--ease-back-in);
+	}
+	.node.level {
+		margin-left: 1rem;
+	}
+	.node.owner {
+		margin-left: 2rem;
+		background: color-mix(in oklab, var(--tw-blue) 20%, var(--tw-surface));
+	}
+	.node.owner.is-gone {
+		translate: 1.5rem 3rem;
+		rotate: 8deg;
+		opacity: 0;
+	}
+	.tag {
+		font-size: 0.64rem;
+		padding: 0 0.4rem;
+		border-radius: 1rem;
+		background: var(--tw-raised);
+		color: var(--tw-muted);
+	}
+	.tag.own {
+		color: var(--tw-blue-ink);
+	}
+	[data-paused-tag] {
+		opacity: 0;
+		scale: 0.5;
+		transition:
+			opacity 0.2s,
+			scale 0.4s var(--ease-back-out);
+		background: var(--tw-amber);
+		color: #231705;
+	}
+	.tree-paused [data-paused-tag] {
+		opacity: 1;
+		scale: 1;
+	}
+	.lane {
+		width: 100%;
+		max-height: 9rem;
+		overflow: visible;
+	}
+	.orbit {
+		fill: none;
+		stroke: var(--tw-outline);
+		stroke-width: 2;
+		stroke-dasharray: 2 7;
+		stroke-linecap: round;
+	}
+	.sprite {
+		fill: var(--tw-blue);
+		transition: fill 0.3s;
+	}
+	.tree-paused .sprite {
+		fill: var(--tw-amber);
+	}
+	.is-exited .sprite {
+		fill: var(--tw-muted);
+	}
+	.status {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.5rem;
+		justify-content: center;
+	}
+	.status b {
+		color: var(--tw-mint-ink);
+	}
+	.state {
+		min-width: 8rem;
+		justify-content: center;
+		font-weight: 700;
+	}
+	.state[data-state='play'] {
+		background: var(--tw-blue);
+		color: #0b1224;
+	}
+	.state[data-state='paused'] {
+		background: var(--tw-amber);
+		color: #231705;
+	}
+	.state[data-state='done'] {
+		background: var(--tw-rose);
+		color: #2a0710;
+	}
+	.controls {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 1rem;
+		align-items: end;
+		justify-content: space-between;
+		padding-top: 1rem;
+		border-top: 1px solid var(--tw-outline);
+	}
+	.controls code {
+		font-size: 0.72rem;
+		color: var(--sl-color-white);
+	}
+	select {
+		min-height: 2.25rem;
+		padding: 0 0.6rem;
+		border-radius: 0.6rem;
+		border: 1px solid var(--tw-outline);
+		background: var(--tw-surface);
+		color: var(--sl-color-white);
+		font: inherit;
+	}
+	.buttons {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.5rem;
+	}
+</style>

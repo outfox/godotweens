@@ -1,0 +1,479 @@
+---
+import { LinkButton } from '@astrojs/starlight/components';
+
+const { data } = Astro.locals.starlightRoute.entry;
+const { title = data.title, tagline, actions = [] } = data.hero || {};
+
+const [name, ext] = title.split('.');
+const eases = ['BackOut', 'CubicOut', 'ElasticOut', 'BounceOut', 'SineInOut', 'ExpoInOut'];
+const ghosts = Array.from({ length: 11 }, (_, i) => i);
+---
+
+<div class="hero">
+	<div class="copy">
+		<h1 id="_top" data-page-title>
+			<span class="sr-only">{title}</span>
+			<span class="letters" aria-hidden="true">
+				{
+					[...name].map((ch, i) => (
+						<span class="ch" style={`--i:${i}`}>
+							{ch}
+						</span>
+					))
+				}
+				{
+					ext && (
+						<>
+							<span class="dot" style={`--i:${name.length + 2}`} />
+							{[...ext].map((ch, i) => (
+								<span class="ch ext" style={`--i:${name.length + 1 + i}`}>
+									{ch}
+								</span>
+							))}
+						</>
+					)
+				}
+			</span>
+		</h1>
+		{tagline && <p class="tagline" set:html={tagline} />}
+		{
+			actions.length > 0 && (
+				<div class="actions">
+					{actions.map(({ attrs: { class: className, ...attrs } = {}, icon, link: href, text, variant }) => (
+						<LinkButton {href} {variant} icon={icon?.name} class:list={[className]} {...attrs}>
+							{text}
+							{icon?.html && <Fragment set:html={icon.html} />}
+						</LinkButton>
+					))}
+				</div>
+			)
+		}
+	</div>
+
+	<figure class="stage" data-stage>
+		<figcaption class="code" aria-live="polite">
+			<span class="t-var">sprite</span>.<span class="t-fn">TweenPosition</span>(to, <span class="t-num">0.8</span>,{" "}
+			<span class="t-var">o</span> =&gt; <span class="t-var">o</span>.Ease = EaseType.<span
+				class="t-ease"
+				data-ease-label>{eases[0]}</span
+			>);
+		</figcaption>
+
+		<svg class="lane" viewBox="0 0 400 84" aria-hidden="true">
+			<line class="rail" x1="36" y1="46" x2="364" y2="46"></line>
+			<circle class="endpoint" cx="36" cy="46" r="5"></circle>
+			<circle class="endpoint" cx="364" cy="46" r="5"></circle>
+			<text class="endlabel" x="36" y="80">From</text>
+			<text class="endlabel" x="364" y="80">To</text>
+			<g data-ghosts>
+				{ghosts.map(() => <circle class="ghost" cy="46" r="13" />)}
+			</g>
+			<g data-ball transform="translate(36 46)">
+				<g data-squash>
+					<circle class="ball" r="15"></circle>
+					<circle class="shine" cx="-5" cy="-5" r="4"></circle>
+				</g>
+			</g>
+		</svg>
+
+		<div class="plot">
+			<svg viewBox="0 0 240 120" aria-hidden="true">
+				<path class="grid" d="M0 100H240M0 20H240M0 60H240"></path>
+				<g data-plot-flip>
+					<path class="curve" data-curve d=""></path>
+					<circle class="tracer" data-tracer r="5" cx="0" cy="100"></circle>
+				</g>
+			</svg>
+			<div class="readout">
+				<span class="tw-chip"><span class="k">progress</span> <span data-progress>0.00</span></span>
+				<span class="tw-chip"><span class="k">weight</span> <span data-weight>0.00</span></span>
+			</div>
+		</div>
+
+		<div class="picker" role="group" aria-label="Easing">
+			{
+				eases.map((e, i) => (
+					<button type="button" class="pick" data-ease={e} aria-pressed={i === 0 ? 'true' : 'false'}>
+						{e}
+					</button>
+				))
+			}
+		</div>
+	</figure>
+</div>
+
+<script>
+	import { EASES, type EaseName, curvePath, loop, reducedMotion } from '../../scripts/motion';
+
+	for (const stage of document.querySelectorAll<HTMLElement>('[data-stage]')) {
+		const $ = <T extends Element>(s: string) => stage.querySelector<T>(s)!;
+		const label = $<HTMLElement>('[data-ease-label]');
+		const ball = $<SVGGElement>('[data-ball]');
+		const squash = $<SVGGElement>('[data-squash]');
+		const ghosts = [...stage.querySelectorAll<SVGCircleElement>('.ghost')];
+		const curve = $<SVGPathElement>('[data-curve]');
+		const tracer = $<SVGCircleElement>('[data-tracer]');
+		const flip = $<SVGGElement>('[data-plot-flip]');
+		const progressOut = $<HTMLElement>('[data-progress]');
+		const weightOut = $<HTMLElement>('[data-weight]');
+		const picks = [...stage.querySelectorAll<HTMLButtonElement>('.pick')];
+
+		const FROM = 36;
+		const TO = 364;
+		const HOLD = 0.2;
+		const LEG = 0.8;
+		const REST = 0.7;
+		const CYCLE = HOLD + LEG + REST;
+		const plotY = (w: number) => 100 - w * 80;
+
+		let names = picks.map((p) => p.dataset.ease as EaseName);
+		let index = 0;
+		let auto = true;
+		let legStart = 0;
+		let leg = 0;
+		let lastX = FROM;
+
+		const setEase = (i: number) => {
+			index = i;
+			const name = names[index];
+			label.textContent = name;
+			label.animate(
+				[
+					{ transform: 'translateY(-0.6em)', opacity: 0 },
+					{ transform: 'none', opacity: 1 },
+				],
+				{ duration: 420, easing: 'cubic-bezier(0.34, 1.56, 0.64, 1)' },
+			);
+			curve.setAttribute('d', curvePath(name, 240, 120, 20));
+			picks.forEach((p, k) => p.setAttribute('aria-pressed', String(k === index)));
+		};
+
+		const frame = (t: number) => {
+			let local = t - legStart;
+			if (local >= CYCLE) {
+				legStart = t;
+				local = 0;
+				leg++;
+				if (auto && leg % 2 === 0) setEase((index + 1) % names.length);
+				for (const g of ghosts) g.style.opacity = '0';
+			}
+			const forward = leg % 2 === 0;
+			const p = Math.min(1, Math.max(0, (local - HOLD) / LEG));
+			const name = names[index];
+			const w = EASES[name](forward ? p : 1 - p);
+			const x = FROM + (TO - FROM) * w;
+
+			// Squash and stretch from horizontal speed, preserving area.
+			const speed = Math.abs(x - lastX);
+			lastX = x;
+			const stretch = 1 + Math.min(0.55, speed / 22);
+			ball.setAttribute('transform', `translate(${x.toFixed(2)} 46)`);
+			squash.setAttribute('transform', `scale(${stretch.toFixed(3)} ${(1 / stretch).toFixed(3)})`);
+
+			// Onion skin: one ghost per tenth of the leg's time, left where the ball was.
+			ghosts.forEach((g, k) => {
+				const gp = k / (ghosts.length - 1);
+				if (p >= gp && g.style.opacity === '0') {
+					g.setAttribute('cx', String(FROM + (TO - FROM) * EASES[name](forward ? gp : 1 - gp)));
+					g.style.opacity = '1';
+				}
+			});
+
+			flip.setAttribute('transform', forward ? '' : 'translate(240 0) scale(-1 1)');
+			tracer.setAttribute('cx', String(p * 240));
+			tracer.setAttribute('cy', String(plotY(EASES[name](p)).toFixed(2)));
+			progressOut.textContent = (forward ? p : 1 - p).toFixed(2);
+			weightOut.textContent = w.toFixed(2);
+		};
+
+		picks.forEach((p, k) =>
+			p.addEventListener('click', () => {
+				auto = false;
+				setEase(k);
+			}),
+		);
+
+		for (const g of ghosts) g.style.opacity = '0';
+		setEase(0);
+		if (reducedMotion()) {
+			// A still frame that still teaches: the full onion skin of one leg.
+			frame(HOLD + LEG);
+			picks.forEach((p) => p.addEventListener('click', () => {
+				for (const g of ghosts) g.style.opacity = '0';
+				frame(HOLD + LEG);
+			}));
+		} else {
+			loop(stage, frame);
+		}
+	}
+</script>
+
+<style>
+	.hero {
+		display: grid;
+		gap: 2.5rem;
+		align-items: center;
+		padding-block: 1.5rem 2rem;
+	}
+	@media (min-width: 62rem) {
+		.hero {
+			grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+			gap: 3.5rem;
+			padding-block: clamp(2.5rem, 8vmin, 6rem) 3rem;
+		}
+	}
+	.copy {
+		display: grid;
+		gap: 1.4rem;
+		justify-items: start;
+	}
+	h1 {
+		margin: 0;
+		font-family: var(--tw-font-display);
+		font-size: clamp(3.4rem, 9vw, 6rem);
+		line-height: 0.95;
+		font-weight: 800;
+		font-stretch: 90%;
+		letter-spacing: -0.015em;
+		color: var(--sl-color-white);
+	}
+	.letters {
+		display: inline-flex;
+		align-items: baseline;
+	}
+	.ch {
+		display: inline-block;
+		transform-origin: 50% 100%;
+		animation:
+			drop 0.9s var(--ease-bounce-out) both,
+			squash 0.9s ease-out both;
+		animation-delay: calc(0.1s + var(--i) * 55ms);
+	}
+	.ext {
+		color: var(--tw-mint-ink);
+	}
+	.dot {
+		display: inline-block;
+		width: 0.2em;
+		height: 0.2em;
+		margin-inline: 0.04em 0.05em;
+		border-radius: 50%;
+		background: var(--tw-mint);
+		animation: dot-in 1.3s var(--ease-elastic-out) both;
+		animation-delay: calc(0.3s + var(--i) * 55ms);
+	}
+	@keyframes drop {
+		from {
+			translate: 0 -1.1em;
+			opacity: 0;
+		}
+		10% {
+			opacity: 1;
+		}
+		to {
+			translate: 0 0;
+			opacity: 1;
+		}
+	}
+	@keyframes squash {
+		0% {
+			scale: 0.88 1.2;
+		}
+		35% {
+			scale: 1.14 0.84;
+		}
+		65% {
+			scale: 0.97 1.03;
+		}
+		100% {
+			scale: 1;
+		}
+	}
+	@keyframes dot-in {
+		from {
+			scale: 0;
+			translate: -1.5em 0;
+		}
+		to {
+			scale: 1;
+			translate: 0 0;
+		}
+	}
+	.tagline {
+		margin: 0;
+		max-width: 26ch;
+		font-family: var(--tw-font-display);
+		font-size: clamp(1.35rem, 2.6vw, 1.85rem);
+		line-height: 1.2;
+		font-weight: 600;
+		font-stretch: 94%;
+		color: var(--tw-soft);
+		text-wrap: balance;
+	}
+	.actions {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.75rem 1.25rem;
+		align-items: center;
+	}
+
+	.stage {
+		margin: 0;
+		display: grid;
+		grid-template-columns: 1fr;
+		gap: 0.25rem;
+		padding: 1.1rem 1.1rem 1rem;
+		border: 1px solid var(--tw-outline);
+		border-radius: 1.5rem;
+		background:
+			radial-gradient(120% 90% at 100% 0%, color-mix(in oklab, var(--tw-blue) 10%, transparent), transparent 60%),
+			var(--tw-stage);
+		box-shadow: var(--tw-shadow);
+		min-width: 0;
+	}
+	.code {
+		font-family: var(--sl-font-mono);
+		font-variant-ligatures: none;
+		font-size: clamp(0.7rem, 1.6vw, 0.82rem);
+		line-height: 1.6;
+		color: var(--tw-muted);
+		padding: 0.55rem 0.8rem;
+		border-radius: 0.8rem;
+		background: color-mix(in oklab, var(--tw-bg) 70%, transparent);
+		overflow-wrap: anywhere;
+	}
+	.t-var {
+		color: var(--sl-color-white);
+	}
+	.t-fn {
+		color: var(--tw-blue-ink);
+	}
+	.t-num {
+		color: var(--tw-amber-ink);
+	}
+	.t-ease {
+		display: inline-block;
+		color: var(--tw-mint-ink);
+		font-weight: 700;
+	}
+	.lane {
+		width: 100%;
+		overflow: visible;
+		margin-top: 0.5rem;
+	}
+	.rail {
+		stroke: var(--tw-outline);
+		stroke-width: 3;
+		stroke-linecap: round;
+		stroke-dasharray: 1 9;
+	}
+	.endpoint {
+		fill: var(--tw-muted);
+	}
+	.endlabel {
+		fill: var(--tw-muted);
+		font: 600 12px var(--sl-font);
+		text-anchor: middle;
+	}
+	.ghost {
+		fill: none;
+		stroke: var(--tw-mint);
+		stroke-width: 2;
+		opacity: 0;
+		transition: opacity 0.35s ease-out;
+	}
+	[data-ghosts] {
+		opacity: 0.4;
+	}
+	.ball {
+		fill: var(--tw-mint);
+	}
+	.shine {
+		fill: #fff;
+		opacity: 0.55;
+	}
+	.plot {
+		display: grid;
+		grid-template-columns: minmax(0, 1fr) auto;
+		gap: 1rem;
+		align-items: end;
+	}
+	.plot svg {
+		width: 100%;
+		max-height: 9rem;
+		overflow: visible;
+	}
+	.plot .grid {
+		stroke: var(--tw-grid);
+		stroke-dasharray: 3 5;
+	}
+	.curve {
+		fill: none;
+		stroke: var(--tw-blue);
+		stroke-width: 3;
+		stroke-linecap: round;
+	}
+	.tracer {
+		fill: var(--sl-color-white);
+		stroke: var(--tw-blue);
+		stroke-width: 3;
+	}
+	.readout {
+		display: grid;
+		gap: 0.4rem;
+		justify-items: end;
+	}
+	.readout .k {
+		color: var(--tw-muted);
+	}
+	.picker {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.4rem;
+		margin-top: 0.75rem;
+	}
+	.pick {
+		all: unset;
+		cursor: pointer;
+		padding: 0.3rem 0.7rem;
+		border-radius: 999px;
+		font-family: var(--sl-font-mono);
+		font-size: 0.75rem;
+		color: var(--tw-soft);
+		background: var(--tw-raised);
+		transition:
+			translate 0.35s var(--ease-back-out),
+			background-color 0.2s,
+			color 0.2s;
+	}
+	.pick:hover {
+		translate: 0 -2px;
+		color: var(--sl-color-white);
+	}
+	.pick:focus-visible {
+		outline: 2px solid var(--tw-mint);
+		outline-offset: 2px;
+	}
+	.pick[aria-pressed='true'] {
+		background: var(--tw-mint);
+		color: var(--tw-on-accent);
+	}
+	:root[data-theme='light'] .pick[aria-pressed='true'] {
+		background: var(--tw-mint-ink);
+	}
+	@media (max-width: 30rem) {
+		.plot {
+			grid-template-columns: 1fr;
+		}
+		.readout {
+			grid-auto-flow: column;
+			justify-content: start;
+		}
+	}
+	@media (prefers-reduced-motion: reduce) {
+		.ch,
+		.dot {
+			animation: none;
+		}
+	}
+</style>

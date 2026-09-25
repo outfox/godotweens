@@ -1,0 +1,14 @@
+---
+import Default from '@astrojs/starlight/components/MarkdownContent.astro';
+---
+
+<Default><slot /></Default>
+
+<script>
+	import { onceVisible } from '../../scripts/motion';
+
+	document.documentElement.classList.add('tw-js');
+	for (const heading of document.querySelectorAll('.sl-markdown-content .sl-heading-wrapper.level-h2')) {
+		onceVisible(heading, () => heading.classList.add('is-in'), 0.6);
+	}
+</script>

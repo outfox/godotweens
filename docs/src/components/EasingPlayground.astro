@@ -1,0 +1,345 @@
+---
+import { curvePath, type EaseName } from '../scripts/motion';
+
+const families = ['Sine', 'Quad', 'Cubic', 'Quart', 'Quint', 'Expo', 'Circ', 'Back', 'Elastic', 'Bounce'];
+const variants = ['In', 'Out', 'InOut'] as const;
+const TILE_W = 100;
+const TILE_H = 64;
+const TILE_PAD = 14;
+const ghosts = Array.from({ length: 11 }, (_, i) => i);
+---
+
+<div class="tw-widget ep not-content" data-easing-playground>
+	<div class="preview">
+		<div class="graph">
+			<svg viewBox="0 0 320 200" aria-hidden="true">
+				<path class="grid" d="M0 40H320M0 160H320M0 100H320"></path>
+				<text class="axis-label" x="4" y="34">1</text>
+				<text class="axis-label" x="4" y="154">0</text>
+				<path class="curve" data-curve d={curvePath('BackOut', 320, 200, 40)}></path>
+				<line class="now" data-now x1="0" x2="0" y1="0" y2="200"></line>
+				<circle class="tracer" data-tracer r="7" cx="0" cy="160"></circle>
+			</svg>
+			<svg class="lane" viewBox="0 0 320 44" aria-hidden="true">
+				<line class="rail" x1="14" x2="306" y1="22" y2="22"></line>
+				<g data-ghosts>{ghosts.map(() => <circle class="ghost" cy="22" r="9" />)}</g>
+				<g data-ball transform="translate(14 22)">
+					<circle class="ball" r="11"></circle>
+				</g>
+			</svg>
+		</div>
+		<div class="side">
+			<p class="name"><span class="ns">EaseType.</span><span data-name>BackOut</span></p>
+			<p class="hint">Onion-skin rings mark equal slices of time. Wide gaps are fast; bunched rings are slow.</p>
+			<label class="tw-field">
+				<span>Duration <output data-duration-out>0.8 s</output></span>
+				<input type="range" min="0.2" max="3" step="0.1" value="0.8" data-duration />
+			</label>
+			<div class="buttons">
+				<button type="button" class="tw-btn is-primary" data-play>
+					<svg viewBox="0 0 16 16" fill="currentColor"><path d="M5 3l8 5-8 5z"></path></svg>
+					Play
+				</button>
+				<button type="button" class="tw-btn" data-race>Race all 31</button>
+			</div>
+		</div>
+	</div>
+
+	<div class="families" role="group" aria-label="Easing functions">
+		<div class="family linear">
+			<span class="fam">Linear</span>
+			<button type="button" class="tile" data-ease="Linear" aria-pressed="false">
+				<svg viewBox={`0 0 ${TILE_W} ${TILE_H}`} aria-hidden="true">
+					<path d={curvePath('Linear', TILE_W, TILE_H, TILE_PAD)}></path>
+					<circle r="4" cx="0" cy={TILE_H - TILE_PAD}></circle>
+				</svg>
+				<span class="v">Linear</span>
+			</button>
+		</div>
+		{
+			families.map((f) => (
+				<div class="family">
+					<span class="fam">{f}</span>
+					{variants.map((v) => {
+						const name = `${f}${v}` as EaseName;
+						return (
+							<button type="button" class="tile" data-ease={name} aria-pressed={name === 'BackOut' ? 'true' : 'false'} aria-label={name}>
+								<svg viewBox={`0 0 ${TILE_W} ${TILE_H}`} aria-hidden="true">
+									<path d={curvePath(name, TILE_W, TILE_H, TILE_PAD)} />
+									<circle r="4" cx="0" cy={TILE_H - TILE_PAD} />
+								</svg>
+								<span class="v">{v}</span>
+							</button>
+						);
+					})}
+				</div>
+			))
+		}
+	</div>
+	<p class="sr-only" aria-live="polite" data-announce></p>
+</div>
+
+<script>
+	import { EASES, type EaseName, curvePath, tween, onceVisible, type TweenHandle } from '../scripts/motion';
+
+	const TILE_W = 100;
+	const TILE_H = 64;
+	const TILE_PAD = 14;
+
+	for (const root of document.querySelectorAll<HTMLElement>('[data-easing-playground]')) {
+		const $ = <T extends Element>(s: string) => root.querySelector<T>(s)!;
+		const curve = $<SVGPathElement>('[data-curve]');
+		const tracer = $<SVGCircleElement>('[data-tracer]');
+		const now = $<SVGLineElement>('[data-now]');
+		const ball = $<SVGGElement>('[data-ball]');
+		const ghosts = [...root.querySelectorAll<SVGCircleElement>('.ghost')];
+		const nameOut = $<HTMLElement>('[data-name]');
+		const announce = $<HTMLElement>('[data-announce]');
+		const duration = $<HTMLInputElement>('[data-duration]');
+		const durationOut = $<HTMLOutputElement>('[data-duration-out]');
+		const tiles = [...root.querySelectorAll<HTMLButtonElement>('.tile')];
+
+		let selected: EaseName = 'BackOut';
+		let playing: TweenHandle | undefined;
+		let racing: TweenHandle | undefined;
+
+		const laneX = (w: number) => 14 + w * 292;
+		const graphY = (w: number) => 160 - w * 120;
+
+		const draw = (p: number) => {
+			const w = EASES[selected](p);
+			tracer.setAttribute('cx', String(p * 320));
+			tracer.setAttribute('cy', graphY(w).toFixed(2));
+			now.setAttribute('x1', String(p * 320));
+			now.setAttribute('x2', String(p * 320));
+			ball.setAttribute('transform', `translate(${laneX(w).toFixed(2)} 22)`);
+			ghosts.forEach((g, k) => {
+				const gp = k / (ghosts.length - 1);
+				g.style.opacity = p >= gp ? '1' : '0';
+			});
+		};
+
+		const place = () =>
+			ghosts.forEach((g, k) => g.setAttribute('cx', laneX(EASES[selected](k / (ghosts.length - 1))).toFixed(2)));
+
+		const play = () => {
+			playing?.cancel();
+			const seconds = Number(duration.value);
+			playing = tween(seconds, (_, p) => draw(p), 'Linear');
+		};
+
+		const select = (name: EaseName, run = true) => {
+			selected = name;
+			nameOut.textContent = name;
+			announce.textContent = `${name} selected`;
+			curve.setAttribute('d', curvePath(name, 320, 200, 40));
+			curve.animate([{ opacity: 0.2 }, { opacity: 1 }], { duration: 300 });
+			tiles.forEach((t) => t.setAttribute('aria-pressed', String(t.dataset.ease === name)));
+			place();
+			if (run) play();
+			else draw(1);
+		};
+
+		const runTile = (tile: HTMLButtonElement, p: number) => {
+			const dot = tile.querySelector('circle')!;
+			const w = EASES[tile.dataset.ease as EaseName](p);
+			dot.setAttribute('cx', (p * TILE_W).toFixed(2));
+			dot.setAttribute('cy', (TILE_H - TILE_PAD - w * (TILE_H - 2 * TILE_PAD)).toFixed(2));
+			tile.style.setProperty('--w', w.toFixed(3));
+		};
+
+		tiles.forEach((tile) => {
+			tile.addEventListener('click', () => select(tile.dataset.ease as EaseName));
+			let h: TweenHandle | undefined;
+			tile.addEventListener('pointerenter', () => {
+				if (racing) return;
+				h?.cancel();
+				h = tween(0.9, (_, p) => runTile(tile, p), 'Linear');
+			});
+		});
+
+		$('[data-play]').addEventListener('click', play);
+		$('[data-race]').addEventListener('click', () => {
+			racing?.cancel();
+			root.classList.add('is-racing');
+			racing = tween(Number(duration.value) * 1.5, (_, p) => tiles.forEach((t) => runTile(t, p)), 'Linear');
+			racing.completion.then(() => {
+				racing = undefined;
+				root.classList.remove('is-racing');
+			});
+		});
+		duration.addEventListener('input', () => (durationOut.textContent = `${Number(duration.value).toFixed(1)} s`));
+
+		select('BackOut', false);
+		onceVisible(root, play, 0.4);
+	}
+</script>
+
+<style>
+	.ep {
+		padding: 1.25rem;
+		display: grid;
+		gap: 1.5rem;
+	}
+	.preview {
+		display: grid;
+		gap: 1.25rem;
+	}
+	@media (min-width: 40rem) {
+		.preview {
+			grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+			align-items: center;
+		}
+	}
+	.graph svg {
+		width: 100%;
+		display: block;
+		overflow: visible;
+	}
+	.grid {
+		stroke: var(--tw-grid);
+		stroke-dasharray: 3 5;
+	}
+	.axis-label {
+		fill: var(--tw-muted);
+		font: 600 11px var(--sl-font-mono);
+	}
+	.curve {
+		fill: none;
+		stroke: var(--tw-blue);
+		stroke-width: 3.5;
+		stroke-linecap: round;
+		stroke-linejoin: round;
+	}
+	.now {
+		stroke: color-mix(in oklab, var(--tw-blue) 40%, transparent);
+		stroke-width: 1.5;
+		stroke-dasharray: 2 4;
+	}
+	.tracer {
+		fill: var(--sl-color-white);
+		stroke: var(--tw-blue);
+		stroke-width: 3;
+	}
+	.lane {
+		margin-top: 0.5rem;
+	}
+	.rail {
+		stroke: var(--tw-outline);
+		stroke-width: 3;
+		stroke-linecap: round;
+		stroke-dasharray: 1 8;
+	}
+	.ghost {
+		fill: none;
+		stroke: var(--tw-mint);
+		stroke-width: 1.5;
+		opacity: 0;
+		transition: opacity 0.25s;
+	}
+	[data-ghosts] {
+		opacity: 0.55;
+	}
+	.ball {
+		fill: var(--tw-mint);
+	}
+	.side {
+		display: grid;
+		gap: 0.9rem;
+	}
+	.name {
+		font-family: var(--sl-font-mono);
+		font-size: 1.15rem;
+		font-weight: 700;
+		color: var(--tw-mint-ink);
+		overflow-wrap: anywhere;
+	}
+	.ns {
+		color: var(--tw-muted);
+		font-weight: 500;
+	}
+	.hint {
+		color: var(--tw-muted);
+		line-height: 1.5;
+	}
+	.buttons {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.5rem;
+	}
+
+	.families {
+		display: grid;
+		grid-template-columns: repeat(auto-fill, minmax(15.5rem, 1fr));
+		gap: 0.9rem 1.2rem;
+		padding-top: 1.25rem;
+		border-top: 1px solid var(--tw-outline);
+	}
+	.family {
+		display: grid;
+		grid-template-columns: 3.6rem repeat(3, minmax(0, 1fr));
+		align-items: center;
+		gap: 0.35rem;
+	}
+	.fam {
+		font-family: var(--tw-font-display);
+		font-weight: 700;
+		color: var(--sl-color-white);
+		font-size: var(--sl-text-sm);
+	}
+	.tile {
+		all: unset;
+		box-sizing: border-box;
+		cursor: pointer;
+		display: grid;
+		justify-items: center;
+		gap: 0.1rem;
+		padding: 0.3rem 0.25rem 0.25rem;
+		border-radius: 0.6rem;
+		background: color-mix(in oklab, var(--tw-raised) 45%, transparent);
+		border: 1px solid transparent;
+		transition:
+			translate 0.35s var(--ease-back-out),
+			background-color 0.2s,
+			border-color 0.2s;
+	}
+	.tile:hover {
+		translate: 0 -3px;
+		background: var(--tw-raised);
+	}
+	.tile:focus-visible {
+		outline: 2px solid var(--tw-mint);
+		outline-offset: 2px;
+	}
+	.tile[aria-pressed='true'] {
+		border-color: var(--tw-mint);
+		background: var(--tw-selected);
+	}
+	.tile svg {
+		width: 100%;
+		overflow: visible;
+	}
+	.tile path {
+		fill: none;
+		stroke: var(--tw-track);
+		stroke-width: 2.5;
+		stroke-linecap: round;
+	}
+	.tile[aria-pressed='true'] path {
+		stroke: var(--tw-mint);
+	}
+	.tile circle {
+		fill: var(--sl-color-white);
+	}
+	.v {
+		font-family: var(--sl-font-mono);
+		font-size: 0.66rem;
+		color: var(--tw-muted);
+	}
+	.linear .tile {
+		grid-column: 2 / span 1;
+	}
+	.is-racing .tile {
+		background: color-mix(in oklab, var(--tw-mint) calc(var(--w, 0) * 22%), var(--tw-stage));
+	}
+</style>
