@@ -1,12 +1,13 @@
 // SPDX-License-Identifier: MIT
 // SPDX-FileCopyrightText: 2026 Moritz Voss
 
+using System.Collections.Generic;
 using System.Linq;
 using Godot;
 using tweens.gd;
 namespace testbed;
 
-public sealed class CurveFollower2D : GalleryEffect
+public sealed partial class CurveFollower2D : GalleryEffect
 {
     private static readonly Vector2 PathStart = new(-160, 35), PathEnd = new(160, -35);
     private PathFollow2D leader = null!;
@@ -47,16 +48,6 @@ public sealed class CurveFollower2D : GalleryEffect
         Diamond(ship, Vector2.Zero, new Color("c3f5df"), 6);
     }
 
-    protected override void Animate()
-    {
-        for (var e = 0; e < echoes.Length; e++)
-        {
-            var trailing = CycleAfter((e + 1) * 0.07);
-            Keep(echoes[e].TweenProgressRatio(1, Seconds, trailing));
-            Keep(echoes[e].TweenVOffset(20, Seconds, trailing));
-        }
-        Keep(leader.TweenProgressRatio(1, Seconds, Cycle));
-        Keep(leader.TweenVOffset(20, Seconds, Cycle));
-        Keep(ship.TweenScale(new Vector2(1.6f, 1.6f), Seconds, Cycle));
-    }
+    // Only the testbed needs tracking; the animation itself returns ordinary tween handles.
+    protected override void Animate() => TrackTweens(FollowPath(Seconds, Ease, PingPong));
 }

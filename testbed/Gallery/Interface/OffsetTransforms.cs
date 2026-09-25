@@ -5,7 +5,7 @@ using Godot;
 using tweens.gd;
 namespace testbed;
 
-public sealed class OffsetTransforms : GalleryEffect
+public sealed partial class OffsetTransforms : GalleryEffect
 {
     private static readonly Vector2 TileSize = new(88, 82);
     private Control featured = null!;
@@ -38,10 +38,5 @@ public sealed class OffsetTransforms : GalleryEffect
         return tile;
     }
 
-    protected override void Animate()
-    {
-        Keep(featured.TweenOffsetTransformPosition(new Vector2(0, -22), Seconds, Cycle));
-        Keep(featured.TweenOffsetTransformRotation(0.18f, Seconds, Cycle));
-        Keep(featured.TweenOffsetTransformScale(new Vector2(1.13f, 1.13f), Seconds, Cycle));
-    }
+    protected override void Animate() => TrackTweens(CreateAnimation());
 }

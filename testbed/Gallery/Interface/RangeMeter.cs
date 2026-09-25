@@ -5,7 +5,7 @@ using Godot;
 using tweens.gd;
 namespace testbed;
 
-public sealed class RangeMeter : GalleryEffect
+public sealed partial class RangeMeter : GalleryEffect
 {
     private static readonly Color Track = new("293c50");
     private ProgressBar progress = null!;
@@ -57,10 +57,5 @@ public sealed class RangeMeter : GalleryEffect
         });
     }
 
-    protected override void Animate()
-    {
-        Keep(progress.TweenValue(100, Seconds, Cycle));
-        Keep(swatch.TweenColor(Palette.Blue, Seconds, Cycle));
-        Keep(swatch.TweenSelfModulateAlpha(0.25f, Seconds, Cycle));
-    }
+    protected override void Animate() => TrackTweens(CreateAnimation());
 }

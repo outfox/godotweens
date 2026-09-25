@@ -7,7 +7,7 @@ using Godot;
 using tweens.gd;
 namespace testbed;
 
-public sealed class SquashWave : GalleryEffect
+public sealed partial class SquashWave : GalleryEffect
 {
     private const int Count = 15;
     private const float Ground = 58, Spacing = 26;
@@ -40,23 +40,5 @@ public sealed class SquashWave : GalleryEffect
         return bottom.Concat(top).OrderBy(p => MathF.Atan2(p.Y + 18, p.X)).ToArray();
     }
 
-    protected override void Animate()
-    {
-        var beat = Seconds * 0.5;
-        for (var i = 0; i < pills.Length; i++)
-        {
-            var pill = pills[i];
-            var delay = i * 0.07 * Tempo;
-            void Wave(TweenOptions t)
-            {
-                Cycle(t);
-                t.Delay = delay;
-                t.RepeatInterval = 0.1;
-                t.PingPongInterval = 0.05;
-            }
-            Keep(pill.TweenScaleY(2.6f, beat, Wave));
-            Keep(pill.TweenScaleX(0.62f, beat, Wave));
-            Keep(pill.TweenColor(pill.Color.Lightened(0.45f), beat, Wave));
-        }
-    }
+    protected override void Animate() => TrackTweens(CreateAnimation());
 }

@@ -98,27 +98,30 @@ public abstract partial class GalleryEffect
         return handle;
     }
 
+    /// <summary>Registers a group with the testbed's pause, cancellation, and error controls.</summary>
+    protected void TrackTweens(IEnumerable<TweenInstance> tweens)
+    {
+        foreach (var tween in tweens) Keep(tween);
+    }
+
     protected T Own<T>(T resource) where T : Resource
     {
         resources.Add(resource);
         return resource;
     }
 
-    /// <summary>True when every tween completed and the effect has not been stopped since <paramref name="run"/>.</summary>
+    /// <summary>Tracks a new group; true when all complete without the effect being stopped since <paramref name="run"/>.</summary>
     protected async Task<bool> Finished(int run, params TweenInstance[] tweens)
     {
+        TrackTweens(tweens);
         var results = await Task.WhenAll(tweens.Select(t => t.Completion));
         return run == Generation && results.All(r => r == TweenCompletionReason.Completed);
     }
 
     /// <summary>Tracks a newly created group for the playback controls, then awaits its completion results.</summary>
-    protected Task<bool> Finished(params TweenInstance[] tweens)
-    {
-        foreach (var tween in tweens) Keep(tween);
-        return Finished(Generation, tweens);
-    }
+    protected Task<bool> Finished(params TweenInstance[] tweens) => Finished(Generation, tweens);
 
-    protected Task<bool> Wait(int run, double seconds) => Finished(run, Keep(Stage.TweenFloat(1, seconds, t => t.From = 0)));
+    protected Task<bool> Wait(int run, double seconds) => Finished(run, Stage.TweenFloat(1, seconds, t => t.From = 0));
 
     protected Task<bool> Wait(double seconds) => Finished(Stage.TweenFloat(1, seconds, t => t.From = 0));
 

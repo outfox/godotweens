@@ -6,15 +6,9 @@ using Godot;
 using tweens.gd;
 namespace testbed;
 
-public sealed class EasingRace : GalleryEffect
+public sealed partial class EasingRace : GalleryEffect
 {
-    private const float StartLine = -120, FinishLine = 120, LaneHeight = 24;
     private const int Echoes = 3;
-    private static readonly (EaseType Ease, string Name)[] Lanes =
-    [
-        (EaseType.Linear, "Linear"), (EaseType.SineInOut, "Sine"), (EaseType.CubicInOut, "Cubic"), (EaseType.ExpoInOut, "Expo"),
-        (EaseType.BackInOut, "Back"), (EaseType.ElasticOut, "Elastic"), (EaseType.BounceOut, "Bounce"),
-    ];
 
     /// <summary>Per lane: the leading dot followed by its echoes.</summary>
     private Polygon2D[][] racers = [];
@@ -41,23 +35,5 @@ public sealed class EasingRace : GalleryEffect
         }).ToArray();
     }
 
-    protected override void Animate()
-    {
-        for (var lane = 0; lane < racers.Length; lane++)
-            for (var position = 0; position < racers[lane].Length; position++)
-            {
-                var ease = Lanes[lane].Ease;
-                var delay = position * 0.05;
-                void Race(TweenOptions t)
-                {
-                    t.Ease = ease;
-                    t.UsePingPong = true;
-                    t.IsInfinite = true;
-                    t.PingPongInterval = 0.3;
-                    t.RepeatInterval = 0.3;
-                    t.Delay = delay;
-                }
-                Keep(racers[lane][position].TweenPositionX(FinishLine, Seconds, Race));
-            }
-    }
+    protected override void Animate() => TrackTweens(CreateAnimation());
 }

@@ -8,10 +8,8 @@ using Godot;
 using tweens.gd;
 namespace testbed;
 
-public sealed class BouncingBall : GalleryEffect
+public sealed partial class BouncingBall : GalleryEffect
 {
-    private const float Ground = 62, Apex = Ground - 96, Stride = 75, Bounds = 151;
-    private static readonly Vector2 Crouched = new(0.72f, 1.32f), Falling = new(0.8f, 1.25f), Squashed = new(1.55f, 0.55f);
 
     private Node2D ball = null!, spin = null!;
     private Polygon2D shadow = null!;
@@ -54,52 +52,15 @@ public sealed class BouncingBall : GalleryEffect
         if (Math.Abs(ball.Position.X + direction * Stride) > Bounds) direction = -direction;
         var target = ball.Position.X + direction * Stride;
 
-        var crouch = Keep(ball.TweenScale(Crouched, 0.07 * Tempo, t => t.Ease = EaseType.QuadOut));
-        if (!await Finished(run, crouch)) return false;
+        if (!await Finished(run, Crouch())) return false;
 
-        Keep(spin.TweenRotation(spin.Rotation + direction * MathF.PI, air * 2));
-        Keep(ball.TweenPositionX(target, air * 2));
-        Keep(shadow.TweenPositionX(target, air * 2));
+        TrackTweens(Travel(target, air * 2));
 
-        void Rising(TweenOptions t) => t.Ease = EaseType.QuadOut;
-        var rise = Finished(run,
-            Keep(ball.TweenPositionY(Apex, air, Rising)),
-            Keep(ball.TweenScale(Vector2.One, air, Rising)),
-            Keep(shadow.TweenScale(new Vector2(0.4f, 0.4f), air, Rising)));
-        if (!await rise) return false;
+        if (!await Finished(run, Rise(air))) return false;
+        if (!await Finished(run, Fall(air))) return false;
 
-        void Dropping(TweenOptions t) => t.Ease = EaseType.QuadIn;
-        var fall = Finished(run,
-            Keep(ball.TweenPositionY(Ground, air, Dropping)),
-            Keep(ball.TweenScale(Falling, air, Dropping)),
-            Keep(shadow.TweenScale(Vector2.One, air, Dropping)));
-        if (!await fall) return false;
-
-        Ripple(target);
-        KickUpDust(target);
-        return await Finished(run, Keep(ball.TweenScale(Squashed, 0.06 * Tempo, t => t.Ease = EaseType.QuadOut)));
-    }
-
-    private void Ripple(float x)
-    {
-        var duration = 0.5 * Tempo;
-        ring.Position = new Vector2(x, Ground);
-        Keep(ring.TweenScale(new Vector2(2.2f, 2.2f), duration, t => { t.From = new Vector2(0.4f, 0.4f); t.Ease = EaseType.QuartOut; }));
-        Keep(ring.TweenModulateAlpha(0, duration, t => { t.From = 1; t.Ease = EaseType.QuadIn; }));
-    }
-
-    private void KickUpDust(float x)
-    {
-        var duration = 0.45 * Tempo;
-        for (var i = 0; i < dust.Length; i++)
-        {
-            var side = i % 2 == 0 ? -1 : 1;
-            var row = i / 2;
-            var landing = new Vector2(x + side * (26 + row * 16), Ground - 10 - row * 5);
-            dust[i].Position = new Vector2(x + side * 14, Ground - 3);
-            dust[i].Scale = Vector2.One * (1.4f - row * 0.3f);
-            Keep(dust[i].TweenPosition(landing, duration, t => t.Ease = EaseType.QuartOut));
-            Keep(dust[i].TweenModulateAlpha(0, duration, t => { t.From = 0.9f; t.Ease = EaseType.QuadIn; }));
-        }
+        TrackTweens(Ripple(target));
+        TrackTweens(KickUpDust(target));
+        return await Finished(run, Squash());
     }
 }

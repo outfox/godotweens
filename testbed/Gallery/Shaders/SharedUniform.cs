@@ -5,7 +5,7 @@ using Godot;
 using tweens.gd;
 namespace testbed;
 
-public sealed class SharedUniform : GalleryEffect
+public sealed partial class SharedUniform : GalleryEffect
 {
     private ShaderMaterial material = null!;
 
@@ -21,5 +21,5 @@ public sealed class SharedUniform : GalleryEffect
         SplitPanel.Caption(view, "SAME MATERIAL", "SAME VALUE");
     }
 
-    protected override void Animate() => Keep(material.TweenShaderParameter("amount", 0.85f, Seconds, Stage, Cycle));
+    protected override void Animate() => TrackTweens(CreateAnimation());
 }

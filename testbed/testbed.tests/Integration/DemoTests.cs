@@ -12,6 +12,99 @@ namespace testbed.Tests;
 public class DemoTests(HeadlessFixture godot)
 {
     private void Pump() { for (var i = 0; i < 3; i++) godot.Engine.Iteration(); }
+
+    [Theory]
+    [InlineData(nameof(BouncingBall))] [InlineData(nameof(SlimeHop))] [InlineData(nameof(JellyCube))]
+    [InlineData(nameof(JellyButton))] [InlineData(nameof(AsyncDelivery))]
+    public void AnimationPartialsRemainTrackedAcrossPhasesAndCallbackCreatedTweens(string name)
+    {
+        // Sample launch, flight, impact, recovery, and subsequent repeats; include the button's OnEnd tween.
+        for (var updates = 0; updates <= 100; updates += 4)
+        {
+            var stage = new Control { Size = new Vector2(600, 300) };
+            godot.Tree.Root.AddChild(stage);
+            var type = typeof(GalleryEffect).Assembly.GetType("testbed." + name)!;
+            var effect = (GalleryEffect)Activator.CreateInstance(type)!;
+            effect.Attach(stage);
+            var scheduler = TweenRuntime.GetRunner(stage).Scheduler;
+            try
+            {
+                effect.Start(1.8, EaseType.CubicInOut, true);
+                var sequence = effect.Sequence!;
+                for (var i = 0; i < updates; i++) scheduler.Update(0.05);
+                Assert.Null(effect.Error);
+                effect.Pause(true);
+                Assert.True(effect.AllPaused);
+                var active = effect.ActiveCount;
+                scheduler.Update(5);
+                Assert.Equal(active, effect.ActiveCount);
+
+                effect.Stop();
+                Assert.True(sequence.IsCompletedSuccessfully);
+                scheduler.Update(5);
+                Assert.Equal(0, scheduler.ActiveCount);
+                Assert.Equal(0, effect.ActiveCount);
+
+                effect.Start(1.8, EaseType.CubicInOut, true);
+                Assert.True(effect.ActiveCount > 0);
+                Assert.NotSame(sequence, effect.Sequence);
+                effect.Stop();
+                Assert.True(effect.Sequence!.IsCompletedSuccessfully);
+                scheduler.Update(5);
+                Assert.Equal(0, scheduler.ActiveCount);
+            }
+            finally { effect.Stop(); stage.Free(); effect.ReleaseResources(); }
+        }
+        Pump();
+        Assert.Empty(godot.Errors.Drain());
+    }
+
+    [Fact]
+    public void PathTweenGroupPreservesTrailingTimingPauseAndCancellation()
+    {
+        var stage = new Control { Size = new Vector2(600, 300) };
+        godot.Tree.Root.AddChild(stage);
+        var effect = new CurveFollower2D();
+        effect.Attach(stage);
+        var view = stage.GetChild<SubViewportContainer>(0).GetChild<SubViewport>(0);
+        var followers = view.GetChildren().OfType<Path2D>().Single().GetChildren().OfType<PathFollow2D>().ToArray();
+        var leader = followers[^1];
+        var scheduler = TweenRuntime.GetRunner(stage).Scheduler;
+        try
+        {
+            effect.Start(1, EaseType.Linear, true);
+            Assert.Equal(9, effect.ActiveCount);
+            scheduler.Update(0.17);
+            Assert.True(leader.ProgressRatio > followers[0].ProgressRatio);
+            Assert.True(followers[0].ProgressRatio > followers[1].ProgressRatio);
+            Assert.True(followers[1].ProgressRatio > 0);
+            Assert.Equal(0, followers[2].ProgressRatio);
+
+            var progress = followers.Select(f => f.ProgressRatio).ToArray();
+            effect.Pause(true);
+            Assert.True(effect.AllPaused);
+            scheduler.Update(5);
+            Assert.Equal(progress, followers.Select(f => f.ProgressRatio).ToArray());
+            effect.Pause(false);
+            scheduler.Update(0.33);
+            Assert.InRange(leader.ProgressRatio, 0.499f, 0.501f);
+            scheduler.Update(0.5);
+            Assert.InRange(leader.ProgressRatio, 0.999f, 1);
+            scheduler.Update(0.65);
+            Assert.InRange(leader.ProgressRatio, 0.499f, 0.501f);
+            Assert.Null(effect.Error);
+
+            effect.Stop();
+            Assert.Equal(0, effect.ActiveCount);
+            scheduler.Update(5);
+            Assert.Equal(0, scheduler.ActiveCount);
+            Assert.InRange(leader.ProgressRatio, 0.499f, 0.501f);
+        }
+        finally { effect.Stop(); stage.Free(); effect.ReleaseResources(); }
+        Pump();
+        Assert.Empty(godot.Errors.Drain());
+    }
+
     [Theory]
     [InlineData(0)] [InlineData(12)] [InlineData(24)] [InlineData(36)] [InlineData(48)]
     [InlineData(60)] [InlineData(72)] [InlineData(84)] [InlineData(96)]

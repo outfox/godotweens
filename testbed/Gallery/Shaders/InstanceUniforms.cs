@@ -5,7 +5,7 @@ using Godot;
 using tweens.gd;
 namespace testbed;
 
-public sealed class InstanceUniforms : GalleryEffect
+public sealed partial class InstanceUniforms : GalleryEffect
 {
     private ColorRect first = null!, second = null!;
 
@@ -22,9 +22,5 @@ public sealed class InstanceUniforms : GalleryEffect
         SplitPanel.Caption(view, "INSTANCE A", "INSTANCE B");
     }
 
-    protected override void Animate()
-    {
-        Keep(first.TweenInstanceShaderParameter("amount", 0.85f, Seconds, Cycle));
-        Keep(second.TweenInstanceShaderParameter("amount", 0.15f, Seconds, Cycle));
-    }
+    protected override void Animate() => TrackTweens(CreateAnimation());
 }

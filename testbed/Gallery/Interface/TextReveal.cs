@@ -5,7 +5,7 @@ using Godot;
 using tweens.gd;
 namespace testbed;
 
-public sealed class TextReveal : GalleryEffect
+public sealed partial class TextReveal : GalleryEffect
 {
     private Label text = null!;
     private ColorRect underline = null!;
@@ -27,11 +27,5 @@ public sealed class TextReveal : GalleryEffect
         });
     }
 
-    protected override void Animate()
-    {
-        Keep(text.TweenVisibleRatio(1, Seconds, Cycle));
-        Keep(text.TweenSelfModulate(Palette.Amber, Seconds, Cycle));
-        Keep(underline.TweenScaleX(1, Seconds, Cycle));
-        Keep(underline.TweenColor(Palette.Amber, Seconds, Cycle));
-    }
+    protected override void Animate() => TrackTweens(CreateAnimation());
 }

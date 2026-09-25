@@ -5,7 +5,7 @@ using Godot;
 using tweens.gd;
 namespace testbed;
 
-public sealed class EmissionPulse : GalleryEffect
+public sealed partial class EmissionPulse : GalleryEffect
 {
     private StandardMaterial3D material = null!;
 
@@ -24,9 +24,5 @@ public sealed class EmissionPulse : GalleryEffect
         torus.RotationDegrees = new Vector3(65, 0, 15);
     }
 
-    protected override void Animate()
-    {
-        Keep(material.TweenEmission(new Color(0.12f, 0.08f, 0.3f), Seconds, Stage, Cycle));
-        Keep(material.TweenEmissionEnergyMultiplier(2, Seconds, Stage, Cycle));
-    }
+    protected override void Animate() => TrackTweens(CreateAnimation());
 }

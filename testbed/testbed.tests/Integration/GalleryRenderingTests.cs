@@ -78,6 +78,7 @@ public class GalleryRenderingTests(Fixture godot)
                 godot.Engine.Iteration();
                 var view = page.SourceView;
                 Assert.Equal(effect, page.SelectedEffect);
+                Assert.EndsWith(".Animation.cs", view.Source.Path);
                 Assert.Equal(Godot.FileAccess.GetFileAsString("res://" + view.Source.Path).Replace("\r\n", "\n"), view.Code.Text);
                 Assert.True(view.Source.TweenLine > 0);
                 Assert.True(view.Code.Size.X > 0 && view.Code.Size.Y > 0);

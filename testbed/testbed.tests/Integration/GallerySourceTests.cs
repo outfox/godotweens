@@ -13,6 +13,29 @@ public class GallerySourceTests(HeadlessFixture godot)
     private void Pump() { for (var i = 0; i < 3; i++) godot.Engine.Iteration(); }
 
     [Fact]
+    public void EveryEffectEmbedsItsAnimationPartialAndCompanionWithoutTrackingInTheAnimation()
+    {
+        var types = typeof(GalleryEffect).Assembly.GetTypes()
+            .Where(t => t.IsSubclassOf(typeof(GalleryEffect)) && !t.IsAbstract && !t.IsNested).ToArray();
+        Assert.Equal(32, types.Length);
+        foreach (var type in types)
+        {
+            var effect = (GalleryEffect)Activator.CreateInstance(type)!;
+            var animation = GallerySource.ForEffect(effect);
+            var setup = GallerySource.ForSetup(effect);
+            Assert.EndsWith(type.Name + ".Animation.cs", animation.Path);
+            Assert.EndsWith(type.Name + ".cs", setup.Path);
+            Assert.Contains("public sealed partial class " + type.Name, animation.Text);
+            Assert.Contains("public sealed partial class " + type.Name, setup.Text);
+            Assert.Contains(".Tween", animation.Text);
+            foreach (var hidden in new[] { "Keep(", "TrackTweens(", "Generation", "protected override void Build(" })
+                Assert.DoesNotContain(hidden, animation.Text);
+            foreach (var source in new[] { animation, setup })
+                Assert.Equal(FileAccess.GetFileAsString("res://" + source.Path).Replace("\r\n", "\n"), source.Text);
+        }
+    }
+
+    [Fact]
     public void EveryCardDisplaysTheExactCompiledSourceWithoutRestartingPlayback()
     {
         var demo = new TweenDemo();
@@ -64,12 +87,16 @@ public class GallerySourceTests(HeadlessFixture godot)
             demo.CurrentPage!.ShowSource(1);
             var view = demo.CurrentPage.SourceView;
             var files = Descendants(view).OfType<OptionButton>().Single();
+            Assert.Equal("Animation", files.GetItemText(0));
+            Assert.Equal("Scene & playback", files.GetItemText(1));
+            var animationPath = view.Source.Path;
             for (var i = 1; i < files.ItemCount; i++)
             {
                 files.Select(i);
                 files.EmitSignal(OptionButton.SignalName.ItemSelected, i);
                 Assert.Equal(FileAccess.GetFileAsString("res://" + view.Source.Path).Replace("\r\n", "\n"), view.Code.Text);
-                Assert.Equal(0, view.Code.GetCaretLine());
+                Assert.Equal(Math.Max(0, view.Source.TweenLine), view.Code.GetCaretLine());
+                if (i == 1) Assert.Equal(animationPath.Replace(".Animation.cs", ".cs"), view.Source.Path);
             }
             demo.TogglePause(); Assert.True(demo.CurrentPage.AllPaused);
             demo.RestartDemo(); Pump();
