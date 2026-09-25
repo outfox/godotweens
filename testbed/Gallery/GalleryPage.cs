@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 // SPDX-FileCopyrightText: 2026 Moritz Voss
 
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -13,6 +14,15 @@ public abstract partial class GalleryPage : VBoxContainer
 {
     private readonly List<Resource> resources = [];
     private GalleryEffect[] effects = [];
+    private readonly List<PanelContainer> cards = [];
+    private readonly List<Button> sourceButtons = [];
+    private GridContainer grid = null!;
+    private HBoxContainer sourceNavigation = null!;
+    private OptionButton examplePicker = null!;
+    private GallerySourceView sourceView = null!;
+
+    public int SelectedEffect { get; private set; } = -1;
+    public GallerySourceView SourceView => sourceView;
 
     public abstract string Heading { get; }
     public abstract string Description { get; }
@@ -29,14 +39,55 @@ public abstract partial class GalleryPage : VBoxContainer
         AddChild(GalleryTheme.Label(Heading, 28));
         AddChild(GalleryTheme.Label(Description, 15, Palette.Muted));
 
-        var grid = new GridContainer { Columns = 2, SizeFlagsHorizontal = SizeFlags.ExpandFill, SizeFlagsVertical = SizeFlags.ExpandFill };
+        sourceNavigation = this.Add(new HBoxContainer { Visible = false });
+        var back = sourceNavigation.Add(new Button { Text = "‹ All examples" });
+        back.Pressed += ShowGallery;
+        examplePicker = sourceNavigation.Add(new OptionButton { SizeFlagsHorizontal = SizeFlags.ExpandFill });
+        examplePicker.ItemSelected += index => ShowSource((int)index);
+        sourceNavigation.AddChild(GalleryTheme.Label("C# / LIVE PREVIEW", 12, Palette.Mint));
+
+        var split = this.Add(new HSplitContainer { SizeFlagsVertical = SizeFlags.ExpandFill });
+        sourceView = split.Add(new GallerySourceView { Visible = false });
+        grid = new GridContainer { Columns = 2, SizeFlagsHorizontal = SizeFlags.ExpandFill, SizeFlagsVertical = SizeFlags.ExpandFill };
         grid.AddThemeConstantOverride("h_separation", 14);
         grid.AddThemeConstantOverride("v_separation", 14);
-        AddChild(grid);
+        split.AddChild(grid);
 
         effects = CreateEffects();
         for (var i = 0; i < effects.Length; i++)
-            effects[i].Attach(AddCard(grid, $"{i + 1:00} / {effects[i].Title}", effects[i].Caption));
+        {
+            examplePicker.AddItem(effects[i].Title);
+            effects[i].Attach(AddCard(grid, $"{i + 1:00} / {effects[i].Title}", effects[i].Caption, i));
+        }
+    }
+
+    public void ShowSource(int index)
+    {
+        if (index < 0 || index >= effects.Length) throw new ArgumentOutOfRangeException(nameof(index));
+        SelectedEffect = index;
+        sourceNavigation.Show();
+        sourceView.Show();
+        examplePicker.Select(index);
+        grid.Columns = 1;
+        // Keep the preview's original landscape proportions, especially for 3D cameras.
+        grid.SizeFlagsVertical = SizeFlags.ShrinkCenter;
+        for (var i = 0; i < cards.Count; i++)
+        {
+            cards[i].Visible = i == index;
+            sourceButtons[i].Visible = false;
+        }
+        sourceView.ShowEffect(effects[index]);
+    }
+
+    public void ShowGallery()
+    {
+        SelectedEffect = -1;
+        sourceNavigation.Hide();
+        sourceView.Hide();
+        grid.Columns = 2;
+        grid.SizeFlagsVertical = SizeFlags.ExpandFill;
+        foreach (var card in cards) card.Show();
+        foreach (var button in sourceButtons) button.Show();
     }
 
     public void Start(double seconds, EaseType ease, bool pingPong)
@@ -61,23 +112,32 @@ public abstract partial class GalleryPage : VBoxContainer
     /// <summary>Called after Free(), so children have relinquished their native resource references.</summary>
     public void ReleaseResources()
     {
+        sourceView.ReleaseResources();
         foreach (var effect in effects) effect.ReleaseResources();
         foreach (var resource in resources) resource.Dispose();
         resources.Clear();
     }
 
     /// <summary>Adds a titled card to the grid and returns its stage, the area an effect draws into.</summary>
-    private Control AddCard(GridContainer grid, string title, string caption)
+    private Control AddCard(GridContainer grid, string title, string caption, int index)
     {
         var panel = grid.Add(new PanelContainer
         {
             SizeFlagsHorizontal = SizeFlags.ExpandFill, SizeFlagsVertical = SizeFlags.ExpandFill,
         });
         panel.AddThemeStyleboxOverride("panel", Own(GalleryTheme.Box(Palette.Surface, 12, 1)));
+        cards.Add(panel);
 
         var column = panel.Add(new VBoxContainer());
         column.AddThemeConstantOverride("separation", 8);
-        column.AddChild(GalleryTheme.Label(title, 19));
+        var header = column.Add(new HBoxContainer());
+        var label = header.Add(GalleryTheme.Label(title, 19));
+        label.SizeFlagsHorizontal = SizeFlags.ExpandFill;
+        label.TextOverrunBehavior = TextServer.OverrunBehavior.TrimEllipsis;
+        var source = header.Add(new Button { Text = "View C#", TooltipText = "Read the actual source beside this animation" });
+        source.AddThemeFontSizeOverride("font_size", 13);
+        source.Pressed += () => ShowSource(index);
+        sourceButtons.Add(source);
 
         // Drawn clipping keeps viewports inside the rounded inset.
         var stage = column.Add(new Panel

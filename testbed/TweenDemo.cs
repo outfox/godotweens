@@ -229,7 +229,10 @@ public partial class TweenDemo : Control
 
     public void RestartDemo()
     {
-        if (content is not null) SelectPage(SelectedPage);
+        if (content is null) return;
+        var selectedEffect = page?.SelectedEffect ?? -1;
+        SelectPage(SelectedPage);
+        if (selectedEffect >= 0) page?.ShowSource(selectedEffect);
     }
 
     public void TogglePause()

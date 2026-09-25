@@ -15,6 +15,9 @@
     </PropertyGroup>
     <ItemGroup>
         <ProjectReference Include="../csharp/tweens.gd.csproj" />
+        <!-- Ship the exact compiled examples, including in trimmed/web exports. -->
+        <EmbeddedResource Include="Gallery/**/*.cs" LogicalName="GallerySource/%(RecursiveDir)%(Filename)%(Extension)" />
+        <Content Include="Fonts/OFL.txt" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
     </ItemGroup>
     <ItemGroup>
         <!-- Web bootstrap lives in the web host folder but must compile into THIS assembly: scripts resolve
