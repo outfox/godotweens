@@ -10,6 +10,8 @@ All library types and extension methods live in `tweens.gd`.
 | Entry point | Purpose |
 | --- | --- |
 | `node.Tween(definition)` | Animate an in-tree node or deliver callback values |
+| `node.Tween(first, second, ...)` | Start several definitions together; returns a `Group` |
+| `Group.Of(tweens)` | Treat running tweens as one step with a shared `End` |
 | `node.TweenProperty(to, duration, configure)` | Convenience form; replace `Property` with a method from the catalog |
 | `node.TweenProperty(to, duration, options)` | Convenience form that copies a shared `TweenOptions`; `duration` takes precedence |
 | `resource.Tween(definition, tree)` | Scope resource playback to a `SceneTree` |
@@ -52,7 +54,7 @@ per-playback bindings.
 | `Progress` | Normalized current-leg progress, before easing |
 | `CompletionReason` | Nullable reason; faults are described by `Error` |
 | `Error` | Failure retained after faulted playback |
-| `Completion` | Shared `Task<Reason>` |
+| `End` | Shared `Task<Reason>` |
 | `AwaitDecommissionAsync(token)` | Wait with cancellation that affects only the wait |
 | `Target` | Original target, on the generic handle |
 

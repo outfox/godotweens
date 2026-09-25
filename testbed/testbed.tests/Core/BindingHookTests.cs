@@ -32,7 +32,7 @@ public class BindingHookTests
         var state = new State(); using var scheduler = new TweenScheduler();
         var handle = scheduler.Add(state, new Definition(state) { To = 1, Duration = 1, Fill = FillMode.None,
             FailRestore = restore, FailRelease = !restore });
-        var completion = handle.Completion;
+        var completion = handle.End;
         scheduler.Update(1);
         var error = await Assert.ThrowsAsync<InvalidOperationException>(async () => await completion);
         Assert.Equal(restore ? "restore" : "release", error.Message);
@@ -46,6 +46,6 @@ public class BindingHookTests
         var tween = scheduler.Add(state, new PropertyTween<State, float>(s => { scheduler.Dispose(); return s.Value; },
             (s, v) => s.Value = v, (a, b, t) => a));
         Assert.Equal(Reason.RunnerDisposed, tween.CompletionReason);
-        Assert.True(tween.Completion.IsCompletedSuccessfully);
+        Assert.True(tween.End.IsCompletedSuccessfully);
     }
 }

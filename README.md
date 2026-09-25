@@ -45,7 +45,7 @@ var movement = sprite.Tween(new Position2DTween
     Ease = EaseType.CubicOut,
 });
 
-var reason = await movement.Completion;
+var reason = await movement.End;
 if (reason == Reason.Completed)
     GD.Print("Arrived");
 ```
@@ -70,19 +70,20 @@ Multiple tweens on the same property are allowed: the last application in insert
 
 ### Async completion
 
-`Completion` is a lazily allocated, shared `Task<Reason>`. Multiple callers can await it, including after the tween ends. Reasons are `Completed`, `Cancelled`, `TargetFreed`, `OwnerExited`, and `RunnerDisposed`. A direct `Free()` may be observed as `OwnerExited` because Godot emits tree-exit before invalidating the native instance; `QueueFree()` is identified as `TargetFreed`.
+`End` is a lazily allocated, shared `Task<Reason>`. Multiple callers can await it, including after the tween ends. Reasons are `Completed`, `Cancelled`, `TargetFreed`, `OwnerExited`, and `RunnerDisposed`. A direct `Free()` may be observed as `OwnerExited` because Godot emits tree-exit before invalidating the native instance; `QueueFree()` is identified as `TargetFreed`.
 
 ```csharp
-await sprite.Tween(new Position2DTween { To = destination, Duration = 0.5 }).Completion;
-await sprite.Tween(new ModulateAlphaTween { To = 0, Duration = 0.2 }).Completion;
+await sprite.Tween(new Position2DTween { To = destination, Duration = 0.5 }).End;
+await sprite.Tween(new ModulateAlphaTween { To = 0, Duration = 0.2 }).End;
 
-await Task.WhenAll(first.Completion, second.Completion);
+await sprite.Tween(new Scale2DTween { To = Vector2.One, Duration = 0.2 }, new ModulateAlphaTween { To = 1, Duration = 0.2 }).End;
+await Group.Of(first, second).End;
 await first.AwaitDecommissionAsync(cancellationToken);
 ```
 
-The wait token cancels **only that wait**. Call `Cancel()` to cancel playback. Check completion reasons before starting a follow-up animation when cancellation should stop a sequence; the [sequences guide](docs/src/content/docs/csharp/sequences.md) covers chaining, staggering, waits, pausing, and step timing. Errors in interpolation, easing, setters, or callbacks fault the completion task and are reported through `TweenScheduler.UnhandledException`; the automatic runner reports them with `GD.PushError`. Other tweens continue. Terminal callbacks and `OnFinally` run at most once, with cleanup and task settlement even when callbacks fail. Multiple failures are retained in an `AggregateException`.
+The wait token cancels **only that wait**. Call `Cancel()` to cancel playback. Awaited steps continue each other's timelines: tweens started where an await of `End` resumes inherit the time the finished tween overshot its end, so sequences do not drift. A `Group` plays several tweens as one step; if one stops early, it cancels the others. Check completion reasons before starting a follow-up animation when cancellation should stop a sequence; the [sequences guide](docs/src/content/docs/csharp/sequences.md) covers chaining, staggering, waits, pausing, and step timing. Errors in interpolation, easing, setters, or callbacks fault the completion task and are reported through `TweenScheduler.UnhandledException`; the automatic runner reports them with `GD.PushError`. Other tweens continue. Terminal callbacks and `OnFinally` run at most once, with cleanup and task settlement even when callbacks fail. Multiple failures are retained in an `AggregateException`.
 
-Create/control tweens on Godot's main thread. Completion is settled from that thread; normal Godot async callers retain their synchronization context. Do not use `.Wait()`, `.Result`, `Task.Run`, or `ConfigureAwait(false)` around engine access. No coroutine API is provided. Use Godot's `ToSignal` for unrelated engine-signal waits.
+Create/control tweens on Godot's main thread. `End` is settled from that thread; normal Godot async callers retain their synchronization context. Do not use `.Wait()`, `.Result`, `Task.Run`, or `ConfigureAwait(false)` around engine access. No coroutine API is provided. Use Godot's `ToSignal` for unrelated engine-signal waits.
 
 ### Timing and lifetime
 

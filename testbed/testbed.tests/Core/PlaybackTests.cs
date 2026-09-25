@@ -34,7 +34,7 @@ public class PlaybackTests
         Assert.Equal(2.5f, box.Value);
         scheduler.Update(0.75);
         Assert.Equal(10, box.Value);
-        Assert.Equal(Reason.Completed, await tween.Completion);
+        Assert.Equal(Reason.Completed, await tween.End);
         Assert.Equal(new[] { "add", "start", "update", "update", "end", "finally" }, events);
         Assert.Equal(0, scheduler.ActiveCount);
     }
@@ -166,7 +166,7 @@ public class PlaybackTests
         tween.Cancel();
         Assert.Equal(3.5f, box.Value);
         Assert.Equal(2, callbacks);
-        Assert.Equal(Reason.Cancelled, await tween.Completion);
+        Assert.Equal(Reason.Cancelled, await tween.End);
     }
 
     [Fact]
@@ -210,11 +210,11 @@ public class PlaybackTests
             OnFinally = _ => { final++; throw new ArgumentException("finally"); } });
         var healthy = scheduler.Add(new Box(), new BoxTween { To = 12 });
         scheduler.Update(1);
-        var error = await Assert.ThrowsAsync<AggregateException>(async () => await failed.Completion);
+        var error = await Assert.ThrowsAsync<AggregateException>(async () => await failed.End);
         Assert.Equal(2, error.InnerExceptions.Count);
         Assert.Single(reports);
         Assert.Equal(1, final);
-        Assert.Equal(Reason.Completed, await healthy.Completion);
+        Assert.Equal(Reason.Completed, await healthy.End);
     }
 
     [Fact]
@@ -223,7 +223,7 @@ public class PlaybackTests
         using var scheduler = new TweenScheduler();
         using var token = new CancellationTokenSource();
         var tween = scheduler.Add(new Box(), new BoxTween { Duration = 1 });
-        var a = tween.Completion; var b = tween.Completion;
+        var a = tween.End; var b = tween.End;
         Assert.Same(a, b);
         var waiting = tween.AwaitDecommissionAsync(token.Token);
         token.Cancel();
@@ -242,8 +242,8 @@ public class PlaybackTests
         var second = scheduler.Add(new Box(), new BoxTween { Duration = 5 });
         second.Pause();
         scheduler.Update(1);
-        Assert.Equal(Reason.RunnerDisposed, await first.Completion);
-        Assert.Equal(Reason.RunnerDisposed, await second.Completion);
+        Assert.Equal(Reason.RunnerDisposed, await first.End);
+        Assert.Equal(Reason.RunnerDisposed, await second.End);
         Assert.Equal(0, scheduler.ActiveCount);
     }
 
@@ -304,7 +304,7 @@ public class PlaybackTests
             OnUpdate = (t, _) => { t.Cancel(); throw new InvalidOperationException("after cancellation"); },
             OnFinally = _ => final++,
         });
-        var waiting = tween.Completion;
+        var waiting = tween.End;
         scheduler.Update(0);
         await Assert.ThrowsAsync<InvalidOperationException>(async () => await waiting);
         Assert.Equal(TweenState.Faulted, tween.State);

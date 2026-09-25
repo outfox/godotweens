@@ -11,6 +11,8 @@ public sealed class TweenScheduler : IDisposable
     private readonly List<TweenInstance> instances = [];
     private readonly int thread = System.Environment.CurrentManagedThreadId;
     private bool updating, disposed;
+    // Updates started per lane; a carry is only valid until its lane updates again.
+    private readonly long[] ticks = new long[2];
     /// <summary>Reported after a failed tween is cleaned up. Exceptions in observers are ignored.</summary>
     public event Action<Exception>? UnhandledException;
     public int ActiveCount
@@ -57,6 +59,7 @@ public sealed class TweenScheduler : IDisposable
         if (owner is not null && tree is not null && owner.GetTree() != tree)
             throw new ArgumentException("The owner must belong to the supplied scene tree.", nameof(owner));
         var instance = new TweenInstance<TTarget, TValue>(this, target, definition, owner, tree);
+        if (TweenCarry.TryGet(this, instance.Mode, instance.Unscaled, out var credit)) instance.ApplyCredit(credit);
         if (disposed)
         {
             instance.Finish(Reason.RunnerDisposed);
@@ -82,6 +85,7 @@ public sealed class TweenScheduler : IDisposable
         if (!Enum.IsDefined(mode)) throw new ArgumentOutOfRangeException(nameof(mode));
         if (updating) throw new InvalidOperationException("Recursive scheduler updates are not supported.");
         updating = true;
+        ticks[(int)mode]++;
         try
         {
             var count = instances.Count;
@@ -127,6 +131,8 @@ public sealed class TweenScheduler : IDisposable
             if (!instances[i].IsTerminal) instances[kept++] = instances[i];
         if (kept < instances.Count) instances.RemoveRange(kept, instances.Count - kept);
     }
+
+    internal long Tick(TweenProcessMode mode) => ticks[(int)mode];
 
     internal void EnsureThread()
     {

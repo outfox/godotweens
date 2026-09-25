@@ -19,7 +19,7 @@
 
 	<div class="status">
 		<span class="tw-chip state" data-state>Playing</span>
-		<span class="tw-chip">Completion <b data-reason>pending…</b></span>
+		<span class="tw-chip">End <b data-reason>pending…</b></span>
 	</div>
 
 	<div class="controls">
@@ -83,7 +83,7 @@
 			owner.classList.add('is-gone');
 			root.classList.add('is-exited');
 			reasonOut.textContent = 'OwnerExited';
-			announce.textContent = 'Sprite2D left the tree. The tween stopped and Completion settled with OwnerExited.';
+			announce.textContent = 'Sprite2D left the tree. The tween stopped and End settled with OwnerExited.';
 			sync();
 		});
 		$('[data-act="reset"]').addEventListener('click', () => {

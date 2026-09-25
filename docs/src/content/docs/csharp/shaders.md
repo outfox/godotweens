@@ -36,7 +36,7 @@ Color and Vector4 are deliberately distinct. A double uses Godot's floating Vari
 
 On natural completion without `RetainFinalValue`, the original explicit override is restored, or the new override is removed if none originally existed. Cancellation keeps the latest sample, matching node tweens. Source definitions can be reused across materials with different initial values and override states.
 
-Replacing, disposing, or editing the bound shader faults playback when it next attempts a sample or restoration. Any shader change signal is treated as a binding change, even if the new declaration happens to be compatible. Completion settles with the error. Start a new tween after changing the shader. No uniform metadata scan or string path parsing occurs per frame.
+Replacing, disposing, or editing the bound shader faults playback when it next attempts a sample or restoration. Any shader change signal is treated as a binding change, even if the new declaration happens to be compatible. `End` settles with the error. Start a new tween after changing the shader. No uniform metadata scan or string path parsing occurs per frame.
 
 Default lookup requires a working renderer. Godot's dummy headless renderer can expose declarations while returning no default value; capture then fails rather than inventing one. An explicit material override can be used in headless property tests, but rendering tests are required to verify defaults and visible behavior.
 

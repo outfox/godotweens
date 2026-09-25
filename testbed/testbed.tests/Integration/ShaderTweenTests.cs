@@ -94,7 +94,7 @@ public class ShaderTweenTests(Fixture godot)
         if (edit) shader.Code = replacement.Code; else material.Shader = replacement;
         scheduler.Update(0.5);
         Assert.Equal(TweenState.Faulted, handle.State);
-        await Assert.ThrowsAsync<InvalidOperationException>(async () => await handle.Completion);
+        await Assert.ThrowsAsync<InvalidOperationException>(async () => await handle.End);
         Assert.Equal(Variant.Type.Nil, material.GetShaderParameter("amount").VariantType);
         Assert.Equal(0, scheduler.ActiveCount);
     }
@@ -188,7 +188,7 @@ public class ShaderTweenTests(Fixture godot)
             if (node is CanvasItem canvas) canvas.Material = replacement;
             else ((GeometryInstance3D)node).MaterialOverride = replacement;
             TweenRuntime.GetRunner(node).Scheduler.Update(0.5);
-            await Assert.ThrowsAsync<InvalidOperationException>(async () => await tween.Completion);
+            await Assert.ThrowsAsync<InvalidOperationException>(async () => await tween.End);
             godot.Errors.Expect("The material binding changed during shader playback.");
             Assert.False(HasOverride(node, "amount"));
         }
@@ -260,7 +260,7 @@ public class ShaderTweenTests(Fixture godot)
             var tween = child.TweenInstanceShaderParameter("amount", 1f, 1);
             shader.Code += "\n// changed";
             TweenRuntime.GetRunner(child).Scheduler.Update(0.5);
-            await Assert.ThrowsAsync<InvalidOperationException>(async () => await tween.Completion);
+            await Assert.ThrowsAsync<InvalidOperationException>(async () => await tween.End);
             godot.Errors.Expect("The shader binding changed during playback.");
         }
         finally { parent.Free(); }
@@ -284,7 +284,7 @@ public class ShaderTweenTests(Fixture godot)
             if (change == "mesh") node.Mesh = replacementMesh;
             if (change == "next-pass") baseMaterial.NextPass = replacement;
             TweenRuntime.GetRunner(node).Scheduler.Update(0.5);
-            await Assert.ThrowsAsync<InvalidOperationException>(async () => await tween.Completion);
+            await Assert.ThrowsAsync<InvalidOperationException>(async () => await tween.End);
             godot.Errors.Expect("binding changed during shader playback.");
         }
         finally { node.Free(); }
@@ -303,7 +303,7 @@ public class ShaderTweenTests(Fixture godot)
         Assert.Throws<OverflowException>(() => scheduler.Add(material, new ShaderParameterTween<int>("count")));
         var handle = scheduler.Add(material, new ShaderParameterTween<float>("amount") { From = -float.MaxValue, To = float.MaxValue, Duration = 1 });
         scheduler.Update(0.5);
-        await Assert.ThrowsAsync<ArgumentException>(async () => await handle.Completion);
+        await Assert.ThrowsAsync<ArgumentException>(async () => await handle.End);
         Assert.Equal(Variant.Type.Nil, material.GetShaderParameter("amount").VariantType);
     }
 }

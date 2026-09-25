@@ -84,6 +84,29 @@ public static partial class TweenExtensions
         TweenDefinition<TTarget, TValue> definition) where TTarget : Node where TValue : struct
         => TweenRuntime.GetRunner(target).Scheduler.Add(target, definition);
 
+    /// <summary>Start several definitions together as one group, owned by the target's scene-tree lifetime.</summary>
+    public static Group Tween<TTarget>(this TTarget target, ITweenDefinition<TTarget> first,
+        ITweenDefinition<TTarget> second, params ITweenDefinition<TTarget>[] rest) where TTarget : Node
+    {
+        ArgumentNullException.ThrowIfNull(rest);
+        ITweenDefinition<TTarget>[] definitions = [first, second, .. rest];
+        if (Array.IndexOf(definitions, null) >= 0)
+            throw new ArgumentNullException(nameof(rest), "Definitions cannot be null.");
+        var scheduler = TweenRuntime.GetRunner(target).Scheduler;
+        var started = new TweenInstance[definitions.Length];
+        var count = 0;
+        try
+        {
+            for (; count < definitions.Length; count++) started[count] = definitions[count].AddTo(scheduler, target);
+        }
+        catch
+        {
+            for (var i = 0; i < count; i++) started[i].Cancel();
+            throw;
+        }
+        return Group.Of(started);
+    }
+
     public static void CancelTweens(this Node owner, bool includeChildren = false)
         => TweenRuntime.Cancel(owner, includeChildren);
 }

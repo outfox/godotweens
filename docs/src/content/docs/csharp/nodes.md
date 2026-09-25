@@ -14,7 +14,7 @@ var movement = sprite.TweenPosition(new Vector2(300, 120), 0.5,
 var fade = sprite.TweenModulateAlpha(0, 0.2);
 var zoom = camera.TweenZoom(new Vector2(2, 2), 0.4);
 var reveal = label.TweenVisibleRatio(1, 1.5, options => options.From = 0);
-await Task.WhenAll(movement.Completion, fade.Completion);
+await Task.WhenAll(movement.End, fade.End);
 ```
 
 Signatures are `target.TweenProperty(to, duration, configure = null)`. The optional typed configure callback runs synchronously before starting playback and may override From, To, Duration or any other definition setting, including callbacks. Configuration errors propagate before playback is added. Keep using `target.Tween(new Definition { ... })` for reusable definitions. Both forms return the existing typed handle with pause/cancel/completion support and the same owner lifetime.

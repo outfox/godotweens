@@ -68,6 +68,8 @@ internal sealed class Playback
     internal float Progress { get; private set; }
     internal bool Started { get; private set; }
     internal bool Completed { get; private set; }
+    /// <summary>Time past the end of the timeline in the completing update.</summary>
+    internal double Overshoot { get; private set; }
     internal TweenState State { get; private set; } = TweenState.Delayed;
 
     internal Playback(TweenOptions options)
@@ -93,6 +95,9 @@ internal sealed class Playback
             throw new ArgumentException("An infinite tween must have a nonzero cycle duration.", nameof(options));
     }
 
+    /// <summary>Starts the timeline this many seconds in, e.g. where a predecessor's timeline ended.</summary>
+    internal void Credit(double seconds) => elapsed = seconds;
+
     internal static double Nonnegative(double value, string name)
     {
         if (!double.IsFinite(value) || value < 0) throw new ArgumentOutOfRangeException(name);
@@ -109,6 +114,7 @@ internal sealed class Playback
         if (time >= total)
         {
             Progress = pingPong ? 0 : 1;
+            Overshoot = time - total;
             Completed = true;
             State = TweenState.Completed;
             return;

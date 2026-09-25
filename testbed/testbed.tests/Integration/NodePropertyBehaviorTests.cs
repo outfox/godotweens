@@ -197,7 +197,7 @@ public class NodePropertyBehaviorTests(HeadlessFixture godot)
             Assert.Equal(1, callbacks);
             tween.Pause(); camera.QueueFree(); scheduler.Update(0);
             Assert.Equal(Reason.TargetFreed, tween.CompletionReason);
-            Assert.True(tween.Completion.IsCompletedSuccessfully);
+            Assert.True(tween.End.IsCompletedSuccessfully);
         }
         finally { if (GodotObject.IsInstanceValid(camera)) camera.Free(); }
     }

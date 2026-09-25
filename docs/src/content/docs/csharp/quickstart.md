@@ -24,7 +24,7 @@ public partial class MoveAndFade : Sprite2D
         };
 
         var movement = this.Tween(tween);
-        if (await movement.Completion != Reason.Completed) return;
+        if (await movement.End != Reason.Completed) return;
 
         // Shorthand for Convenience
         this.TweenModulateAlpha(to: 0, duration: 0.3);

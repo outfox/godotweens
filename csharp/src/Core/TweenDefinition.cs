@@ -3,10 +3,18 @@
 
 namespace tweens.gd;
 
+/// <summary>A definition that can start on <typeparamref name="TTarget"/>, whatever its value type.</summary>
+public interface ITweenDefinition<in TTarget> where TTarget : class
+{
+    internal TweenInstance AddTo(TweenScheduler scheduler, TTarget target);
+}
+
 /// <summary>A reusable typed definition. Override the three property operations for custom tweens.</summary>
-public abstract class TweenDefinition<TTarget, TValue> : TweenOptions
+public abstract class TweenDefinition<TTarget, TValue> : TweenOptions, ITweenDefinition<TTarget>
     where TTarget : class where TValue : struct
 {
+    TweenInstance ITweenDefinition<TTarget>.AddTo(TweenScheduler scheduler, TTarget target) => scheduler.Add(target, this);
+
     public TValue? From { get; set; }
     public TValue? To { get; set; }
     public Action<TweenInstance<TTarget, TValue>>? OnAdd { get; set; }

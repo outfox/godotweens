@@ -114,8 +114,9 @@ public abstract partial class GalleryEffect
     protected async Task<bool> Finished(int run, params TweenInstance[] tweens)
     {
         TrackTweens(tweens);
-        var results = await Task.WhenAll(tweens.Select(t => t.Completion));
-        return run == Generation && results.All(r => r == Reason.Completed);
+        // A group hands its timeline to the next step; Task.WhenAll would drop up to a frame per step.
+        var reason = await Group.Of(tweens).End;
+        return run == Generation && reason == Reason.Completed;
     }
 
     /// <summary>Tracks a newly created group for the playback controls, then awaits its completion results.</summary>

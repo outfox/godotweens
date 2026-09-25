@@ -18,13 +18,13 @@ also takes a `CancellationToken cancellationToken` supplied by your caller.
 
 ## Sequence animations
 
-Chain steps by awaiting `Completion` and checking its reason; run steps together
-with `Task.WhenAll`:
+Chain steps by awaiting `End` and checking its reason; run steps together
+as a `Group`. Awaited steps continue each other's timelines without frame drift:
 
 ```csharp
-if (await sprite.TweenPosition(new Vector2(400, 180), 0.6).Completion != Reason.Completed)
+if (await sprite.TweenPosition(new Vector2(400, 180), 0.6).End != Reason.Completed)
     return;
-await sprite.TweenModulateAlpha(0, 0.3).Completion;
+await sprite.TweenModulateAlpha(0, 0.3).End;
 ```
 
 [Sequences](/csharp/sequences/) covers staggering, waits, stopping, pausing,
@@ -32,7 +32,7 @@ and the timing between steps.
 
 ## Completion reasons
 
-`Completion` is a lazily allocated, shared `Task<Reason>`. Multiple
+`End` is a lazily allocated, shared `Task<Reason>`. Multiple
 callers can await it, including after playback has ended.
 
 | Reason | Meaning |
@@ -76,7 +76,8 @@ callbacks fail.
 
 `OnUpdate` samples once per eligible tick, with extra samples for delay fill or
 restoration when applicable. New tweens created by update callbacks begin on the
-next eligible update. A long frame does not replay every skipped cycle's callbacks.
+next eligible update. Tweens created by `OnEnd` start with the time by which the
+finishing tween overshot its end, so they continue its timeline exactly. A long frame does not replay every skipped cycle's callbacks.
 
 Failures in interpolation, easing, setters, or callbacks fault completion and
 populate `Error`. Multiple failures are retained in an `AggregateException`.
@@ -86,8 +87,8 @@ sequence, especially in `async void` Godot callbacks such as `_Ready`.
 
 ## Stay on the main thread
 
-Create/control automatic tweens and access `Completion` on Godot's main thread.
-Completion settles there, and normal Godot async callers retain their
+Create/control automatic tweens and access `End` on Godot's main thread.
+`End` settles there, and normal Godot async callers retain their
 synchronization context. Do not block with `.Wait()` or `.Result`, or use
 `Task.Run` / `ConfigureAwait(false)` around engine access. Use Godot's `ToSignal`
 for unrelated engine-signal waits; tweens.gd provides no coroutine API.

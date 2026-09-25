@@ -24,7 +24,7 @@ var movement = sprite.Tween(new Position2DTween
     Ease = EaseType.CubicOut,
 });
 
-var reason = await movement.Completion;
+var reason = await movement.End;
 if (reason == Reason.Completed)
     GD.Print("Arrived");
 ```

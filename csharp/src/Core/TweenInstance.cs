@@ -27,6 +27,11 @@ public abstract class TweenInstance
     public Reason? CompletionReason { get; private set; }
     public Exception? Error { get; private set; }
     public float Progress => Clock.Progress;
+    /// <summary>Set on natural completion; continuations started from it inherit the overshoot.</summary>
+    internal Carry? Stamp { get; private set; }
+    internal bool IsSettled => settled;
+    /// <summary>Raised once the tween has settled, before its completion task is resolved.</summary>
+    internal event Action<TweenInstance>? Settled;
     public bool IsPaused
     {
         get => paused;
@@ -34,7 +39,8 @@ public abstract class TweenInstance
     }
 
     /// <summary>Shared completion. Cancellation is a result; callback errors fault the task.</summary>
-    public Task<Reason> Completion
+    /// <remarks>Tweens started where an await of it resumes continue its timeline, including its last overshoot.</remarks>
+    public Task<Reason> End
     {
         get
         {
@@ -70,7 +76,7 @@ public abstract class TweenInstance
 
     /// <summary>The token cancels only this wait, not the tween. Use Cancel to stop playback.</summary>
     public Task<Reason> AwaitDecommissionAsync(CancellationToken cancellationToken = default)
-        => cancellationToken.CanBeCanceled ? Completion.WaitAsync(cancellationToken) : Completion;
+        => cancellationToken.CanBeCanceled ? End.WaitAsync(cancellationToken) : End;
 
     internal void BindLifetime()
     {
@@ -108,6 +114,8 @@ public abstract class TweenInstance
         return tree is null || !tree.Paused;
     }
 
+    internal void ApplyCredit(double seconds) => Clock.Credit(seconds);
+
     internal abstract void Initialize();
     internal abstract void Advance(double delta);
     protected abstract void InvokeTerminal(Reason reason, bool faulted);
@@ -137,7 +145,14 @@ public abstract class TweenInstance
         Error = error;
         State = error is not null ? TweenState.Faulted : reason == Reason.Completed
             ? TweenState.Completed : TweenState.Cancelled;
-        try { InvokeTerminal(reason, error is not null); }
+        if (State == TweenState.Completed)
+            Stamp = new Carry(Scheduler, Mode, Unscaled, Scheduler.Tick(Mode), Clock.Overshoot);
+        try
+        {
+            // Tweens started by OnEnd continue this timeline.
+            using var scope = TweenCarry.Enter(Stamp);
+            InvokeTerminal(reason, error is not null);
+        }
         catch (Exception callbackError)
         {
             Error = Error is null ? callbackError : new AggregateException(Error, callbackError);
@@ -162,6 +177,11 @@ public abstract class TweenInstance
     {
         settled = true;
         if (Error is not null) Scheduler.Report(Error);
+        try { Settled?.Invoke(this); }
+        catch (Exception error) { Scheduler.Report(error); }
+        Settled = null;
+        // Awaiting code resumes inline here; tweens it starts continue this timeline.
+        using var scope = TweenCarry.Enter(Error is null ? Stamp : null);
         SetCompletion();
     }
 

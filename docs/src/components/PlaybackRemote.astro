@@ -1,5 +1,5 @@
 ---
-// A toy handle mirroring TweenInstance: pause, resume, cancel, and a Completion that settles once.
+// A toy handle mirroring TweenInstance: pause, resume, cancel, and an End that settles once.
 ---
 
 <div class="tw-widget pr not-content" data-playback-remote>
@@ -7,7 +7,7 @@
 <span data-line="pause">movement.<span class="fn">Pause</span>();</span>
 <span data-line="resume">movement.<span class="fn">Resume</span>();</span>
 <span data-line="cancel">movement.<span class="fn">Cancel</span>();</span>
-<span data-line="await"><span class="kw">var</span> reason = <span class="kw">await</span> movement.Completion; <span class="cm">// <span data-reason>pending…</span></span></span></pre>
+<span data-line="await"><span class="kw">var</span> reason = <span class="kw">await</span> movement.End; <span class="cm">// <span data-reason>pending…</span></span></span></pre>
 
 	<svg class="lane" viewBox="0 0 400 64" aria-hidden="true">
 		<line class="rail" x1="24" x2="376" y1="32" y2="32"></line>
@@ -85,7 +85,7 @@
 				reasonOut.textContent = `Reason.${next}`;
 				reasonOut.parentElement!.classList.add('is-settled');
 				highlight('await');
-				announce.textContent = `Completion settled: ${next}`;
+				announce.textContent = `End settled: ${next}`;
 			} else if (next === 'Playing' && elapsed === 0) {
 				reasonOut.textContent = 'pending…';
 				reasonOut.parentElement!.classList.remove('is-settled');

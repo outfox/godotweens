@@ -34,7 +34,7 @@ public class NodeTweenTests(HeadlessFixture godot)
 
             async Task Observe()
             {
-                Assert.Equal(Reason.Completed, await node.Movement!.Completion);
+                Assert.Equal(Reason.Completed, await node.Movement!.End);
                 continuationThread = System.Environment.CurrentManagedThreadId;
                 node.Tween(new Position2DTween { To = new Vector2(30, 40), Duration = 1 }).Cancel();
             }
@@ -52,8 +52,8 @@ public class NodeTweenTests(HeadlessFixture godot)
         tween.Pause();
         node.QueueFree();
         for (var i = 0; i < 5 && !tween.IsTerminal; i++) godot.Engine.Iteration();
-        Assert.True(tween.Completion.IsCompleted);
-        Assert.Equal(Reason.TargetFreed, await tween.Completion);
+        Assert.True(tween.End.IsCompleted);
+        Assert.Equal(Reason.TargetFreed, await tween.End);
         Assert.Equal(0, calls);
     }
 
@@ -66,10 +66,43 @@ public class NodeTweenTests(HeadlessFixture godot)
         {
             godot.Tree.Paused = true;
             godot.Tree.Root.RemoveChild(node);
-            Assert.True(tween.Completion.IsCompleted);
-            Assert.Equal(Reason.OwnerExited, await tween.Completion);
+            Assert.True(tween.End.IsCompleted);
+            Assert.Equal(Reason.OwnerExited, await tween.End);
         }
         finally { godot.Tree.Paused = false; node.Free(); }
+    }
+
+    [Fact]
+    public async Task GroupStartsDefinitionsForBaseTypesTogether()
+    {
+        var sprite = Attach(new Sprite2D());
+        try
+        {
+            // Scale2DTween targets Node2D and ModulateAlphaTween targets CanvasItem.
+            var group = sprite.Tween(new Scale2DTween { To = new Vector2(2, 2), Duration = 0.05 },
+                new ModulateAlphaTween { To = 0, Duration = 0.05 });
+            Assert.Equal(2, group.Members.Count);
+            for (var i = 0; i < 50 && !group.IsTerminal; i++) godot.Engine.Iteration();
+            Assert.Equal(Reason.Completed, await group.End);
+            Assert.Equal(new Vector2(2, 2), sprite.Scale);
+            Assert.Equal(0, sprite.Modulate.A);
+        }
+        finally { sprite.Free(); }
+    }
+
+    [Fact]
+    public void GroupStartFailureCancelsTheTweensAlreadyStarted()
+    {
+        var node = Attach(new Node2D());
+        try
+        {
+            var started = new List<TweenInstance>();
+            var valid = new Position2DXTween { To = 10, Duration = 1, OnAdd = started.Add };
+            var invalid = new Position2DYTween { To = 10, Duration = 1, Offset = 2 };
+            Assert.Throws<ArgumentOutOfRangeException>(() => node.Tween(valid, invalid));
+            Assert.Equal(TweenState.Cancelled, Assert.Single(started).State);
+        }
+        finally { node.Free(); }
     }
 
     [Fact]
@@ -187,7 +220,7 @@ public class NodeTweenTests(HeadlessFixture godot)
             godot.Engine.Iteration();
             var runner = TweenRuntime.GetRunner(node);
             runner.Free();
-            Assert.Equal(Reason.RunnerDisposed, await a.Completion);
+            Assert.Equal(Reason.RunnerDisposed, await a.End);
             var b = node.Tween(new FloatTween());
             Assert.NotSame(runner, TweenRuntime.GetRunner(node));
             for (var i = 0; i < 10 && !b.IsTerminal; i++) godot.Engine.Iteration();
