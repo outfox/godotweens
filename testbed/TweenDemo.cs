@@ -23,8 +23,6 @@ public partial class TweenDemo : Control
         ("Materials", () => new MaterialsPage()),
         ("Shaders", () => new ShadersPage()),
     ];
-    private static readonly EaseType[] EaseChoices =
-        [EaseType.CubicInOut, EaseType.Linear, EaseType.SineInOut, EaseType.BackOut, EaseType.ElasticOut, EaseType.BounceOut];
 
     public static readonly string[] PageNames = Pages.Select(p => p.Name).ToArray();
 
@@ -33,9 +31,7 @@ public partial class TweenDemo : Control
     private VBoxContainer content = null!;
     private Label status = null!, durationLabel = null!;
     private Button pause = null!;
-    private OptionButton ease = null!;
     private HSlider duration = null!;
-    private CheckBox pingPong = null!;
     private GalleryPage? page;
     private bool paused;
     private int revision;
@@ -104,13 +100,6 @@ public partial class TweenDemo : Control
         var settings = new HBoxContainer();
         settings.AddThemeConstantOverride("separation", 10);
 
-        settings.AddChild(GalleryTheme.Label("Easing", 16, Palette.Muted));
-        ease = new OptionButton { CustomMinimumSize = new Vector2(164, 34) };
-        foreach (var choice in EaseChoices) ease.AddItem(choice.ToString(), (int)choice);
-        ease.ItemSelected += _ => RestartDemo();
-        settings.AddChild(ease);
-        settings.AddChild(new Control { CustomMinimumSize = new Vector2(8, 0) });
-
         settings.AddChild(GalleryTheme.Label("Leg duration", 16, Palette.Muted));
         durationLabel = GalleryTheme.Label("1.8 s", 16);
         durationLabel.CustomMinimumSize = new Vector2(44, 0);
@@ -127,9 +116,6 @@ public partial class TweenDemo : Control
         };
         settings.AddChild(duration);
 
-        pingPong = new CheckBox { Text = "Ping-pong", ButtonPressed = true };
-        pingPong.Toggled += _ => RestartDemo();
-        settings.AddChild(pingPong);
         return settings;
     }
 
@@ -214,7 +200,7 @@ public partial class TweenDemo : Control
         if (!IsInsideTree() || selection != revision || page is null) return;
         try
         {
-            page.Start(duration.Value, (EaseType)ease.GetSelectedId(), pingPong.ButtonPressed);
+            page.Start(duration.Value, EaseType.CubicInOut, pingPong: true);
             IsPlaying = true;
             paused = false;
             pause.Text = "Pause";
