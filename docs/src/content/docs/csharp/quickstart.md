@@ -15,7 +15,7 @@ public partial class MoveAndFade : Sprite2D
 {
     public override async void _Ready()
     {
-        // Structured Approach
+        // Structured, Readable, Reusable
         var tween = new Position2DTween
         {
             To = Position + new Vector2(240, 0),
@@ -26,8 +26,8 @@ public partial class MoveAndFade : Sprite2D
         var movement = this.Tween(tween);
         if (await movement.Completion != TweenCompletionReason.Completed) return;
 
-        // Shorthand
-        await this.TweenModulateAlpha(to: 0, duration: 0.3).Completion;
+        // Shorthand for Convenience
+        this.TweenModulateAlpha(to: 0, duration: 0.3);
     }
 }
 ```
