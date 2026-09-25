@@ -37,7 +37,6 @@ starter-template text. Preview the production build when checking search.
   It compiles snippets against the library using explicit context for fragments;
   it does not execute native examples or certify their rendered output.
 
-Deployment is not configured. The current links assume a domain-root deployment.
-Choose the public URL before setting Astro `site`; a subpath deployment also
-requires configuring `base` and adapting root-relative content links. No domain
-or canonical URL is assumed by this content change.
+The public URL is `https://tweens.gd`, set as Astro `site` for canonical URLs and
+the sitemap. Links assume that domain-root deployment. statichost.eu builds and
+deploys the site automatically from a repository webhook; no workflow is needed here.

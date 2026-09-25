@@ -4,6 +4,7 @@ import starlight from '@astrojs/starlight';
 
 // https://astro.build/config
 export default defineConfig({
+	site: 'https://tweens.gd',
 	integrations: [
 		starlight({
 			title: 'tweens.gd',
@@ -31,12 +32,15 @@ export default defineConfig({
 					codeBackground: 'var(--tw-stage)',
 					frames: {
 						editorTabBarBackground: 'var(--tw-surface)',
+						// The theme's accent stripe on the active tab gets clipped by the frame's corner radius.
+						editorActiveTabIndicatorTopColor: 'transparent',
+						editorActiveTabIndicatorBottomColor: 'transparent',
 						terminalTitlebarBackground: 'var(--tw-surface)',
 						frameBoxShadowCssValue: 'var(--tw-shadow)',
 					},
 				},
 			},
-			social: [{ icon: 'github', label: 'GitHub', href: 'https://github.com/outfox/godotweens' }],
+			social: [{ icon: 'github', label: 'GitHub', href: 'https://github.com/outfox/tweens.gd' }],
 			sidebar: [
 				{ label: 'Overview', slug: '' },
 				{ label: 'Compatibility & availability', slug: 'compatibility' },

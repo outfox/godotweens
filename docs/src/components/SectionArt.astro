@@ -5,9 +5,11 @@ interface Props {
 	kind: Section;
 }
 const { kind } = Astro.props;
+// SMIL time (s) shown when motion is reduced: the most telling resting frame.
+const still: Record<Section, number> = { curve: 0, hop: 0, catalog: 0, sketch: 2.4, dock: 1.6 };
 ---
 
-<svg class:list={['art', `art-${kind}`]} viewBox="0 0 160 100" aria-hidden="true" focusable="false">
+<svg class:list={['art', `art-${kind}`]} data-still={still[kind]} viewBox="0 0 160 100" aria-hidden="true" focusable="false">
 	{
 		kind === 'curve' && (
 			<>
@@ -102,22 +104,30 @@ const { kind } = Astro.props;
 			<>
 				<rect class="socket" x="96" y="26" width="52" height="48" rx="10" />
 				<rect class="socket-hole" x="96" y="40" width="20" height="20" rx="4" />
-				<g class="plug">
+				<rect class="socket-glow" x="96" y="26" width="52" height="48" rx="10" opacity="0">
+					<animate attributeName="opacity" dur="2.8s" repeatCount="indefinite" values="0;0;0.35;0.35;0;0" keyTimes="0;0.33;0.36;0.78;0.84;1" />
+				</rect>
+				{/* Docked, the pin fills the hole and the body sits flush against the socket (x 96). */}
+				<g>
+					<animateTransform attributeName="transform" type="translate" dur="2.8s" repeatCount="indefinite" values="-20 0;-20 0;18 0;15 0;18 0;18 0;-20 0" keyTimes="0;0.1;0.34;0.38;0.42;0.8;1" calcMode="spline" keySplines="0 0 1 1;0.7 0 0.9 0.5;0.2 0.6 0.4 1;0.4 0 0.6 1;0 0 1 1;0.45 0 0.55 1" />
 					<rect class="plug-body" x="30" y="30" width="48" height="40" rx="10" />
 					<rect class="plug-pin" x="78" y="42" width="20" height="16" rx="3" />
 				</g>
-				<circle class="spark" cx="97" cy="50" r="18" />
+				<circle class="spark" cx="96" cy="50" r="4" opacity="0">
+					<animate attributeName="r" dur="2.8s" repeatCount="indefinite" values="4;4;26;26" keyTimes="0;0.34;0.56;1" calcMode="spline" keySplines="0 0 1 1;0.16 1 0.3 1;0 0 1 1" />
+					<animate attributeName="opacity" dur="2.8s" repeatCount="indefinite" values="0;0;1;0;0" keyTimes="0;0.335;0.35;0.56;1" />
+				</circle>
 			</>
 		)
 	}
 </svg>
 
 <script>
-	// SMIL ignores the motion preference; hold its clock at the resting first frame instead.
+	// SMIL ignores the motion preference; hold its clock on each drawing's resting frame instead.
 	if (matchMedia('(prefers-reduced-motion: reduce)').matches)
 		for (const svg of document.querySelectorAll<SVGSVGElement>('svg.art')) {
 			svg.pauseAnimations();
-			svg.setCurrentTime(0);
+			svg.setCurrentTime(Number(svg.dataset.still ?? 0));
 		}
 </script>
 
@@ -296,12 +306,15 @@ const { kind } = Astro.props;
 		fill: var(--tw-amber);
 	}
 
-	/* dock: the plug slides home with an overshoot and a spark */
+	/* dock: the plug is pulled in, clicks home with a small recoil, lights the socket, then lets go */
 	.socket {
 		fill: var(--tw-raised);
 	}
 	.socket-hole {
 		fill: var(--tw-stage);
+	}
+	.socket-glow {
+		fill: var(--tw-mint);
 	}
 	.plug-body {
 		fill: var(--tw-mint);
@@ -309,45 +322,10 @@ const { kind } = Astro.props;
 	.plug-pin {
 		fill: var(--tw-blue);
 	}
-	.plug {
-		animation: dock 2.8s infinite;
-	}
 	.spark {
+		fill: none;
 		stroke: var(--tw-mint);
 		stroke-width: 3;
-		transform-box: fill-box;
-		transform-origin: center;
-		animation: spark 2.8s var(--ease-expo-out) infinite;
-	}
-	@keyframes dock {
-		0%,
-		10% {
-			transform: translateX(-24px);
-			animation-timing-function: var(--ease-back-out);
-		}
-		40%,
-		80% {
-			transform: translateX(0);
-			animation-timing-function: var(--ease-back-in);
-		}
-		100% {
-			transform: translateX(-24px);
-		}
-	}
-	@keyframes spark {
-		0%,
-		34% {
-			transform: scale(0.2);
-			opacity: 0;
-		}
-		38% {
-			opacity: 1;
-		}
-		62%,
-		100% {
-			transform: scale(1.4);
-			opacity: 0;
-		}
 	}
 
 	@media (prefers-reduced-motion: reduce) {

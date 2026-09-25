@@ -37,10 +37,8 @@ Create and control tweens on Godot's main thread.
 ## Documentation
 
 The GDScript addon is planned separately and is not included in this package.
-Public documentation lives in the repository's Astro/Starlight site, with
-deployment pending. See the [documentation source](https://github.com/outfox/godotweens/tree/main/docs)
-or [repository README](https://github.com/outfox/godotweens#readme) for C# guides
-and examples.
+Guides, concepts, and the API reference live at [tweens.gd](https://tweens.gd).
+The site's source is in the [repository](https://github.com/outfox/tweens.gd/tree/main/docs).
 
 MIT licensed. Easing math and API inspiration come from Jeffrey Lanters'
 unity-tweens; the package includes the license and third-party notices.

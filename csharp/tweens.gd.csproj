@@ -15,8 +15,8 @@
         <Authors>Moritz Voss</Authors>
         <Copyright>Copyright (c) 2026 Moritz Voss</Copyright>
         <PackageLicenseExpression>MIT</PackageLicenseExpression>
-        <PackageProjectUrl>https://github.com/outfox/godotweens</PackageProjectUrl>
-        <RepositoryUrl>https://github.com/outfox/godotweens</RepositoryUrl>
+        <PackageProjectUrl>https://tweens.gd</PackageProjectUrl>
+        <RepositoryUrl>https://github.com/outfox/tweens.gd</RepositoryUrl>
         <RepositoryType>git</RepositoryType>
         <PublishRepositoryUrl>true</PublishRepositoryUrl>
         <PackageTags>godot;godotsharp;2dog;tween;animation</PackageTags>
