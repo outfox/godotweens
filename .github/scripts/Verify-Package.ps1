@@ -58,7 +58,7 @@ using Godot;
 using tweens.gd;
 public static class Consumer
 {
-    public static System.Threading.Tasks.Task<TweenCompletionReason> Animate(Node2D node) =>
+    public static System.Threading.Tasks.Task<Reason> Animate(Node2D node) =>
         node.Tween(new Position2DTween { To = new Vector2(100, 50), Duration = 0.25 }).Completion;
 }
 '@ | Set-Content (Join-Path $consumer 'Consumer.cs')

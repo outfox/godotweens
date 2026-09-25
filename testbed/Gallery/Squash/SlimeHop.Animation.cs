@@ -15,7 +15,7 @@ public sealed partial class SlimeHop
         Squashed = new(1.6f, 0.5f);
 
     private TweenInstance Blink() =>
-        eyes.TweenScaleY(0.1f, 0.07, t => { t.UsePingPong = true; t.IsInfinite = true; t.RepeatInterval = 2.2; t.Delay = 0.9; });
+        eyes.TweenScaleY(0.1f, 0.07, t => { t.UsePingPong = true; t.Repeats = TweenOptions.Infinite; t.RepeatInterval = 2.2; t.Delay = 0.9; });
 
     private TweenInstance LookAhead() =>
         pupils.TweenPositionX(direction * 3, 0.2 * Tempo, t => t.Ease = EaseType.BackOut);

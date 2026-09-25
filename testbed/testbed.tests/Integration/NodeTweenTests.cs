@@ -34,7 +34,7 @@ public class NodeTweenTests(HeadlessFixture godot)
 
             async Task Observe()
             {
-                Assert.Equal(TweenCompletionReason.Completed, await node.Movement!.Completion);
+                Assert.Equal(Reason.Completed, await node.Movement!.Completion);
                 continuationThread = System.Environment.CurrentManagedThreadId;
                 node.Tween(new Position2DTween { To = new Vector2(30, 40), Duration = 1 }).Cancel();
             }
@@ -53,7 +53,7 @@ public class NodeTweenTests(HeadlessFixture godot)
         node.QueueFree();
         for (var i = 0; i < 5 && !tween.IsTerminal; i++) godot.Engine.Iteration();
         Assert.True(tween.Completion.IsCompleted);
-        Assert.Equal(TweenCompletionReason.TargetFreed, await tween.Completion);
+        Assert.Equal(Reason.TargetFreed, await tween.Completion);
         Assert.Equal(0, calls);
     }
 
@@ -67,9 +67,28 @@ public class NodeTweenTests(HeadlessFixture godot)
             godot.Tree.Paused = true;
             godot.Tree.Root.RemoveChild(node);
             Assert.True(tween.Completion.IsCompleted);
-            Assert.Equal(TweenCompletionReason.OwnerExited, await tween.Completion);
+            Assert.Equal(Reason.OwnerExited, await tween.Completion);
         }
         finally { godot.Tree.Paused = false; node.Free(); }
+    }
+
+    [Fact]
+    public void OptionsOverloadCopiesOptionsButKeepsExplicitDuration()
+    {
+        var node = Attach(new Node2D());
+        // An offset beyond options.Duration would throw if that duration were applied.
+        var options = new TweenOptions { Duration = 1, Offset = 5 };
+        try
+        {
+            var offset = node.TweenPositionX(10, 10, options);
+            var delayed = node.TweenPositionY(10, 10, new TweenOptions { Delay = 1000 });
+            godot.Engine.Iteration();
+            Assert.InRange(offset.Progress, 0.5f, 0.9f);
+            Assert.Equal(TweenState.Delayed, delayed.State);
+            Assert.Equal(1, options.Duration);
+            Assert.Throws<ArgumentNullException>(() => node.TweenPositionX(10, 10, (TweenOptions)null!));
+        }
+        finally { node.Free(); }
     }
 
     [Fact]
@@ -168,7 +187,7 @@ public class NodeTweenTests(HeadlessFixture godot)
             godot.Engine.Iteration();
             var runner = TweenRuntime.GetRunner(node);
             runner.Free();
-            Assert.Equal(TweenCompletionReason.RunnerDisposed, await a.Completion);
+            Assert.Equal(Reason.RunnerDisposed, await a.Completion);
             var b = node.Tween(new FloatTween());
             Assert.NotSame(runner, TweenRuntime.GetRunner(node));
             for (var i = 0; i < 10 && !b.IsTerminal; i++) godot.Engine.Iteration();

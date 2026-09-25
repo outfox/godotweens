@@ -82,7 +82,7 @@
 			badge.classList.toggle('is-on', next === 'Paused');
 			root.dataset.state = next;
 			if (next === 'Completed' || next === 'Cancelled') {
-				reasonOut.textContent = `TweenCompletionReason.${next}`;
+				reasonOut.textContent = `Reason.${next}`;
 				reasonOut.parentElement!.classList.add('is-settled');
 				highlight('await');
 				announce.textContent = `Completion settled: ${next}`;

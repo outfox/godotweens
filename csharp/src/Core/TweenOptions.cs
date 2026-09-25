@@ -15,19 +15,21 @@ public enum FillMode
 public enum TweenProcessMode { Process, Physics }
 public enum TweenPauseMode { Bound, SceneTree, Always }
 public enum TweenState { Delayed, Playing, Interval, Completed, Cancelled, Faulted }
-public enum TweenCompletionReason { Completed, Cancelled, TargetFreed, OwnerExited, RunnerDisposed }
+public enum Reason { Completed, Cancelled, TargetFreed, OwnerExited, RunnerDisposed }
 
 /// <summary>Reusable timing configuration. Values are snapshotted on addition.</summary>
-public abstract class TweenOptions
+public class TweenOptions
 {
+    /// <summary>A <see cref="Repeats"/> value that repeats until cancelled.</summary>
+    public const int Infinite = -1;
+
     public double Duration { get; set; }
     public double Delay { get; set; }
     public double PingPongInterval { get; set; }
     public double RepeatInterval { get; set; }
     public double Offset { get; set; }
-    /// <summary>Total cycles, including the first. A ping-pong cycle includes both legs.</summary>
-    public int LoopCount { get; set; } = 1;
-    public bool IsInfinite { get; set; }
+    /// <summary>Cycles after the first, or <see cref="Infinite"/>. A ping-pong cycle includes both legs.</summary>
+    public int Repeats { get; set; }
     public bool UsePingPong { get; set; }
     public bool UseUnscaledTime { get; set; }
     public FillMode Fill { get; set; } = FillMode.RetainFinalValue;
@@ -37,12 +39,31 @@ public abstract class TweenOptions
     public TweenProcessMode ProcessMode { get; set; }
     public TweenPauseMode PauseMode { get; set; }
     public bool SuppressCallbacksWhenTargetInvalid { get; set; }
+
+    internal void CopyTo(TweenOptions target)
+    {
+        target.Duration = Duration;
+        target.Delay = Delay;
+        target.PingPongInterval = PingPongInterval;
+        target.RepeatInterval = RepeatInterval;
+        target.Offset = Offset;
+        target.Repeats = Repeats;
+        target.UsePingPong = UsePingPong;
+        target.UseUnscaledTime = UseUnscaledTime;
+        target.Fill = Fill;
+        target.Ease = Ease;
+        target.EaseFunction = EaseFunction;
+        target.Curve = Curve;
+        target.ProcessMode = ProcessMode;
+        target.PauseMode = PauseMode;
+        target.SuppressCallbacksWhenTargetInvalid = SuppressCallbacksWhenTargetInvalid;
+    }
 }
 
 internal sealed class Playback
 {
     private readonly double duration, delay, turn, repeat, offset, span, total;
-    private readonly bool pingPong, infinite;
+    private readonly bool pingPong;
     private double elapsed;
     internal float Progress { get; private set; }
     internal bool Started { get; private set; }
@@ -57,15 +78,16 @@ internal sealed class Playback
         repeat = Nonnegative(options.RepeatInterval, nameof(options.RepeatInterval));
         offset = Nonnegative(options.Offset, nameof(options.Offset));
         if (offset > duration) throw new ArgumentOutOfRangeException(nameof(options.Offset));
-        if (options.LoopCount < 1) throw new ArgumentOutOfRangeException(nameof(options.LoopCount));
+        if (options.Repeats < TweenOptions.Infinite) throw new ArgumentOutOfRangeException(nameof(options.Repeats));
         if (!Enum.IsDefined(options.ProcessMode) || !Enum.IsDefined(options.PauseMode) ||
             (options.Fill & ~FillMode.Both) != 0)
             throw new ArgumentException("Invalid tween mode.", nameof(options));
         pingPong = options.UsePingPong;
-        infinite = options.IsInfinite;
+        var infinite = options.Repeats == TweenOptions.Infinite;
         span = duration + (pingPong ? turn + duration : 0) + repeat;
-        total = span * options.LoopCount - repeat;
-        if (!double.IsFinite(span) || !double.IsFinite(total + delay))
+        // Double arithmetic keeps int.MaxValue repeats from overflowing.
+        total = infinite ? double.PositiveInfinity : span * ((double)options.Repeats + 1) - repeat;
+        if (!double.IsFinite(span + delay) || !infinite && !double.IsFinite(total + delay))
             throw new ArgumentOutOfRangeException(nameof(options.Duration), "Timeline is too long.");
         if (infinite && span == 0)
             throw new ArgumentException("An infinite tween must have a nonzero cycle duration.", nameof(options));
@@ -84,7 +106,7 @@ internal sealed class Playback
         if (elapsed < delay) return;
         Started = true;
         var time = Math.Min(double.MaxValue, elapsed - delay + offset);
-        if (!infinite && time >= total)
+        if (time >= total)
         {
             Progress = pingPong ? 0 : 1;
             Completed = true;

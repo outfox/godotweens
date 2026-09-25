@@ -19,14 +19,14 @@ public sealed partial class Spirograph
         {
             t.Ease = EaseType.SineInOut;
             t.UsePingPong = true;
-            t.IsInfinite = true;
+            t.Repeats = TweenOptions.Infinite;
         });
 
         var revolution = 7 * Tempo;
         yield return Stage.TweenFloat(1, revolution, t =>
         {
             t.From = 0;
-            t.IsInfinite = true;
+            t.Repeats = TweenOptions.Infinite;
             t.OnUpdate = (_, progress) => Draw(progress);
         });
     }

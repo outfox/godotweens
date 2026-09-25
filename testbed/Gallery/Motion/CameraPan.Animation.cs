@@ -19,13 +19,13 @@ public sealed partial class CameraPan
         {
             t.From = Vector2.One;
             t.Ease = EaseType.QuartOut;
-            t.IsInfinite = true;
+            t.Repeats = TweenOptions.Infinite;
         });
         yield return beacon.TweenModulateAlpha(0, pulse, t =>
         {
             t.From = 1;
             t.Ease = EaseType.QuadIn;
-            t.IsInfinite = true;
+            t.Repeats = TweenOptions.Infinite;
         });
     }
 }

@@ -65,8 +65,6 @@ public partial class GallerySourceView : VBoxContainer
         focus.DrawCenter = false;
         Code.AddThemeStyleboxOverride("focus", focus);
         Code.SyntaxHighlighter = Own(CreateHighlighter());
-
-        Code.TooltipText = "Exact source from this build. Animation and Scene & playback are two parts of the same class. Select text to copy, or drag the divider to resize the panes.";
     }
 
     public void ShowEffect(GalleryEffect effect)
@@ -120,7 +118,7 @@ public partial class GallerySourceView : VBoxContainer
             "int long float double string object out ref params get set switch case default try catch throw typeof with yield").Split(' '))
             highlighter.AddKeywordColor(word, new Color("d5a6ef"));
         foreach (var word in ("Vector2 Vector3 Vector4 Vector2I Color Colors Math MathF Mathf Task TweenOptions TweenInstance " +
-            "EaseType TweenState TweenCompletionReason Node Node2D Node3D Control Stage Palette GalleryEffect " +
+            "EaseType TweenState Reason Node Node2D Node3D Control Stage Palette GalleryEffect " +
             "Polygon2D Line2D ShaderMaterial StandardMaterial3D Camera2D Camera3D IEnumerable").Split(' '))
             highlighter.AddKeywordColor(word, Palette.Mint);
         highlighter.AddColorRegion("//", "", Palette.Muted, true);

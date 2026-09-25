@@ -11,6 +11,7 @@ All library types and extension methods live in `tweens.gd`.
 | --- | --- |
 | `node.Tween(definition)` | Animate an in-tree node or deliver callback values |
 | `node.TweenProperty(to, duration, configure)` | Convenience form; replace `Property` with a method from the catalog |
+| `node.TweenProperty(to, duration, options)` | Convenience form that copies a shared `TweenOptions`; `duration` takes precedence |
 | `resource.Tween(definition, tree)` | Scope resource playback to a `SceneTree` |
 | `resource.Tween(definition, owner)` | Bind resource playback to an owner node |
 | `owner.Tween(resource, definition)` | Owner-first form of resource playback |
@@ -26,10 +27,11 @@ for exact examples, [node/value definitions](/csharp/nodes/), and
 `TweenDefinition<TTarget, TValue>` inherits `TweenOptions` and adds nullable
 `From`/`To` endpoints and typed callbacks. `TTarget` must be a class and `TValue`
 a struct. Definitions are reusable; playback snapshots configuration on addition.
+`new TweenOptions { ... }` holds timing alone and can be passed to any convenience method.
 
 | Configuration | Reference |
 | --- | --- |
-| `Duration`, `Delay`, `Offset`, `LoopCount`, `IsInfinite`, `UsePingPong`, `PingPongInterval`, `RepeatInterval`, `Fill` | [Timing and loops](/concepts/timing/) |
+| `Duration`, `Delay`, `Offset`, `Repeats`, `UsePingPong`, `PingPongInterval`, `RepeatInterval`, `Fill` | [Timing and loops](/concepts/timing/) |
 | `Ease`, `EaseFunction`, `Curve` | [Easing](/concepts/easing/) |
 | `ProcessMode`, `UseUnscaledTime` | [Process and physics](/concepts/timing/#process-and-physics) |
 | `PauseMode`, `SuppressCallbacksWhenTargetInvalid` | [Lifetime and ownership](/concepts/lifetime/) |
@@ -50,7 +52,7 @@ per-playback bindings.
 | `Progress` | Normalized current-leg progress, before easing |
 | `CompletionReason` | Nullable reason; faults are described by `Error` |
 | `Error` | Failure retained after faulted playback |
-| `Completion` | Shared `Task<TweenCompletionReason>` |
+| `Completion` | Shared `Task<Reason>` |
 | `AwaitDecommissionAsync(token)` | Wait with cancellation that affects only the wait |
 | `Target` | Original target, on the generic handle |
 

@@ -27,7 +27,7 @@ public sealed partial class EasingRace
                 {
                     t.Ease = ease;
                     t.UsePingPong = true;
-                    t.IsInfinite = true;
+                    t.Repeats = TweenOptions.Infinite;
                     t.PingPongInterval = 0.3;
                     t.RepeatInterval = 0.3;
                     t.Delay = delay;

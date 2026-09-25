@@ -38,7 +38,8 @@ Multiple tweens on the same property are allowed: the last application in insert
 Use `target.Tween(new Definition { ... })` for reusable definitions, or a typed
 convenience method such as `sprite.TweenPosition(destination, 0.5)`. Both return
 independent handles. The configure callback in a convenience method runs before
-snapshotting and may override any option.
+snapshotting and may override any option. Alternatively, pass a shared `TweenOptions`
+object; its options are copied, but the explicit duration argument wins.
 
 Callback value tweens have no property to read; omitted endpoints use the type's
 default (zero, transparent black, or identity as applicable). Supply explicit

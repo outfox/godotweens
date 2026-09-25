@@ -11,4 +11,15 @@ public static partial class TweenExtensions
         configure?.Invoke(definition);
         return definition;
     }
+
+    // The explicit duration argument takes precedence over options.Duration.
+    private static TDefinition ApplyOptions<TDefinition>(TDefinition definition, TweenOptions options)
+        where TDefinition : TweenOptions
+    {
+        ArgumentNullException.ThrowIfNull(options);
+        var duration = definition.Duration;
+        options.CopyTo(definition);
+        definition.Duration = duration;
+        return definition;
+    }
 }

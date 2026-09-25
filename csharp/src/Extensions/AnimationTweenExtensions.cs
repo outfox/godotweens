@@ -12,13 +12,31 @@ public static partial class TweenExtensions
         float to, double duration, Action<AnimatedSprite2DSpeedScaleTween>? configure = null)
         => target.Tween(ConfigureDefinition(new AnimatedSprite2DSpeedScaleTween { To = to, Duration = duration }, configure));
 
+    /// <summary>Starts a AnimatedSprite2DSpeedScaleTween.
+    /// Copies the options; the explicit duration takes precedence.</summary>
+    public static TweenInstance<AnimatedSprite2D, float> TweenSpeedScale(this AnimatedSprite2D target,
+        float to, double duration, TweenOptions options)
+        => target.Tween(ApplyOptions(new AnimatedSprite2DSpeedScaleTween { To = to, Duration = duration }, options));
+
     /// <summary>Starts a AnimatedSprite3DSpeedScaleTween. Configure runs before snapshotting and can override any definition option.</summary>
     public static TweenInstance<AnimatedSprite3D, float> TweenSpeedScale(this AnimatedSprite3D target,
         float to, double duration, Action<AnimatedSprite3DSpeedScaleTween>? configure = null)
         => target.Tween(ConfigureDefinition(new AnimatedSprite3DSpeedScaleTween { To = to, Duration = duration }, configure));
 
+    /// <summary>Starts a AnimatedSprite3DSpeedScaleTween.
+    /// Copies the options; the explicit duration takes precedence.</summary>
+    public static TweenInstance<AnimatedSprite3D, float> TweenSpeedScale(this AnimatedSprite3D target,
+        float to, double duration, TweenOptions options)
+        => target.Tween(ApplyOptions(new AnimatedSprite3DSpeedScaleTween { To = to, Duration = duration }, options));
+
     /// <summary>Starts a AnimationPlayerSpeedScaleTween. Configure runs before snapshotting and can override any definition option.</summary>
     public static TweenInstance<AnimationPlayer, float> TweenSpeedScale(this AnimationPlayer target,
         float to, double duration, Action<AnimationPlayerSpeedScaleTween>? configure = null)
         => target.Tween(ConfigureDefinition(new AnimationPlayerSpeedScaleTween { To = to, Duration = duration }, configure));
+
+    /// <summary>Starts a AnimationPlayerSpeedScaleTween.
+    /// Copies the options; the explicit duration takes precedence.</summary>
+    public static TweenInstance<AnimationPlayer, float> TweenSpeedScale(this AnimationPlayer target,
+        float to, double duration, TweenOptions options)
+        => target.Tween(ApplyOptions(new AnimationPlayerSpeedScaleTween { To = to, Duration = duration }, options));
 }

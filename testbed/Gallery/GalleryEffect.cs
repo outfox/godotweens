@@ -78,7 +78,7 @@ public abstract partial class GalleryEffect
     {
         options.Ease = Ease;
         options.UsePingPong = PingPong;
-        options.IsInfinite = true;
+        options.Repeats = TweenOptions.Infinite;
         options.RepeatInterval = 0.25;
         options.PingPongInterval = 0.15;
     }
@@ -115,7 +115,7 @@ public abstract partial class GalleryEffect
     {
         TrackTweens(tweens);
         var results = await Task.WhenAll(tweens.Select(t => t.Completion));
-        return run == Generation && results.All(r => r == TweenCompletionReason.Completed);
+        return run == Generation && results.All(r => r == Reason.Completed);
     }
 
     /// <summary>Tracks a newly created group for the playback controls, then awaits its completion results.</summary>

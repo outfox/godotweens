@@ -280,7 +280,7 @@ public class ExpandedAdapterTests(HeadlessFixture godot)
         scheduler.Update(0.5);
         Close(Expected(initial, target, component, 1), prop.GetValue(node)!);
         Assert.Equal(TweenState.Completed, handle.State);
-        Assert.Equal(TweenCompletionReason.Completed, handle.CompletionReason);
+        Assert.Equal(Reason.Completed, handle.CompletionReason);
 
         // Non-retaining completion restores the captured value, while cancellation retains its sample.
         prop.SetValue(node, initial);
@@ -296,7 +296,7 @@ public class ExpandedAdapterTests(HeadlessFixture godot)
         cancelled.Cancel();
         scheduler.Update(1);
         Close(midpoint, prop.GetValue(node)!);
-        Assert.Equal(TweenCompletionReason.Cancelled, cancelled.CompletionReason);
+        Assert.Equal(Reason.Cancelled, cancelled.CompletionReason);
 
         // Explicit From with omitted To returns to the value captured at addition.
         prop.SetValue(node, initial);

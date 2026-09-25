@@ -38,7 +38,7 @@ public sealed partial class CurveFollower2D
         {
             options.Ease = ease;
             options.UsePingPong = pingPong;
-            options.IsInfinite = true;
+            options.Repeats = TweenOptions.Infinite;
             options.RepeatInterval = 0.25;
             options.PingPongInterval = 0.15;
         }

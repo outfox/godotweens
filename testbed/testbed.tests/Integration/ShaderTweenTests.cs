@@ -133,7 +133,7 @@ public class ShaderTweenTests(Fixture godot)
             TweenRuntime.GetRunner(first).Scheduler.Update(0.5);
             Assert.Equal(0.5f, ((ShaderMaterial)second.Material).GetShaderParameter("amount").AsSingle());
             first.CancelTweens();
-            Assert.Equal(TweenCompletionReason.Cancelled, tween.CompletionReason);
+            Assert.Equal(Reason.Cancelled, tween.CompletionReason);
             Assert.Equal(0.5f, material.GetShaderParameter("amount").AsSingle());
             Assert.Same(material, first.Material); Assert.Same(material, second.Material);
         }
@@ -233,7 +233,7 @@ public class ShaderTweenTests(Fixture godot)
             Assert.Throws<NotSupportedException>(() => Start("scalar", true));
             var removed = Start("scalar", 1f); removed.Pause();
             godot.Tree.Root.RemoveChild(node);
-            Assert.Equal(TweenCompletionReason.OwnerExited, removed.CompletionReason);
+            Assert.Equal(Reason.OwnerExited, removed.CompletionReason);
         }
         finally { node.Free(); }
         TweenInstance Start<T>(string name, T to) where T : struct => spatial

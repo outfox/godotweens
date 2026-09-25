@@ -18,34 +18,21 @@ also takes a `CancellationToken cancellationToken` supplied by your caller.
 
 ## Sequence animations
 
-Check the completion reason before starting a follow-up animation:
+Chain steps by awaiting `Completion` and checking its reason; run steps together
+with `Task.WhenAll`:
 
 ```csharp
-var reason = await sprite.TweenPosition(new Vector2(400, 180), 0.6).Completion;
-if (reason != TweenCompletionReason.Completed)
+if (await sprite.TweenPosition(new Vector2(400, 180), 0.6).Completion != Reason.Completed)
     return;
-
 await sprite.TweenModulateAlpha(0, 0.3).Completion;
 ```
 
-To run animations concurrently, start them before awaiting:
-
-```csharp
-var move = sprite.TweenPosition(new Vector2(400, 180), 0.6);
-var fade = sprite.TweenModulateAlpha(0.5f, 0.6);
-var reasons = await Task.WhenAll(move.Completion, fade.Completion);
-
-if (reasons.All(reason => reason == TweenCompletionReason.Completed))
-    GD.Print("Both animations finished");
-```
-
-Include `System.Threading.Tasks` and `System.Linq` if implicit usings are disabled.
-`Task.WhenAll` waits for every tween; it does not cancel siblings when one fails
-or is cancelled. Cancel sibling handles explicitly if that is your desired policy.
+[Sequences](/csharp/sequences/) covers staggering, waits, stopping, pausing,
+and the timing between steps.
 
 ## Completion reasons
 
-`Completion` is a lazily allocated, shared `Task<TweenCompletionReason>`. Multiple
+`Completion` is a lazily allocated, shared `Task<Reason>`. Multiple
 callers can await it, including after playback has ended.
 
 | Reason | Meaning |

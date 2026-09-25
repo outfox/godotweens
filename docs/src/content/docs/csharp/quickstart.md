@@ -24,7 +24,7 @@ public partial class MoveAndFade : Sprite2D
         };
 
         var movement = this.Tween(tween);
-        if (await movement.Completion != TweenCompletionReason.Completed) return;
+        if (await movement.Completion != Reason.Completed) return;
 
         // Shorthand for Convenience
         this.TweenModulateAlpha(to: 0, duration: 0.3);
@@ -63,6 +63,7 @@ that node and its descendants.
 ## Choose the next guide
 
 - [Definitions and playback](/concepts/definitions/) explains snapshots and reuse.
-- [Playback and async](/csharp/playback/) covers sequences, parallel work, and errors.
+- [Playback and async](/csharp/playback/) covers handles, completion reasons, and errors.
+- [Sequences](/csharp/sequences/) covers chained, parallel, and staggered animation.
 - [Node and value catalog](/csharp/nodes/) lists typed adapters and units.
 - [Gallery](/csharp/gallery/) shows combinations you can run and inspect.

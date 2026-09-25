@@ -8,7 +8,7 @@ namespace tweens.gd;
 /// <summary>A single playback. Mutating operations belong to its scheduler's thread.</summary>
 public abstract class TweenInstance
 {
-    private TaskCompletionSource<TweenCompletionReason>? completion;
+    private TaskCompletionSource<Reason>? completion;
     private bool settled;
     private int operationDepth;
     private bool paused;
@@ -24,7 +24,7 @@ public abstract class TweenInstance
 
     public TweenState State { get; protected set; } = TweenState.Delayed;
     public bool IsTerminal => State is TweenState.Completed or TweenState.Cancelled or TweenState.Faulted;
-    public TweenCompletionReason? CompletionReason { get; private set; }
+    public Reason? CompletionReason { get; private set; }
     public Exception? Error { get; private set; }
     public float Progress => Clock.Progress;
     public bool IsPaused
@@ -34,7 +34,7 @@ public abstract class TweenInstance
     }
 
     /// <summary>Shared completion. Cancellation is a result; callback errors fault the task.</summary>
-    public Task<TweenCompletionReason> Completion
+    public Task<Reason> Completion
     {
         get
         {
@@ -65,18 +65,18 @@ public abstract class TweenInstance
     public void Cancel()
     {
         Scheduler.EnsureThread();
-        Finish(TweenCompletionReason.Cancelled);
+        Finish(Reason.Cancelled);
     }
 
     /// <summary>The token cancels only this wait, not the tween. Use Cancel to stop playback.</summary>
-    public Task<TweenCompletionReason> AwaitDecommissionAsync(CancellationToken cancellationToken = default)
+    public Task<Reason> AwaitDecommissionAsync(CancellationToken cancellationToken = default)
         => cancellationToken.CanBeCanceled ? Completion.WaitAsync(cancellationToken) : Completion;
 
     internal void BindLifetime()
     {
         if (Owner is null) return;
         exitHandler = () => Finish(ReferenceEquals(Owner, nativeTarget) && Owner.IsQueuedForDeletion()
-            ? TweenCompletionReason.TargetFreed : TweenCompletionReason.OwnerExited);
+            ? Reason.TargetFreed : Reason.OwnerExited);
         Owner.TreeExiting += exitHandler;
     }
 
@@ -90,11 +90,11 @@ public abstract class TweenInstance
         if (IsTerminal) return false;
         if (nativeTarget is not null && (!GodotObject.IsInstanceValid(nativeTarget) ||
             (nativeTarget is Node targetNode && targetNode.IsQueuedForDeletion())))
-            Finish(TweenCompletionReason.TargetFreed);
+            Finish(Reason.TargetFreed);
         else if (Owner is not null && (!GodotObject.IsInstanceValid(Owner) || Owner.IsQueuedForDeletion() || !Owner.IsInsideTree()))
-            Finish(TweenCompletionReason.OwnerExited);
+            Finish(Reason.OwnerExited);
         else if (tree is not null && !GodotObject.IsInstanceValid(tree))
-            Finish(TweenCompletionReason.RunnerDisposed);
+            Finish(Reason.RunnerDisposed);
         return !IsTerminal;
     }
 
@@ -110,7 +110,7 @@ public abstract class TweenInstance
 
     internal abstract void Initialize();
     internal abstract void Advance(double delta);
-    protected abstract void InvokeTerminal(TweenCompletionReason reason, bool faulted);
+    protected abstract void InvokeTerminal(Reason reason, bool faulted);
     protected abstract void Release();
 
     private protected void BeginOperation() => operationDepth++;
@@ -120,7 +120,7 @@ public abstract class TweenInstance
         if (IsTerminal && !settled && operationDepth == 0) Settle();
     }
 
-    internal void Finish(TweenCompletionReason reason, Exception? error = null)
+    internal void Finish(Reason reason, Exception? error = null)
     {
         if (IsTerminal)
         {
@@ -135,7 +135,7 @@ public abstract class TweenInstance
         }
         CompletionReason = reason;
         Error = error;
-        State = error is not null ? TweenState.Faulted : reason == TweenCompletionReason.Completed
+        State = error is not null ? TweenState.Faulted : reason == Reason.Completed
             ? TweenState.Completed : TweenState.Cancelled;
         try { InvokeTerminal(reason, error is not null); }
         catch (Exception callbackError)
@@ -225,7 +225,7 @@ public sealed class TweenInstance<TTarget, TValue> : TweenInstance
             if (!CheckTarget()) return;
             if (definition.Delay > 0 && definition.Fill.HasFlag(FillMode.ApplyFromDuringDelay)) Apply(from);
         }
-        catch (Exception error) { Finish(TweenCompletionReason.Cancelled, error); }
+        catch (Exception error) { Finish(Reason.Cancelled, error); }
         finally { EndOperation(); }
     }
 
@@ -251,9 +251,9 @@ public sealed class TweenInstance<TTarget, TValue> : TweenInstance
             Apply(value);
             if (!CheckTarget() || !Clock.Completed) return;
             if (!definition!.Fill.HasFlag(FillMode.RetainFinalValue)) RestoreInitial();
-            if (CheckTarget()) Finish(TweenCompletionReason.Completed);
+            if (CheckTarget()) Finish(Reason.Completed);
         }
-        catch (Exception error) { Finish(TweenCompletionReason.Cancelled, error); }
+        catch (Exception error) { Finish(Reason.Cancelled, error); }
         finally { EndOperation(); }
     }
 
@@ -273,17 +273,17 @@ public sealed class TweenInstance<TTarget, TValue> : TweenInstance
         if (CheckTarget()) definition.OnUpdate?.Invoke(this, initial);
     }
 
-    protected override void InvokeTerminal(TweenCompletionReason reason, bool faulted)
+    protected override void InvokeTerminal(Reason reason, bool faulted)
     {
         var snapshot = definition!;
         if (snapshot.SuppressCallbacksWhenTargetInvalid &&
-            (InvalidTargetOrOwner || reason is TweenCompletionReason.TargetFreed or TweenCompletionReason.OwnerExited)) return;
+            (InvalidTargetOrOwner || reason is Reason.TargetFreed or Reason.OwnerExited)) return;
         Exception? failure = null;
         try
         {
             if (!faulted)
             {
-                if (reason == TweenCompletionReason.Completed) snapshot.OnEnd?.Invoke(this);
+                if (reason == Reason.Completed) snapshot.OnEnd?.Invoke(this);
                 else snapshot.OnCancel?.Invoke(this);
             }
         }

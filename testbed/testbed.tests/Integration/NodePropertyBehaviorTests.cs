@@ -23,8 +23,12 @@ public class NodePropertyBehaviorTests(HeadlessFixture godot)
             t.BaseType is { IsGenericType: true } b && b.GetGenericTypeDefinition() == typeof(PropertyTween<,>) && typeof(Node).IsAssignableFrom(b.GetGenericArguments()[0])).ToHashSet();
         Assert.Equal(definitions.OrderBy(t => t.Name), covered.OrderBy(t => t.Name));
         foreach (var definition in definitions)
-            Assert.Single(typeof(TweenExtensions).GetMethods(), m => m.GetParameters().Length == 4 &&
+        {
+            var configured = Assert.Single(typeof(TweenExtensions).GetMethods(), m => m.GetParameters().Length == 4 &&
                 m.GetParameters()[3].ParameterType == typeof(Action<>).MakeGenericType(definition));
+            var parameters = configured.GetParameters().Take(3).Select(p => p.ParameterType).Append(typeof(TweenOptions));
+            Assert.NotNull(typeof(TweenExtensions).GetMethod(configured.Name, parameters.ToArray()));
+        }
     }
 
     [Theory]
@@ -192,7 +196,7 @@ public class NodePropertyBehaviorTests(HeadlessFixture godot)
             ExpandedAdapterTests.Close(new Vector2(3, 5), camera.Zoom);
             Assert.Equal(1, callbacks);
             tween.Pause(); camera.QueueFree(); scheduler.Update(0);
-            Assert.Equal(TweenCompletionReason.TargetFreed, tween.CompletionReason);
+            Assert.Equal(Reason.TargetFreed, tween.CompletionReason);
             Assert.True(tween.Completion.IsCompletedSuccessfully);
         }
         finally { if (GodotObject.IsInstanceValid(camera)) camera.Free(); }
@@ -221,7 +225,7 @@ public class NodePropertyBehaviorTests(HeadlessFixture godot)
         {
             var tween = label.TweenVisibleRatio(1, 0);
             for (var i = 0; i < 10 && !tween.IsTerminal; i++) godot.Engine.Iteration();
-            Assert.Equal(TweenCompletionReason.Completed, tween.CompletionReason);
+            Assert.Equal(Reason.Completed, tween.CompletionReason);
             Assert.Equal(1, label.VisibleRatio);
             Assert.True(label.VisibleCharacters < 0 || label.VisibleCharacters == 10);
         }

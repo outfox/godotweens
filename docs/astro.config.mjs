@@ -59,6 +59,7 @@ export default defineConfig({
 						{ label: 'Installation', slug: 'csharp/installation' },
 						{ label: 'Quickstart', slug: 'csharp/quickstart' },
 						{ label: 'Playback & async', slug: 'csharp/playback' },
+						{ label: 'Sequences', slug: 'csharp/sequences' },
 						{ label: 'Custom tweens', slug: 'csharp/custom-tweens' },
 						{ label: 'Gallery', slug: 'csharp/gallery' },
 					],

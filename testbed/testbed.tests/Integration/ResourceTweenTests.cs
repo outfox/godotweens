@@ -49,10 +49,10 @@ public class ResourceTweenTests(HeadlessFixture godot)
             var b = material.TweenMetallic(1, 10, second);
             var c = material.TweenAlbedoAlpha(0, 10, godot.Tree);
             first.CancelTweens(true);
-            Assert.Equal(TweenCompletionReason.Cancelled, a.CompletionReason);
+            Assert.Equal(Reason.Cancelled, a.CompletionReason);
             Assert.False(b.IsTerminal); Assert.False(c.IsTerminal);
             b.Pause(); godot.Tree.Root.RemoveChild(second);
-            Assert.Equal(TweenCompletionReason.OwnerExited, await b.Completion);
+            Assert.Equal(Reason.OwnerExited, await b.Completion);
             Assert.False(c.IsTerminal); c.Cancel();
             Assert.True(GodotObject.IsInstanceValid(material));
         }
@@ -89,7 +89,7 @@ public class ResourceTweenTests(HeadlessFixture godot)
         var tween = scheduler.Add(material, new MaterialRoughnessTween { Duration = 10,
             SuppressCallbacksWhenTargetInvalid = suppress, OnFinally = _ => calls++ });
         tween.Pause(); material.Dispose(); scheduler.Update(0);
-        Assert.Equal(TweenCompletionReason.TargetFreed, await tween.Completion);
+        Assert.Equal(Reason.TargetFreed, await tween.Completion);
         Assert.Equal(suppress ? 0 : 1, calls);
         Assert.Equal(0, scheduler.ActiveCount);
         Assert.Throws<ArgumentException>(() => scheduler.Add(material, new MaterialRoughnessTween()));
@@ -107,7 +107,7 @@ public class ResourceTweenTests(HeadlessFixture godot)
         if (phase == 2) definition.EaseFunction = t => { material.Dispose(); return t; };
         if (phase == 3) definition.OnUpdate = (_, _) => material.Dispose();
         var tween = scheduler.Add(material, definition); scheduler.Update(1);
-        Assert.Equal(TweenCompletionReason.TargetFreed, await tween.Completion);
+        Assert.Equal(Reason.TargetFreed, await tween.Completion);
         Assert.Null(tween.Error);
     }
 
@@ -118,11 +118,11 @@ public class ResourceTweenTests(HeadlessFixture godot)
         using var scheduler = new TweenScheduler();
         var owner = Attach(new Node());
         var manual = scheduler.Add(material, new MaterialRoughnessTween { Duration = 10 }, owner);
-        owner.Free(); Assert.Equal(TweenCompletionReason.OwnerExited, await manual.Completion);
+        owner.Free(); Assert.Equal(Reason.OwnerExited, await manual.Completion);
         var automatic = material.TweenRoughness(0, 10, godot.Tree);
         godot.Engine.Iteration();
         TweenRuntime.GetRunner(godot.Tree).Free();
-        Assert.Equal(TweenCompletionReason.RunnerDisposed, await automatic.Completion);
+        Assert.Equal(Reason.RunnerDisposed, await automatic.Completion);
         Assert.True(GodotObject.IsInstanceValid(material));
         var fresh = material.TweenRoughness(0, 0, godot.Tree);
         TweenRuntime.GetRunner(godot.Tree).Scheduler.Update(0);
@@ -171,7 +171,7 @@ public class ResourceTweenTests(HeadlessFixture godot)
         var tween = material.TweenRoughness(0, 10, owner);
         tween.Pause(); owner.QueueFree();
         TweenRuntime.GetRunner(godot.Tree).Scheduler.Update(0);
-        Assert.Equal(TweenCompletionReason.OwnerExited, await tween.Completion);
+        Assert.Equal(Reason.OwnerExited, await tween.Completion);
         Assert.True(GodotObject.IsInstanceValid(material));
         godot.Engine.Iteration();
     }

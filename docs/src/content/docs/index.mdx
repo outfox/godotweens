@@ -48,7 +48,7 @@ var arrive = new Position2DTween
 };
 
 var movement = sprite.Tween(arrive);
-if (await movement.Completion == TweenCompletionReason.Completed)
+if (await movement.Completion == Reason.Completed)
     GD.Print("Arrived");
 ```
 

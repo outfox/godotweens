@@ -34,7 +34,7 @@ public class PlaybackTests
         Assert.Equal(2.5f, box.Value);
         scheduler.Update(0.75);
         Assert.Equal(10, box.Value);
-        Assert.Equal(TweenCompletionReason.Completed, await tween.Completion);
+        Assert.Equal(Reason.Completed, await tween.Completion);
         Assert.Equal(new[] { "add", "start", "update", "update", "end", "finally" }, events);
         Assert.Equal(0, scheduler.ActiveCount);
     }
@@ -73,12 +73,12 @@ public class PlaybackTests
     }
 
     [Fact]
-    public void PingPongIntervalsAndTotalLoopCount()
+    public void PingPongIntervalsAndRepeats()
     {
         using var scheduler = new TweenScheduler();
         var box = new Box();
         var tween = scheduler.Add(box, new BoxTween
-        { From = 0, To = 10, Duration = 1, UsePingPong = true, PingPongInterval = 0.5, RepeatInterval = 0.25, LoopCount = 2 });
+        { From = 0, To = 10, Duration = 1, UsePingPong = true, PingPongInterval = 0.5, RepeatInterval = 0.25, Repeats = 1 });
         scheduler.Update(1);
         Assert.Equal(10, box.Value);
         scheduler.Update(0.25);
@@ -102,7 +102,7 @@ public class PlaybackTests
         using var whole = new TweenScheduler();
         using var pieces = new TweenScheduler();
         var definition = new BoxTween { From = -1, To = 2, Duration = 1, Delay = 0.25,
-            RepeatInterval = 0.25, PingPongInterval = 0.25, UsePingPong = pingPong, IsInfinite = true, Offset = 0.5 };
+            RepeatInterval = 0.25, PingPongInterval = 0.25, UsePingPong = pingPong, Repeats = TweenOptions.Infinite, Offset = 0.5 };
         var a = new Box(); var b = new Box();
         var first = whole.Add(a, definition); var second = pieces.Add(b, definition);
         whole.Update(123.5);
@@ -113,16 +113,28 @@ public class PlaybackTests
     }
 
     [Fact]
-    public void ZeroDurationAndHugeFiniteLoopCountFinishWithoutIteration()
+    public void ZeroDurationAndHugeFiniteRepeatsFinishWithoutIteration()
     {
         using var scheduler = new TweenScheduler();
         var box = new Box();
-        var tween = scheduler.Add(box, new BoxTween { To = 12, LoopCount = int.MaxValue });
+        var tween = scheduler.Add(box, new BoxTween { To = 12, Repeats = int.MaxValue });
         Assert.False(tween.IsTerminal);
         scheduler.Update(0);
         Assert.True(tween.IsTerminal);
         Assert.Equal(12, box.Value);
-        Assert.Throws<ArgumentException>(() => scheduler.Add(box, new BoxTween { IsInfinite = true }));
+        Assert.Throws<ArgumentException>(() => scheduler.Add(box, new BoxTween { Repeats = TweenOptions.Infinite }));
+    }
+
+    [Fact]
+    public void DefaultRepeatsPlaysOnceAndRejectsValuesBelowInfinite()
+    {
+        using var scheduler = new TweenScheduler();
+        var box = new Box();
+        var tween = scheduler.Add(box, new BoxTween { From = 0, To = 10, Duration = 1 });
+        scheduler.Update(1);
+        Assert.True(tween.IsTerminal);
+        Assert.Equal(10, box.Value);
+        Assert.Throws<ArgumentOutOfRangeException>(() => scheduler.Add(box, new BoxTween { Duration = 1, Repeats = -2 }));
     }
 
     [Fact]
@@ -130,7 +142,7 @@ public class PlaybackTests
     {
         using var scheduler = new TweenScheduler();
         var box = new Box();
-        var tween = scheduler.Add(box, new BoxTween { From = 0, To = 10, Duration = 1, Offset = 0.5, LoopCount = 2 });
+        var tween = scheduler.Add(box, new BoxTween { From = 0, To = 10, Duration = 1, Offset = 0.5, Repeats = 1 });
         scheduler.Update(0.75);
         Assert.Equal(2.5f, box.Value);
         scheduler.Update(0.75);
@@ -154,7 +166,7 @@ public class PlaybackTests
         tween.Cancel();
         Assert.Equal(3.5f, box.Value);
         Assert.Equal(2, callbacks);
-        Assert.Equal(TweenCompletionReason.Cancelled, await tween.Completion);
+        Assert.Equal(Reason.Cancelled, await tween.Completion);
     }
 
     [Fact]
@@ -202,7 +214,7 @@ public class PlaybackTests
         Assert.Equal(2, error.InnerExceptions.Count);
         Assert.Single(reports);
         Assert.Equal(1, final);
-        Assert.Equal(TweenCompletionReason.Completed, await healthy.Completion);
+        Assert.Equal(Reason.Completed, await healthy.Completion);
     }
 
     [Fact]
@@ -218,8 +230,8 @@ public class PlaybackTests
         await Assert.ThrowsAnyAsync<OperationCanceledException>(async () => await waiting);
         Assert.False(tween.IsTerminal);
         scheduler.Update(1);
-        Assert.Equal(TweenCompletionReason.Completed, await a);
-        Assert.Equal(TweenCompletionReason.Completed, await b);
+        Assert.Equal(Reason.Completed, await a);
+        Assert.Equal(Reason.Completed, await b);
     }
 
     [Fact]
@@ -230,8 +242,8 @@ public class PlaybackTests
         var second = scheduler.Add(new Box(), new BoxTween { Duration = 5 });
         second.Pause();
         scheduler.Update(1);
-        Assert.Equal(TweenCompletionReason.RunnerDisposed, await first.Completion);
-        Assert.Equal(TweenCompletionReason.RunnerDisposed, await second.Completion);
+        Assert.Equal(Reason.RunnerDisposed, await first.Completion);
+        Assert.Equal(Reason.RunnerDisposed, await second.Completion);
         Assert.Equal(0, scheduler.ActiveCount);
     }
 
@@ -275,7 +287,7 @@ public class PlaybackTests
     public void SteadyStateManualUpdatesDoNotAllocate()
     {
         using var scheduler = new TweenScheduler();
-        for (var i = 0; i < 100; i++) scheduler.Add(new Box(), new BoxTween { Duration = 1, IsInfinite = true });
+        for (var i = 0; i < 100; i++) scheduler.Add(new Box(), new BoxTween { Duration = 1, Repeats = TweenOptions.Infinite });
         for (var i = 0; i < 100; i++) scheduler.Update(0.01);
         var before = GC.GetAllocatedBytesForCurrentThread();
         for (var i = 0; i < 100; i++) scheduler.Update(0.01);
@@ -318,7 +330,7 @@ public class PlaybackTests
     {
         using var scheduler = new TweenScheduler();
         var box = new Box();
-        var tween = scheduler.Add(box, new BoxTween { From = 0, To = 10, UsePingPong = true, PingPongInterval = 1, RepeatInterval = 1, LoopCount = 2 });
+        var tween = scheduler.Add(box, new BoxTween { From = 0, To = 10, UsePingPong = true, PingPongInterval = 1, RepeatInterval = 1, Repeats = 1 });
         scheduler.Update(0.5);
         Assert.Equal(10, box.Value);
         scheduler.Update(1);

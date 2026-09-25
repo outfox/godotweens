@@ -39,7 +39,7 @@ const slots = 1 + MAX_LOOPS * 3 + (MAX_LOOPS - 1);
 	<div class="controls">
 		<label class="tw-field"><span><code>Delay</code> <output data-out="delay"></output></span><input type="range" min="0" max="1" step="0.1" value="0" data-in="delay" /></label>
 		<label class="tw-field"><span><code>Duration</code> <output data-out="duration"></output></span><input type="range" min="0.1" max="1.5" step="0.1" value="0.5" data-in="duration" /></label>
-		<label class="tw-field"><span><code>LoopCount</code> <output data-out="loops"></output></span><input type="range" min="1" max={MAX_LOOPS} step="1" value="2" data-in="loops" /></label>
+		<label class="tw-field"><span><code>Repeats</code> <output data-out="repeats"></output></span><input type="range" min="0" max={MAX_LOOPS - 1} step="1" value="1" data-in="repeats" /></label>
 		<label class="tw-field"><span><code>PingPongInterval</code> <output data-out="turn"></output></span><input type="range" min="0" max="1" step="0.1" value="0.2" data-in="turn" /></label>
 		<label class="tw-field"><span><code>RepeatInterval</code> <output data-out="repeat"></output></span><input type="range" min="0" max="1" step="0.1" value="0.3" data-in="repeat" /></label>
 		<label class="check"><input type="checkbox" checked data-in="pingpong" /> <code>UsePingPong</code></label>
@@ -83,7 +83,7 @@ const slots = 1 + MAX_LOOPS * 3 + (MAX_LOOPS - 1);
 		const read = () => ({
 			delay: Number(input('delay').value),
 			duration: Number(input('duration').value),
-			loops: Number(input('loops').value),
+			loops: Number(input('repeats').value) + 1,
 			turn: Number(input('turn').value),
 			repeat: Number(input('repeat').value),
 			pingpong: input('pingpong').checked,
@@ -94,7 +94,7 @@ const slots = 1 + MAX_LOOPS * 3 + (MAX_LOOPS - 1);
 			input('turn').disabled = !o.pingpong;
 			for (const k of ['delay', 'duration', 'turn', 'repeat'] as const)
 				$(`[data-out="${k}"]`).textContent = `${o[k].toFixed(1)} s`;
-			$('[data-out="loops"]').textContent = String(o.loops);
+			$('[data-out="repeats"]').textContent = String(o.loops - 1);
 
 			segs = [];
 			let t = 0;

@@ -46,7 +46,7 @@ var movement = sprite.Tween(new Position2DTween
 });
 
 var reason = await movement.Completion;
-if (reason == TweenCompletionReason.Completed)
+if (reason == Reason.Completed)
     GD.Print("Arrived");
 ```
 
@@ -70,7 +70,7 @@ Multiple tweens on the same property are allowed: the last application in insert
 
 ### Async completion
 
-`Completion` is a lazily allocated, shared `Task<TweenCompletionReason>`. Multiple callers can await it, including after the tween ends. Reasons are `Completed`, `Cancelled`, `TargetFreed`, `OwnerExited`, and `RunnerDisposed`. A direct `Free()` may be observed as `OwnerExited` because Godot emits tree-exit before invalidating the native instance; `QueueFree()` is identified as `TargetFreed`.
+`Completion` is a lazily allocated, shared `Task<Reason>`. Multiple callers can await it, including after the tween ends. Reasons are `Completed`, `Cancelled`, `TargetFreed`, `OwnerExited`, and `RunnerDisposed`. A direct `Free()` may be observed as `OwnerExited` because Godot emits tree-exit before invalidating the native instance; `QueueFree()` is identified as `TargetFreed`.
 
 ```csharp
 await sprite.Tween(new Position2DTween { To = destination, Duration = 0.5 }).Completion;
@@ -80,7 +80,7 @@ await Task.WhenAll(first.Completion, second.Completion);
 await first.AwaitDecommissionAsync(cancellationToken);
 ```
 
-The wait token cancels **only that wait**. Call `Cancel()` to cancel playback. Check completion reasons before starting a follow-up animation when cancellation should stop a sequence (see `MotionPage.Deliver`). Errors in interpolation, easing, setters, or callbacks fault the completion task and are reported through `TweenScheduler.UnhandledException`; the automatic runner reports them with `GD.PushError`. Other tweens continue. Terminal callbacks and `OnFinally` run at most once, with cleanup and task settlement even when callbacks fail. Multiple failures are retained in an `AggregateException`.
+The wait token cancels **only that wait**. Call `Cancel()` to cancel playback. Check completion reasons before starting a follow-up animation when cancellation should stop a sequence; the [sequences guide](docs/src/content/docs/csharp/sequences.md) covers chaining, staggering, waits, pausing, and step timing. Errors in interpolation, easing, setters, or callbacks fault the completion task and are reported through `TweenScheduler.UnhandledException`; the automatic runner reports them with `GD.PushError`. Other tweens continue. Terminal callbacks and `OnFinally` run at most once, with cleanup and task settlement even when callbacks fail. Multiple failures are retained in an `AggregateException`.
 
 Create/control tweens on Godot's main thread. Completion is settled from that thread; normal Godot async callers retain their synchronization context. Do not use `.Wait()`, `.Result`, `Task.Run`, or `ConfigureAwait(false)` around engine access. No coroutine API is provided. Use Godot's `ToSignal` for unrelated engine-signal waits.
 
@@ -90,8 +90,7 @@ Create/control tweens on Godot's main thread. Completion is settled from that th
 | --- | --- |
 | `Duration` | Seconds per leg, stored as double. Zero duration completes on the first eligible update. |
 | `Delay` | Initial wait before starting; only unused delta advances playback. |
-| `LoopCount` | Total cycles including the first, default 1. Must be positive. |
-| `IsInfinite` | Repeats indefinitely; a fully zero-time infinite cycle is rejected. |
+| `Repeats` | Cycles after the first, default 0. `TweenOptions.Infinite` (-1) repeats until cancelled; a fully zero-time infinite cycle is rejected. |
 | `UsePingPong` | Forward and backward legs form one cycle. |
 | `PingPongInterval` | Wait at the far endpoint before returning. |
 | `RepeatInterval` | Wait between cycles, never after the final cycle. |
@@ -140,6 +139,15 @@ label.TweenVisibleRatio(1, 1.5, options => options.From = 0);
 audio.TweenVolumeDb(-20, 1);
 ```
 
+Each method also accepts a `TweenOptions` object instead of a callback. Its timing options are copied at the call,
+and the explicit duration argument takes precedence over `options.Duration`:
+
+```csharp
+var snappy = new TweenOptions { Ease = EaseType.BackOut, Delay = 0.1 };
+sprite.TweenPosition(destination, 0.5, snappy);
+sprite.TweenModulateAlpha(1, 0.3, snappy);
+```
+
 The catalog now also covers cameras, paths, 3D appearance, Control pivots and offset transforms, drawing, canvas/parallax, spatial audio, additional lights, animation, particles, decals, fog volumes, spring arms and integer frame/scroll/text properties. See the [complete node/value catalog](docs/src/content/docs/csharp/nodes.md).
 
 ### Materials and shader uniforms
@@ -183,7 +191,7 @@ For deterministic tests or non-node managed targets, use `TweenScheduler.Add(tar
 
 ## Differences from unity-tweens
 
-The reusable definition/instance design and easing math are retained. Properties use PascalCase and Godot types. `LoopCount` explicitly means total cycles. Fill flags describe behavior instead of retaining upstream's reversed Forwards/Backwards terminology. Native `Nullable<T>` replaces the custom nullable wrapper. Timing carries remaining delta across phase boundaries, zero duration is explicit, and terminal callbacks are idempotent.
+The reusable definition/instance design and easing math are retained. Properties use PascalCase and Godot types. `Repeats` counts cycles after the first, with `TweenOptions.Infinite` replacing a separate flag. Fill flags describe behavior instead of retaining upstream's reversed Forwards/Backwards terminology. Native `Nullable<T>` replaces the custom nullable wrapper. Timing carries remaining delta across phase boundaries, zero duration is explicit, and terminal callbacks are idempotent.
 
 Unity coroutine APIs, the editor inspector, component lookup, and Unity-specific audio spatial-blend/priority/reverb/pan controls are not ported. Sequence DSLs, automatic overwrite arbitration, and pooling are deferred. Global quaternion rotation is available through `GlobalQuaternion3DTween` / `TweenGlobalQuaternion`; it follows Godot global-rotation scale/shear semantics. Use async composition and custom property definitions where appropriate.
 

@@ -45,7 +45,7 @@ public class BindingHookTests
         var state = new State(); using var scheduler = new TweenScheduler();
         var tween = scheduler.Add(state, new PropertyTween<State, float>(s => { scheduler.Dispose(); return s.Value; },
             (s, v) => s.Value = v, (a, b, t) => a));
-        Assert.Equal(TweenCompletionReason.RunnerDisposed, tween.CompletionReason);
+        Assert.Equal(Reason.RunnerDisposed, tween.CompletionReason);
         Assert.True(tween.Completion.IsCompletedSuccessfully);
     }
 }

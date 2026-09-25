@@ -18,15 +18,14 @@ All time values are double-precision seconds.
 | --- | --- | --- |
 | `Duration` | `0` | Seconds per leg. Zero completes on the first eligible update. |
 | `Delay` | `0` | Initial wait; only unused delta advances playback. |
-| `LoopCount` | `1` | Total cycles including the first; must be positive. |
-| `IsInfinite` | `false` | Repeat indefinitely. A fully zero-time infinite cycle is rejected. |
+| `Repeats` | `0` | Cycles after the first. `TweenOptions.Infinite` (-1) repeats until cancelled; a fully zero-time infinite cycle is rejected. |
 | `UsePingPong` | `false` | A forward and backward leg form one cycle. |
 | `PingPongInterval` | `0` | Wait at the far endpoint before returning. |
 | `RepeatInterval` | `0` | Wait between cycles, never after the final cycle. |
 | `Offset` | `0` | Start this many seconds into the first forward leg, within `[0, Duration]`. Delay still comes first. |
 
 For example, `Duration = 0.5`, `UsePingPong = true`, `PingPongInterval = 0.2`,
-`RepeatInterval = 0.3`, and `LoopCount = 2` take 2.7 seconds with zero delay and
+`RepeatInterval = 0.3`, and `Repeats = 1` take 2.7 seconds with zero delay and
 offset: two 1.2-second cycles and one 0.3-second gap.
 
 <TimingLab />

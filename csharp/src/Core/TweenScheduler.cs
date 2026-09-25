@@ -59,7 +59,7 @@ public sealed class TweenScheduler : IDisposable
         var instance = new TweenInstance<TTarget, TValue>(this, target, definition, owner, tree);
         if (disposed)
         {
-            instance.Finish(TweenCompletionReason.RunnerDisposed);
+            instance.Finish(Reason.RunnerDisposed);
             return instance;
         }
         // A custom getter may remove/dispose an owner or target. Observe this before binding signals.
@@ -146,7 +146,7 @@ public sealed class TweenScheduler : IDisposable
         if (disposed) return;
         disposed = true;
         var count = instances.Count;
-        for (var i = 0; i < count; i++) instances[i].Finish(TweenCompletionReason.RunnerDisposed);
+        for (var i = 0; i < count; i++) instances[i].Finish(Reason.RunnerDisposed);
         if (!updating) instances.Clear();
         UnhandledException = null;
     }
