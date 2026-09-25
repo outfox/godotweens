@@ -1,18 +1,18 @@
 # tweens.gd
 
-Tween libraries for Godot, inspired by Jeffrey Lanters' **unity-tweens**. The C# NuGet package supersedes `godotweens`; a GDScript addon with equivalent functionality is planned.
+Tween libraries for Godot, inspired by Jeffrey Lanters' **unity-tweens**. A typed C# NuGet package and a planned GDScript addon with equivalent functionality.
 
 | Project | Location | Status |
 | --- | --- | --- |
 | C# NuGet package `tweens.gd` | `csharp/` | Implemented; examples below |
 | GDScript Godot addon | `addons/tweens_gd/` (planned) | Backend and performance evaluation pending |
-| Public documentation | `docs/` | Astro/Starlight template; content pending |
+| Public documentation | [docs/](docs/README.md) | C# guides/reference and GDScript status; deployment pending |
 
-Internal working documents live in the gitignored `docs-internal/` directory. See [Migrating from godotweens](MIGRATING.md) for package, namespace, and project-reference changes. The following documentation describes the C# implementation.
+Internal working documents live in the gitignored `docs-internal/` directory. The following documentation describes the C# implementation.
 
 Reuse definitions, control independent playback handles, and compose animations with `async`/`await`.
 
-Targets **.NET 10 / GodotSharp 4.7.2**. The included testbed uses a floating `2dog 4.7.2.*` package version. The library has no dependency on 2dog, native engine packages, or editor assemblies; your application supplies the engine. Use matching GodotSharp/engine versions. Other Godot versions and trimmed/AOT/web exports have not been validated.
+Targets **.NET 10 / GodotSharp 4.7.2**. The included testbed pins its 2dog versions in `testbed/Directory.Build.props`. The library has no dependency on 2dog, native engine packages, or editor assemblies; your application supplies the engine. Use matching GodotSharp/engine versions. Other Godot versions and trimmed/AOT/web exports have not been validated.
 
 ## Run the testbed
 
@@ -22,7 +22,7 @@ dotnet test testbed/testbed.tests/testbed.tests.csproj
 dotnet run --project testbed/testbed.2dog
 ```
 
-The testbed is a six-page gallery with 24 examples: motion and paths, interface, drawing and particles, a 3D stage, materials, and shaders. Change easing and duration, pause/resume, cancel, or restart the current page. From `testbed/`, `dotnet test` and `dotnet run --project testbed.2dog` also work.
+The testbed is an eight-page gallery with 32 examples: squash and stretch, choreography, motion and paths, interface, drawing and particles, a 3D stage, materials, and shaders. Change easing and duration, pause/resume, cancel, or restart the current page. See the [gallery guide](docs/src/content/docs/csharp/gallery.md). From `testbed/`, `dotnet test` and `dotnet run --project testbed.2dog` also work.
 
 ## Use the library
 
@@ -140,7 +140,7 @@ label.TweenVisibleRatio(1, 1.5, options => options.From = 0);
 audio.TweenVolumeDb(-20, 1);
 ```
 
-The catalog now also covers cameras, paths, 3D appearance, Control pivots and offset transforms, drawing, canvas/parallax, spatial audio, additional lights, animation, particles, decals, fog volumes, spring arms and integer frame/scroll/text properties. Detailed adapter documentation will be published in the public documentation site.
+The catalog now also covers cameras, paths, 3D appearance, Control pivots and offset transforms, drawing, canvas/parallax, spatial audio, additional lights, animation, particles, decals, fog volumes, spring arms and integer frame/scroll/text properties. See the [complete node/value catalog](docs/src/content/docs/csharp/nodes.md).
 
 ### Materials and shader uniforms
 

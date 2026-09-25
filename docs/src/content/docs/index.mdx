@@ -1,40 +1,92 @@
 ---
-title: Welcome to Starlight
-description: Get started building your docs site with Starlight.
-template: splash # Remove or comment out this line to display the site sidebar on this page.
+title: Reusable tweens for Godot
+description: Animate nodes, values, materials, and shader uniforms with reusable definitions and independent playback.
 hero:
-  tagline: Congrats on setting up a new Starlight project!
-  image:
-    file: ../../assets/houston.webp
+  title: tweens.gd
+  tagline: Define a motion once. Play it wherever you need it.
   actions:
-    - text: Example Guide
-      link: /guides/example/
+    - text: Start with C#
+      link: /csharp/quickstart/
       icon: right-arrow
-    - text: Read the Starlight docs
-      link: https://starlight.astro.build
-      icon: external
-      variant: minimal
+    - text: Explore the gallery
+      link: /csharp/gallery/
+      variant: secondary
 ---
 
-import { Card, CardGrid } from '@astrojs/starlight/components';
+import { Card, CardGrid, Tabs, TabItem } from '@astrojs/starlight/components';
 
-## Next steps
+Animate positions, colors, UI, audio, materials, and shader uniforms with typed
+tween definitions. Each playback has its own handle for pausing, cancellation,
+and completion. Compose C# animations with `async`/`await`.
 
-<CardGrid stagger>
-	<Card title="Update content" icon="pencil">
-		Edit `src/content/docs/index.mdx` to see this page change.
-	</Card>
-	<Card title="Change page layout" icon="document">
-		Delete `template: splash` in `src/content/docs/index.mdx` to display a
-		sidebar on this page.
-	</Card>
-	<Card title="Add new content" icon="add-document">
-		Add Markdown or MDX files to `src/content/docs` to create new pages.
-	</Card>
-	<Card title="Configure your site" icon="setting">
-		Edit your `sidebar` and other config in `astro.config.mjs`.
-	</Card>
-	<Card title="Read the docs" icon="open-book">
-		Learn more in [the Starlight Docs](https://starlight.astro.build/).
-	</Card>
+## Choose your language
+
+<Tabs>
+  <TabItem label="C#">
+
+The C# implementation is available in this repository. Start with a project
+reference or a locally built `tweens.gd` package while its first public release
+is pending.
+
+```csharp
+using Godot;
+using tweens.gd;
+
+// sprite is an in-tree Sprite2D. Run on Godot's main thread.
+var movement = sprite.TweenPosition(new Vector2(400, 180), 0.6,
+    options => options.Ease = EaseType.CubicOut);
+
+var reason = await movement.Completion;
+if (reason == TweenCompletionReason.Completed)
+    GD.Print("Arrived");
+```
+
+[Install the C# library](/csharp/installation/).
+
+  </TabItem>
+  <TabItem label="GDScript — planned">
+
+A Godot addon with equivalent tween functionality is planned. It is not available
+to install yet. Its public API, completion signals, minimum engine version, and
+supported exports will be documented once implemented and tested.
+
+[Read the addon status](/gdscript/).
+
+  </TabItem>
+</Tabs>
+
+## Build an animation
+
+<CardGrid>
+  <Card title="Reuse definitions" icon="document">
+    Keep the endpoints, easing, and timing together. Starting a tween snapshots
+    that definition into an independent playback.
+    [Understand definitions](/concepts/definitions/).
+  </Card>
+  <Card title="Control playback" icon="rocket">
+    Pause, resume, cancel, and await completion. Node ownership stops work when
+    a scene leaves the tree.
+    [Control a C# tween](/csharp/playback/).
+  </Card>
+  <Card title="Animate Godot properties" icon="setting">
+    Use typed adapters for transforms, UI, lights, audio, particles, and more.
+    [Browse the C# catalog](/csharp/nodes/).
+  </Card>
+  <Card title="Work with materials" icon="star">
+    Animate a shared resource or a per-instance shader uniform with explicit
+    ownership and restoration behavior.
+    [Explore material tweens](/csharp/materials/).
+  </Card>
 </CardGrid>
+
+## Compatibility
+
+The C# library targets **.NET 10 and GodotSharp 4.7.2**. The application supplies
+the engine; the package has no dependency on 2dog, native engine packages, or
+editor assemblies. See [compatibility and availability](/compatibility/) before
+choosing an engine or export target.
+
+The API design and easing math are inspired by Jeffrey Lanters'
+[unity-tweens](https://github.com/jeffreylanters/unity-tweens).
+tweens.gd is MIT licensed, with upstream attribution preserved in the
+[third-party notices](https://github.com/outfox/godotweens/blob/main/THIRD-PARTY-NOTICES.md).

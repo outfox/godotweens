@@ -1,0 +1,58 @@
+---
+title: Lifetime and ownership
+description: Targets, owners, scene trees, pause policies, and completion.
+---
+
+The **target** receives values. The **owner** determines when playback should
+stop. For a node tween, the node is normally both target and owner. Resource
+tweens can bind to a separate owner or to the scene tree.
+
+These are the current C# semantics. The GDScript addon is not implemented yet.
+
+## Nodes
+
+Start node tweens from `_Ready` or later, while the node is inside the tree.
+Owner tree exit cancels immediately, including removal and reparenting that
+causes tree exit. A freed or queued-for-deletion target is never written again.
+Destroying an owner still settles completion while its tween is paused.
+
+`node.CancelTweens()` cancels that owner's automatic tweens. Pass
+`includeChildren: true` to include descendant owners. This does not cancel work
+in independently created manual schedulers.
+
+## Resources
+
+Animating a material changes the supplied resource. Every node sharing it sees
+the change. Tween playback never duplicates, reassigns, or disposes your resource.
+
+Give a resource tween an owner to stop it when that node leaves the tree. A
+tree-scoped tween without an owner continues if a mesh is removed or gets a new
+material: the tween still targets the original resource. Tree teardown stops
+pending work. See [C# material lifetimes](/csharp/materials/#choose-the-playback-lifetime).
+
+Handles retain their target for inspection. Release handles you no longer need.
+
+## Pause policy
+
+| `TweenPauseMode` | With an owner | Without an owner, bound to a tree |
+| --- | --- | --- |
+| `Bound` (default) | Follow `owner.CanProcess()` | Follow tree pause |
+| `SceneTree` | Follow tree pause only | Follow tree pause |
+| `Always` | Ignore owner/tree pause | Ignore tree pause |
+
+Pausing the handle always stops advancement, even with `Always`. A node's
+`SetProcess(false)` does not disable bound tweens; its `ProcessMode` and the tree
+pause state determine `CanProcess()`.
+
+## Completion and cleanup
+
+Natural completion, cancellation, owner exit, target destruction, and runner
+teardown all settle the completion wait. Cancellation is a result, not a fault.
+Interpolation, easing, setter, or callback failures fault C# completion instead.
+`SuppressCallbacksWhenTargetInvalid` can suppress callbacks while still settling
+completion and releasing bindings.
+
+All native access belongs on Godot's main thread. Create and control automatic
+tweens there, including access to `Completion`. A manual scheduler belongs to
+the thread that created it, and native targets still require Godot's main thread.
+See [playback and async](/csharp/playback/) for cancellation-aware sequences.

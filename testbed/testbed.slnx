@@ -8,4 +8,8 @@
   <Project Path="testbed.2dog/testbed.2dog.csproj" />
   <Project Path="testbed.csproj" />
   <Project Path="testbed.tests/testbed.tests.csproj" />
+  <Project Path="testbed.web/testbed.web.csproj">
+    <BuildType Solution="Editor|*" Project="Debug" />
+    <Build Project="false" />
+  </Project>
 </Solution>

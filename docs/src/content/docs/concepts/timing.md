@@ -1,0 +1,59 @@
+---
+title: Timing and loops
+description: Duration, delay, repeat, ping-pong, fill behavior, and large frame deltas.
+---
+
+Each tween advances through its delay, forward leg, optional turn interval and
+backward leg, and optional repeat interval. These are the C# rules and the
+intended model for the planned GDScript addon.
+
+## Timing options
+
+All time values are double-precision seconds.
+
+| C# option | Default | Meaning |
+| --- | --- | --- |
+| `Duration` | `0` | Seconds per leg. Zero completes on the first eligible update. |
+| `Delay` | `0` | Initial wait; only unused delta advances playback. |
+| `LoopCount` | `1` | Total cycles including the first; must be positive. |
+| `IsInfinite` | `false` | Repeat indefinitely. A fully zero-time infinite cycle is rejected. |
+| `UsePingPong` | `false` | A forward and backward leg form one cycle. |
+| `PingPongInterval` | `0` | Wait at the far endpoint before returning. |
+| `RepeatInterval` | `0` | Wait between cycles, never after the final cycle. |
+| `Offset` | `0` | Start this many seconds into the first forward leg, within `[0, Duration]`. Delay still comes first. |
+
+For example, `Duration = 0.5`, `UsePingPong = true`, `PingPongInterval = 0.2`,
+`RepeatInterval = 0.3`, and `LoopCount = 2` take 2.7 seconds with zero delay and
+offset: two 1.2-second cycles and one 0.3-second gap.
+
+Negative and non-finite timing values are rejected. Large deltas advance to the
+correct phase even across multiple cycles; time is not discarded at boundaries.
+Skipped cycles do not synthesize callbacks for every intermediate boundary.
+
+## Fill and restoration
+
+| `FillMode` | During initial delay | On natural completion |
+| --- | --- | --- |
+| `RetainFinalValue` (default) | Leave the property alone | Keep the final sample |
+| `ApplyFromDuringDelay` | Apply `From` | Restore the captured initial value |
+| `Both` | Apply `From` | Keep the final sample |
+| `None` | Leave the property alone | Restore the captured initial value |
+
+A ping-pong tween finishes at its starting endpoint. Cancellation holds the most
+recent sample regardless of fill mode. Shader restoration also preserves whether
+an explicit override existed; see [shader uniforms](/csharp/shaders/).
+
+## Process and physics
+
+`ProcessMode` defaults to `TweenProcessMode.Process`. Choose
+`TweenProcessMode.Physics` for physics updates. The automatic runner uses process
+and physics priority `1000`, after nodes with default priority.
+
+`UseUnscaledTime = true` uses monotonic engine ticks for process updates. Physics
+updates use `1 / PhysicsTicksPerSecond` per tick; during catch-up this is simulation
+time, not wall-clock time. Neither option changes pause or ownership policy.
+
+`Progress` is the current leg's normalized position, reversing during ping-pong.
+It is not the total fraction of all loops completed. Easing changes the sample
+weight, not the timeline. Continue with [easing](/concepts/easing/) and
+[lifetime and ownership](/concepts/lifetime/).
