@@ -11,6 +11,45 @@ namespace testbed.Tests;
 [Trait("Category", "Rendering")]
 public class GalleryRenderingTests(Fixture godot)
 {
+    [Fact]
+    public void SourceLayoutUsesExtraSpaceAndCanShrinkBackWithoutClipping()
+    {
+        var window = godot.Tree.Root;
+        var originalSize = window.Size;
+        var demo = new TweenDemo();
+        godot.Tree.Root.AddChild(demo);
+        demo.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.FullRect);
+        try
+        {
+            demo.CurrentPage!.ShowSource(0);
+            Vector2 startingCodeSize = default;
+            foreach (var size in new[] { new Vector2I(1440, 720), new Vector2I(1920, 1080), new Vector2I(1200, 640), new Vector2I(1440, 720) })
+            {
+                window.Size = size;
+                for (var i = 0; i < 6; i++) godot.Engine.Iteration();
+                var code = demo.CurrentPage.SourceView.Code;
+                var stage = Descendants(demo).OfType<Control>().Single(c => c.Name == "PreviewStage" && c.IsVisibleInTree());
+                foreach (var control in new Control[] { code, stage })
+                {
+                    var rect = control.GetGlobalRect();
+                    Assert.True(rect.Position.X >= 0 && rect.Position.Y >= 0);
+                    Assert.True(rect.End.X <= size.X + 1 && rect.End.Y <= size.Y + 1);
+                }
+                Assert.InRange(stage.Size.X / stage.Size.Y, 1.99f, 2.01f);
+                if (startingCodeSize == default) startingCodeSize = code.Size;
+                if (size.X == 1920)
+                {
+                    Assert.True(code.Size.X > startingCodeSize.X);
+                    Assert.True(code.Size.Y > startingCodeSize.Y);
+                }
+            }
+            demo.CurrentPage.ShowGallery();
+            for (var i = 0; i < 3; i++) godot.Engine.Iteration();
+            Assert.Equal(4, Descendants(demo).OfType<Control>().Count(c => c.Name == "PreviewStage" && c.IsVisibleInTree()));
+        }
+        finally { demo.Free(); window.Size = originalSize; }
+    }
+
     [Theory]
     [InlineData(0)] [InlineData(1)] [InlineData(2)] [InlineData(3)] [InlineData(4)] [InlineData(5)] [InlineData(6)] [InlineData(7)]
     public void EachPagePlaysPausesAndReleasesItsNativeScene(int index)

@@ -20,6 +20,8 @@ public abstract partial class GalleryPage : VBoxContainer
     private HBoxContainer sourceNavigation = null!;
     private OptionButton examplePicker = null!;
     private GallerySourceView sourceView = null!;
+    private Label description = null!;
+    private readonly List<Control> frames = [];
 
     public int SelectedEffect { get; private set; } = -1;
     public GallerySourceView SourceView => sourceView;
@@ -36,15 +38,20 @@ public abstract partial class GalleryPage : VBoxContainer
     public override void _Ready()
     {
         AddThemeConstantOverride("separation", 10);
-        AddChild(GalleryTheme.Label(Heading, 28));
-        AddChild(GalleryTheme.Label(Description, 15, Palette.Muted));
+        var heading = this.Add(new HBoxContainer());
+        heading.AddThemeConstantOverride("separation", 16);
+        heading.AddChild(GalleryTheme.Label(Heading, 24));
+        description = heading.Add(GalleryTheme.Label(Description, 14, Palette.Muted));
+        description.SizeFlagsHorizontal = SizeFlags.ExpandFill;
+        description.TextOverrunBehavior = TextServer.OverrunBehavior.TrimEllipsis;
+        description.TooltipText = Description;
+        description.MouseFilter = MouseFilterEnum.Pass;
 
-        sourceNavigation = this.Add(new HBoxContainer { Visible = false });
+        sourceNavigation = heading.Add(new HBoxContainer { Visible = false, SizeFlagsHorizontal = SizeFlags.ExpandFill });
         var back = sourceNavigation.Add(new Button { Text = "‹ All examples" });
         back.Pressed += ShowGallery;
         examplePicker = sourceNavigation.Add(new OptionButton { SizeFlagsHorizontal = SizeFlags.ExpandFill });
         examplePicker.ItemSelected += index => ShowSource((int)index);
-        sourceNavigation.AddChild(GalleryTheme.Label("C# / LIVE PREVIEW", 12, Palette.Mint));
 
         var split = this.Add(new HSplitContainer { SizeFlagsVertical = SizeFlags.ExpandFill });
         sourceView = split.Add(new GallerySourceView { Visible = false });
@@ -66,15 +73,16 @@ public abstract partial class GalleryPage : VBoxContainer
         if (index < 0 || index >= effects.Length) throw new ArgumentOutOfRangeException(nameof(index));
         SelectedEffect = index;
         sourceNavigation.Show();
+        description.Hide();
         sourceView.Show();
         examplePicker.Select(index);
         grid.Columns = 1;
-        // Keep the preview's original landscape proportions, especially for 3D cameras.
-        grid.SizeFlagsVertical = SizeFlags.ShrinkCenter;
+        grid.SizeFlagsVertical = SizeFlags.ExpandFill;
         for (var i = 0; i < cards.Count; i++)
         {
             cards[i].Visible = i == index;
             sourceButtons[i].Visible = false;
+            FitPreview(frames[i]);
         }
         sourceView.ShowEffect(effects[index]);
     }
@@ -83,11 +91,13 @@ public abstract partial class GalleryPage : VBoxContainer
     {
         SelectedEffect = -1;
         sourceNavigation.Hide();
+        description.Show();
         sourceView.Hide();
         grid.Columns = 2;
         grid.SizeFlagsVertical = SizeFlags.ExpandFill;
         foreach (var card in cards) card.Show();
         foreach (var button in sourceButtons) button.Show();
+        foreach (var frame in frames) FitPreview(frame);
     }
 
     public void Start(double seconds, EaseType ease, bool pingPong)
@@ -125,7 +135,7 @@ public abstract partial class GalleryPage : VBoxContainer
         {
             SizeFlagsHorizontal = SizeFlags.ExpandFill, SizeFlagsVertical = SizeFlags.ExpandFill,
         });
-        panel.AddThemeStyleboxOverride("panel", Own(GalleryTheme.Box(Palette.Surface, 12, 1)));
+        panel.AddThemeStyleboxOverride("panel", Own(GalleryTheme.Box(Palette.Surface, 12, 1, null, 12, 10)));
         cards.Add(panel);
 
         var column = panel.Add(new VBoxContainer());
@@ -140,11 +150,18 @@ public abstract partial class GalleryPage : VBoxContainer
         sourceButtons.Add(source);
 
         // Drawn clipping keeps viewports inside the rounded inset.
-        var stage = column.Add(new Panel
+        var frame = column.Add(new Control
         {
-            CustomMinimumSize = new Vector2(370, 168), SizeFlagsHorizontal = SizeFlags.ExpandFill,
-            SizeFlagsVertical = SizeFlags.ExpandFill, ClipChildren = ClipChildrenMode.AndDraw, MouseFilter = MouseFilterEnum.Ignore,
+            CustomMinimumSize = new Vector2(370, 168), MouseFilter = MouseFilterEnum.Ignore,
+            SizeFlagsHorizontal = SizeFlags.ExpandFill, SizeFlagsVertical = SizeFlags.ExpandFill,
         });
+        frames.Add(frame);
+        var stage = frame.Add(new Panel
+        {
+            Name = "PreviewStage",
+            ClipChildren = ClipChildrenMode.AndDraw, MouseFilter = MouseFilterEnum.Ignore,
+        });
+        frame.Resized += () => FitPreview(frame);
         stage.AddThemeStyleboxOverride("panel", Own(GalleryTheme.Box(Palette.Stage, 8)));
 
         column.Add(GalleryTheme.Label(caption, 13, Palette.Muted)).AutowrapMode = TextServer.AutowrapMode.WordSmart;
@@ -155,5 +172,20 @@ public abstract partial class GalleryPage : VBoxContainer
     {
         resources.Add(resource);
         return resource;
+    }
+
+    private void FitPreview(Control frame)
+    {
+        // Fill gallery cards; fit source previews at 2:1 without making the layout's
+        // minimum size depend on the previous window size.
+        var stage = frame.GetChild<Control>(0);
+        var size = frame.Size;
+        if (SelectedEffect >= 0)
+        {
+            var width = Math.Min(size.X, size.Y * 2);
+            size = new Vector2(width, width / 2);
+        }
+        stage.Size = size;
+        stage.Position = (frame.Size - size) / 2;
     }
 }
