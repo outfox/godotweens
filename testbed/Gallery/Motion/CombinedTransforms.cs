@@ -5,7 +5,7 @@ using Godot;
 using tweens.gd;
 namespace testbed;
 
-public sealed class CombinedTransforms : GalleryEffect
+public sealed partial class CombinedTransforms : GalleryEffect
 {
     private Polygon2D shape = null!, shadow = null!;
 
@@ -27,14 +27,5 @@ public sealed class CombinedTransforms : GalleryEffect
         Blob(shape, 4, 4, Palette.Amber);
     }
 
-    protected override void Animate()
-    {
-        foreach (var target in new[] { shape, shadow })
-        {
-            Keep(target.TweenSkew(0.5f, Seconds, Cycle));
-            Keep(target.TweenRotation(Mathf.Pi, Seconds, Cycle));
-            Keep(target.TweenScaleX(1.8f, Seconds, Cycle));
-            Keep(target.TweenScaleY(0.6f, Seconds, Cycle));
-        }
-    }
+    protected override void Animate() => TrackTweens(CreateAnimation());
 }

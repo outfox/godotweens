@@ -7,7 +7,7 @@ using Godot;
 using tweens.gd;
 namespace testbed;
 
-public sealed class CurveFollower2D : GalleryEffect
+public sealed partial class CurveFollower2D : GalleryEffect
 {
     private static readonly Vector2 PathStart = new(-160, 35), PathEnd = new(160, -35);
     private PathFollow2D leader = null!;
@@ -50,37 +50,4 @@ public sealed class CurveFollower2D : GalleryEffect
 
     // Only the testbed needs tracking; the animation itself returns ordinary tween handles.
     protected override void Animate() => TrackTweens(FollowPath(Seconds, Ease, PingPong));
-
-    private TweenInstance[] FollowPath(double duration, EaseType ease, bool pingPong)
-    {
-        void Loop(TweenOptions options)
-        {
-            options.Ease = ease;
-            options.UsePingPong = pingPong;
-            options.IsInfinite = true;
-            options.RepeatInterval = 0.25;
-            options.PingPongInterval = 0.15;
-        }
-
-        var tweens = new List<TweenInstance>();
-        for (var e = 0; e < echoes.Length; e++)
-        {
-            var delay = (e + 1) * 0.07;
-            void Trailing(TweenOptions options)
-            {
-                Loop(options);
-                options.Delay = delay;
-            }
-            tweens.AddRange([
-                echoes[e].TweenProgressRatio(1, duration, Trailing),
-                echoes[e].TweenVOffset(20, duration, Trailing),
-            ]);
-        }
-        tweens.AddRange([
-            leader.TweenProgressRatio(1, duration, Loop),
-            leader.TweenVOffset(20, duration, Loop),
-            ship.TweenScale(new Vector2(1.6f, 1.6f), duration, Loop),
-        ]);
-        return tweens.ToArray();
-    }
 }

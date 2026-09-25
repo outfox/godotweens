@@ -5,7 +5,7 @@ using Godot;
 using tweens.gd;
 namespace testbed;
 
-public sealed class Spotlight : GalleryEffect
+public sealed partial class Spotlight : GalleryEffect
 {
     private SpotLight3D spot = null!;
 
@@ -37,10 +37,5 @@ public sealed class Spotlight : GalleryEffect
         Mesh(spot, new SphereMesh { Radius = 0.12f, Height = 0.24f }, bulb);
     }
 
-    protected override void Animate()
-    {
-        Keep(spot.TweenSpotAngle(52, Seconds, Cycle));
-        Keep(spot.TweenLightColor(Palette.Blue, Seconds, Cycle));
-        Keep(spot.TweenLightEnergy(3, Seconds, Cycle));
-    }
+    protected override void Animate() => TrackTweens(CreateAnimation());
 }

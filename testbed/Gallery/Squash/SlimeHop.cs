@@ -8,11 +8,8 @@ using Godot;
 using tweens.gd;
 namespace testbed;
 
-public sealed class SlimeHop : GalleryEffect
+public sealed partial class SlimeHop : GalleryEffect
 {
-    private const float Ground = 52, Apex = Ground - 78, Stride = 90, Bounds = 136;
-    private static readonly Vector2 Crouched = new(1.38f, 0.6f), Launched = new(0.68f, 1.45f), Falling = new(0.82f, 1.25f),
-        Squashed = new(1.6f, 0.5f);
 
     private Node2D slime = null!, body = null!, eyes = null!, pupils = null!;
     private Polygon2D[] drops = [];
@@ -47,7 +44,7 @@ public sealed class SlimeHop : GalleryEffect
 
     protected override void Animate()
     {
-        Keep(eyes.TweenScaleY(0.1f, 0.07, t => { t.UsePingPong = true; t.IsInfinite = true; t.RepeatInterval = 2.2; t.Delay = 0.9; }));
+        Keep(Blink());
         Sequence = Repeat(Hop);
     }
 
@@ -57,44 +54,16 @@ public sealed class SlimeHop : GalleryEffect
         if (Math.Abs(slime.Position.X + direction * Stride) > Bounds) direction = -direction;
         var target = slime.Position.X + direction * Stride;
 
-        Keep(pupils.TweenPositionX(direction * 3, 0.2 * Tempo, t => t.Ease = EaseType.BackOut));
-        if (!await Finished(run, Keep(slime.TweenScale(Crouched, 0.32 * Tempo, t => t.Ease = EaseType.SineOut)))) return false;
-        if (!await Finished(run, Keep(slime.TweenScale(Launched, 0.08 * Tempo, t => t.Ease = EaseType.QuadOut)))) return false;
+        Keep(LookAhead());
+        if (!await Finished(run, Crouch())) return false;
+        if (!await Finished(run, Launch())) return false;
 
-        Keep(slime.TweenPositionX(target, air * 2, t => t.Ease = EaseType.SineInOut));
-        if (++hops % 2 == 0)
-            Keep(body.TweenRotation(direction * MathF.Tau, air * 2, t => { t.From = 0; t.Ease = EaseType.CubicInOut; }));
+        TrackTweens(Travel(target, air * 2));
+        if (!await Finished(run, Rise(air))) return false;
+        if (!await Finished(run, Fall(air))) return false;
 
-        void Rising(TweenOptions t) => t.Ease = EaseType.QuadOut;
-        var rise = Finished(run,
-            Keep(slime.TweenPositionY(Apex, air, Rising)),
-            Keep(slime.TweenScale(Vector2.One, air, Rising)));
-        if (!await rise) return false;
-
-        void Dropping(TweenOptions t) => t.Ease = EaseType.QuadIn;
-        var fall = Finished(run,
-            Keep(slime.TweenPositionY(Ground, air, Dropping)),
-            Keep(slime.TweenScale(Falling, air, Dropping)));
-        if (!await fall) return false;
-
-        Splash(target);
-        if (!await Finished(run, Keep(slime.TweenScale(Squashed, 0.06 * Tempo, t => t.Ease = EaseType.QuadOut)))) return false;
-        return await Finished(run, Keep(slime.TweenScale(Vector2.One, 0.75 * Tempo, t => t.Ease = EaseType.ElasticOut)));
-    }
-
-    /// <summary>Flings the droplets outward along the upper half of an ellipse.</summary>
-    private void Splash(float x)
-    {
-        var duration = 0.4 * Tempo;
-        var origin = new Vector2(x, Ground - 6);
-        for (var i = 0; i < drops.Length; i++)
-        {
-            var angle = MathF.PI + (i + 0.5f) / drops.Length * MathF.PI;
-            var landing = origin + new Vector2(MathF.Cos(angle) * 58, MathF.Sin(angle) * 34);
-            drops[i].Position = origin;
-            drops[i].Scale = Vector2.One * (i % 2 == 0 ? 1 : 0.7f);
-            Keep(drops[i].TweenPosition(landing, duration, t => t.Ease = EaseType.QuartOut));
-            Keep(drops[i].TweenModulateAlpha(0, duration, t => { t.From = 1; t.Ease = EaseType.CubicIn; }));
-        }
+        TrackTweens(Splash(target));
+        if (!await Finished(run, Squash())) return false;
+        return await Finished(run, Recover());
     }
 }

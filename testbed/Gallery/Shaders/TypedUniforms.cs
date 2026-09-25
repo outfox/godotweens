@@ -5,7 +5,7 @@ using Godot;
 using tweens.gd;
 namespace testbed;
 
-public sealed class TypedUniforms : GalleryEffect
+public sealed partial class TypedUniforms : GalleryEffect
 {
     private const string DotGrid = """
         shader_type canvas_item;
@@ -38,9 +38,5 @@ public sealed class TypedUniforms : GalleryEffect
         });
     }
 
-    protected override void Animate()
-    {
-        Keep(material.TweenShaderParameter("tint", Palette.Amber, Seconds, Stage, Cycle));
-        Keep(material.TweenShaderParameter("offset", new Vector2(0.25f, 0.33f), Seconds, Stage, Cycle));
-    }
+    protected override void Animate() => TrackTweens(CreateAnimation());
 }

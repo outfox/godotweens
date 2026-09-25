@@ -5,7 +5,7 @@ using Godot;
 using tweens.gd;
 namespace testbed;
 
-public sealed class ParentedRotation : GalleryEffect
+public sealed partial class ParentedRotation : GalleryEffect
 {
     private MeshInstance3D cube = null!;
 
@@ -21,10 +21,5 @@ public sealed class ParentedRotation : GalleryEffect
         Mesh(parent, new SphereMesh { Radius = 0.16f, Height = 0.32f }, Surface(Palette.Amber), new Vector3(1, 0, 0));
     }
 
-    protected override void Animate()
-    {
-        var orientation = Quaternion.FromEuler(new Vector3(0.5f, 2.5f, 0.8f));
-        Keep(cube.TweenGlobalQuaternion(orientation, Seconds, Cycle));
-        Keep(cube.TweenScale(new Vector3(1.4f, 0.7f, 1.1f), Seconds, Cycle));
-    }
+    protected override void Animate() => TrackTweens(CreateAnimation());
 }

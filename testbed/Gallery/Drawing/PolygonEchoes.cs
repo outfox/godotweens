@@ -2,12 +2,13 @@
 // SPDX-FileCopyrightText: 2026 Moritz Voss
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using Godot;
 using tweens.gd;
 namespace testbed;
 
-public sealed class PolygonEchoes : GalleryEffect
+public sealed partial class PolygonEchoes : GalleryEffect
 {
     private static readonly Vector2[] Outline = [new(-45, -40), new(35, -50), new(65, 15), new(0, 50), new(-60, 15)];
     private Polygon2D polygon = null!;
@@ -34,20 +35,5 @@ public sealed class PolygonEchoes : GalleryEffect
         });
     }
 
-    protected override void Animate()
-    {
-        for (var e = 0; e < echoes.Length; e++)
-        {
-            var lag = echoes.Length - e;
-            Play(echoes[e], CycleAfter(lag * 0.08));
-        }
-        Play(polygon, Cycle);
-    }
-
-    private void Play(Polygon2D target, Action<TweenOptions> timing)
-    {
-        Keep(target.TweenColor(Palette.Amber, Seconds, timing));
-        Keep(target.TweenOffset(new Vector2(40, 0), Seconds, timing));
-        Keep(target.TweenRotation(Mathf.Pi, Seconds * 2, timing));
-    }
+    protected override void Animate() => TrackTweens(CreateAnimation());
 }

@@ -5,7 +5,7 @@ using Godot;
 using tweens.gd;
 namespace testbed;
 
-public sealed class VertexDisplacement : GalleryEffect
+public sealed partial class VertexDisplacement : GalleryEffect
 {
     private const string Ripple = """
         shader_type spatial;
@@ -32,5 +32,5 @@ public sealed class VertexDisplacement : GalleryEffect
         Mesh(scene.View, new SphereMesh { Radius = 0.65f, Height = 1.3f }, material, new Vector3(1, 0, 0));
     }
 
-    protected override void Animate() => Keep(deformed.TweenInstanceShaderParameter("amplitude", 0.22f, Seconds, Cycle));
+    protected override void Animate() => TrackTweens(CreateAnimation());
 }

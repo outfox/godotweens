@@ -9,7 +9,7 @@ namespace testbed;
 public partial class GallerySourceView : VBoxContainer
 {
     private readonly List<Resource> resources = [];
-    private GallerySource example = null!;
+    private GallerySource example = null!, setup = null!;
     private OptionButton files = null!;
     private Label path = null!;
     private Button entry = null!, copy = null!;
@@ -26,11 +26,11 @@ public partial class GallerySourceView : VBoxContainer
 
         var toolbar = this.Add(new HBoxContainer());
         files = toolbar.Add(new OptionButton { SizeFlagsHorizontal = SizeFlags.ExpandFill });
-        foreach (var name in new[] { "Example", "Playback helpers", "Scene helpers", "Palette", "Node helpers", "Shader panels" }) files.AddItem(name);
+        foreach (var name in new[] { "Animation", "Scene & playback", "Playback helpers", "Scene helpers", "Palette", "Node helpers", "Shader panels" }) files.AddItem(name);
         files.ItemSelected += index => ShowFile((int)index);
         copy = toolbar.Add(new Button { Text = "Copy file", TooltipText = "Copy the complete source file" });
         copy.Pressed += () => { DisplayServer.ClipboardSet(Code.Text); copy.Text = "Copied!"; };
-        entry = toolbar.Add(new Button { Text = "Tween entry", TooltipText = "Jump to Animate(), where this example starts its tweens" });
+        entry = toolbar.Add(new Button { Text = "Tween entry", TooltipText = "Jump to the animation code or its playback entry point" });
         entry.Pressed += JumpToTween;
         var top = toolbar.Add(new Button { Text = "File start" });
         top.Pressed += () => Jump(0);
@@ -66,12 +66,13 @@ public partial class GallerySourceView : VBoxContainer
         Code.AddThemeStyleboxOverride("focus", focus);
         Code.SyntaxHighlighter = Own(CreateHighlighter());
 
-        Code.TooltipText = "Full source from this build. Select text to copy, or drag the divider to resize the panes.";
+        Code.TooltipText = "Exact source from this build. Animation and Scene & playback are two parts of the same class. Select text to copy, or drag the divider to resize the panes.";
     }
 
     public void ShowEffect(GalleryEffect effect)
     {
         example = GallerySource.ForEffect(effect);
+        setup = GallerySource.ForSetup(effect);
         files.Select(0);
         ShowFile(0);
     }
@@ -80,11 +81,12 @@ public partial class GallerySourceView : VBoxContainer
     {
         Source = index switch
         {
-            1 => GallerySource.Load("GalleryEffect.cs"),
-            2 => GallerySource.Load("GalleryEffect.Stage.cs"),
-            3 => GallerySource.Load("Palette.cs"),
-            4 => GallerySource.Load("NodeExtensions.cs"),
-            5 => GallerySource.Load("SplitPanel.cs"),
+            1 => setup,
+            2 => GallerySource.Load("GalleryEffect.cs"),
+            3 => GallerySource.Load("GalleryEffect.Stage.cs"),
+            4 => GallerySource.Load("Palette.cs"),
+            5 => GallerySource.Load("NodeExtensions.cs"),
+            6 => GallerySource.Load("SplitPanel.cs"),
             _ => example,
         };
         path.Text = Source.Path;
@@ -115,11 +117,11 @@ public partial class GallerySourceView : VBoxContainer
         };
         foreach (var word in ("using namespace public private protected internal sealed abstract partial static readonly const " +
             "override virtual async await return if else for foreach while in is not null true false new var void bool byte " +
-            "int long float double string object out ref params get set switch case default try catch throw typeof with").Split(' '))
+            "int long float double string object out ref params get set switch case default try catch throw typeof with yield").Split(' '))
             highlighter.AddKeywordColor(word, new Color("d5a6ef"));
         foreach (var word in ("Vector2 Vector3 Vector4 Vector2I Color Colors Math MathF Mathf Task TweenOptions TweenInstance " +
             "EaseType TweenState TweenCompletionReason Node Node2D Node3D Control Stage Palette GalleryEffect " +
-            "Polygon2D Line2D ShaderMaterial StandardMaterial3D Camera2D Camera3D").Split(' '))
+            "Polygon2D Line2D ShaderMaterial StandardMaterial3D Camera2D Camera3D IEnumerable").Split(' '))
             highlighter.AddKeywordColor(word, Palette.Mint);
         highlighter.AddColorRegion("//", "", Palette.Muted, true);
         highlighter.AddColorRegion("/*", "*/", Palette.Muted);

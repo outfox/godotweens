@@ -5,7 +5,7 @@ using Godot;
 using tweens.gd;
 namespace testbed;
 
-public sealed class SharedMaterial : GalleryEffect
+public sealed partial class SharedMaterial : GalleryEffect
 {
     private StandardMaterial3D material = null!;
 
@@ -23,9 +23,5 @@ public sealed class SharedMaterial : GalleryEffect
         cube.Rotation = new Vector3(0.3f, 0.5f, 0);
     }
 
-    protected override void Animate()
-    {
-        Keep(material.TweenAlbedoColor(Palette.Amber, Seconds, Stage, Cycle));
-        Keep(material.TweenRoughness(0.95f, Seconds, Stage, Cycle));
-    }
+    protected override void Animate() => TrackTweens(CreateAnimation());
 }

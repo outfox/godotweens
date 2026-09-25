@@ -5,7 +5,7 @@ using Godot;
 using tweens.gd;
 namespace testbed;
 
-public sealed class UvScroll : GalleryEffect
+public sealed partial class UvScroll : GalleryEffect
 {
     private StandardMaterial3D material = null!;
 
@@ -24,10 +24,5 @@ public sealed class UvScroll : GalleryEffect
         Mesh(scene.View, new QuadMesh { Size = new Vector2(3.8f, 1.35f) }, material);
     }
 
-    protected override void Animate()
-    {
-        var slow = Seconds * 2;
-        Keep(material.TweenUv1OffsetX(1, slow, Stage, Cycle));
-        Keep(material.TweenUv1Scale(new Vector3(2.5f, 2.5f, 1), slow, Stage, Cycle));
-    }
+    protected override void Animate() => TrackTweens(CreateAnimation());
 }

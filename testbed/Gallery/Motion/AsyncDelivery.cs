@@ -9,9 +9,8 @@ using tweens.gd;
 namespace testbed;
 
 /// <summary>A one-shot sequence: restart the page to replay it.</summary>
-public sealed class AsyncDelivery : GalleryEffect
+public sealed partial class AsyncDelivery : GalleryEffect
 {
-    private const float Left = -150, Right = 150, Rail = 15;
     private Polygon2D courier = null!;
     private Polygon2D[] steps = [];
     private Label status = null!;
@@ -41,29 +40,17 @@ public sealed class AsyncDelivery : GalleryEffect
     {
         try
         {
-            Report(0, "1 / Position");
-            var outward = Keep(courier.TweenPositionX(Right, Seconds, t => t.Ease = Ease));
-            if (!await Finished(run, outward)) return;
+            TrackTweens(Report(0, "1 / Position"));
+            if (!await Finished(run, Outward())) return;
 
-            Report(1, "2 / Position + rotation");
-            var back = Keep(courier.TweenPositionX(Left, Seconds, t => t.Ease = Ease));
-            var turn = Keep(courier.TweenRotation(Mathf.Tau, Seconds, t => t.Ease = Ease));
-            if (!await Finished(run, back, turn)) return;
+            TrackTweens(Report(1, "2 / Position + rotation"));
+            if (!await Finished(run, ReturnAndTurn())) return;
 
-            Report(2, "3 / Complete");
+            TrackTweens(Report(2, "3 / Complete"));
         }
         catch (Exception error)
         {
             GD.PushError(error.ToString());
         }
-    }
-
-    /// <summary>Shows the step's label and lights its progress dot, and every dot before it.</summary>
-    private void Report(int step, string text)
-    {
-        status.Text = text;
-        for (var i = 0; i < steps.Length; i++)
-            Keep(steps[i].TweenColor(i <= step ? Palette.Mint : Palette.Outline, 0.2));
-        Keep(steps[step].TweenScale(Vector2.One, 0.5, t => { t.From = new Vector2(2, 2); t.Ease = EaseType.ElasticOut; }));
     }
 }

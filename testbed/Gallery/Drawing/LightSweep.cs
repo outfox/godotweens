@@ -6,7 +6,7 @@ using Godot;
 using tweens.gd;
 namespace testbed;
 
-public sealed class LightSweep : GalleryEffect
+public sealed partial class LightSweep : GalleryEffect
 {
     private const float Cell = 32, Tile = 27;
     private static readonly Color Warm = new("fff0cd");
@@ -37,10 +37,5 @@ public sealed class LightSweep : GalleryEffect
         Blob(light, 3, 3, Colors.White);
     }
 
-    protected override void Animate()
-    {
-        Keep(light.TweenTextureScale(2.5f, Seconds, Cycle));
-        Keep(light.TweenEnergy(2, Seconds, Cycle));
-        Keep(light.TweenPositionX(100, Seconds, Cycle));
-    }
+    protected override void Animate() => TrackTweens(CreateAnimation());
 }

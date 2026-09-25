@@ -8,9 +8,8 @@ using Godot;
 using tweens.gd;
 namespace testbed;
 
-public sealed class JellyButton : GalleryEffect
+public sealed partial class JellyButton : GalleryEffect
 {
-    private const int Points = 10;
     private static readonly Color[] Confetti = [Palette.Mint, Palette.Amber, Palette.Blue, new("ff8fa3"), Colors.White];
 
     private readonly Random random = new();
@@ -102,70 +101,19 @@ public sealed class JellyButton : GalleryEffect
     private void Pop(int run)
     {
         Squish(run);
-        Keep(shaker.TweenPosition(new Vector2(9, 5), 0.4 * Tempo, t => { t.From = Vector2.Zero; t.EaseFunction = Shake; }));
-        var flash = 0.6 * Tempo;
-        Keep(burst.TweenScale(new Vector2(2.1f, 2.1f), flash, t => { t.From = new Vector2(0.7f, 0.7f); t.Ease = EaseType.QuartOut; }));
-        Keep(burst.TweenModulateAlpha(0, flash, t => { t.From = 1; t.Ease = EaseType.QuadIn; }));
-        foreach (var shard in shards) Throw(shard);
-        FloatBonus();
-        AddToScore();
+        TrackTweens(Flash());
+        foreach (var shard in shards) TrackTweens(Throw(shard));
+        TrackTweens(FloatBonus());
+        TrackTweens(AddToScore());
     }
 
     /// <summary>Flattens the button, then springs it back unless the effect was stopped in between.</summary>
     private void Squish(int run)
     {
         squish?.Cancel();
-        squish = Keep(button.TweenScale(new Vector2(1.3f, 0.7f), 0.07 * Tempo, t =>
+        squish = Keep(Flatten(() =>
         {
-            t.Ease = EaseType.QuadOut;
-            t.OnEnd = _ =>
-            {
-                if (run == Generation) squish = Keep(button.TweenScale(Vector2.One, 0.8 * Tempo, e => e.Ease = EaseType.ElasticOut));
-            };
+            if (run == Generation) squish = Keep(SpringBack());
         }));
-    }
-
-    private void Throw(Polygon2D shard)
-    {
-        var flight = 0.9 * Tempo;
-        var angle = (float)(random.NextDouble() * MathF.PI * 1.2 + MathF.PI * 0.9);
-        var reach = 90 + (float)random.NextDouble() * 110;
-        var landing = new Vector2(MathF.Cos(angle) * reach, 70 + (float)random.NextDouble() * 20);
-        var spin = angle + (float)(random.NextDouble() * 12 - 6);
-        var lift = 1 + (float)random.NextDouble();
-        // (2 + lift)w² − (1 + lift)w dips below zero before landing at 1: a launch arc from a single scalar tween.
-        float Arc(float w) => (2 + lift) * w * w - (1 + lift) * w;
-
-        shard.Position = Vector2.Zero;
-        shard.Rotation = angle;
-        shard.Modulate = Colors.White;
-        Keep(shard.TweenPositionX(landing.X, flight, t => t.Ease = EaseType.QuartOut));
-        Keep(shard.TweenPositionY(landing.Y, flight, t => t.EaseFunction = Arc));
-        Keep(shard.TweenRotation(spin, flight, t => t.Ease = EaseType.QuadOut));
-        Keep(shard.TweenModulateAlpha(0, 0.3 * Tempo, t => t.Delay = 0.6 * Tempo));
-    }
-
-    private void FloatBonus()
-    {
-        bonus.Modulate = Colors.White;
-        Keep(bonus.TweenPositionY(-95, 0.7 * Tempo, t => { t.From = -50; t.Ease = EaseType.QuartOut; }));
-        Keep(bonus.TweenModulateAlpha(0, 0.3 * Tempo, t => t.Delay = 0.4 * Tempo));
-    }
-
-    /// <summary>Rolls the displayed score up from whatever it currently shows.</summary>
-    private void AddToScore()
-    {
-        total += Points;
-        Keep(Stage.TweenFloat(total, 0.5 * Tempo, t =>
-        {
-            t.From = shown;
-            t.Ease = EaseType.CubicOut;
-            t.OnUpdate = (_, value) =>
-            {
-                shown = value;
-                score.Text = $"{value:000}";
-            };
-        }));
-        Keep(score.TweenScale(Vector2.One, 0.6 * Tempo, t => { t.From = new Vector2(1.45f, 1.45f); t.Ease = EaseType.ElasticOut; }));
     }
 }

@@ -9,13 +9,19 @@ namespace testbed;
 /// <summary>Source from this build, available without a checkout or exported loose .cs files.</summary>
 public sealed record GallerySource(string Path, string Text)
 {
-    public int TweenLine => Array.FindIndex(Text.Split('\n'), line => line.Contains("protected override void Animate()", StringComparison.Ordinal));
+    public int TweenLine => Path.EndsWith(".Animation.cs", StringComparison.Ordinal)
+        ? Array.FindIndex(Text.Split('\n'), line => line.StartsWith("public sealed partial class ", StringComparison.Ordinal)) + 2
+        : Array.FindIndex(Text.Split('\n'), line => line.Contains("protected override void Animate()", StringComparison.Ordinal));
 
     public static GallerySource ForEffect(GalleryEffect effect)
     {
         var type = effect.GetType();
-        return Load((type.DeclaringType ?? type).Name + ".cs");
+        // The nested headless-renderer notice is a placeholder, not an animated effect.
+        return type.DeclaringType is { } parent ? Load(parent.Name + ".cs") : Load(type.Name + ".Animation.cs");
     }
+
+    public static GallerySource ForSetup(GalleryEffect effect) =>
+        Load((effect.GetType().DeclaringType ?? effect.GetType()).Name + ".cs");
 
     public static GallerySource Load(string fileName)
     {

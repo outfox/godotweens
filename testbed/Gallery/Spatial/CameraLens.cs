@@ -5,7 +5,7 @@ using Godot;
 using tweens.gd;
 namespace testbed;
 
-public sealed class CameraLens : GalleryEffect
+public sealed partial class CameraLens : GalleryEffect
 {
     private Camera3D camera = null!;
 
@@ -25,9 +25,5 @@ public sealed class CameraLens : GalleryEffect
         }
     }
 
-    protected override void Animate()
-    {
-        Keep(camera.TweenFov(65, Seconds, Cycle));
-        Keep(camera.TweenHOffset(0.7f, Seconds, Cycle));
-    }
+    protected override void Animate() => TrackTweens(CreateAnimation());
 }

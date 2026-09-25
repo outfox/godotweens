@@ -6,7 +6,7 @@ using tweens.gd;
 namespace testbed;
 
 /// <summary>Also freezes the particle simulation itself while paused or stopped.</summary>
-public sealed class ParticleStream : GalleryEffect
+public sealed partial class ParticleStream : GalleryEffect
 {
     private CpuParticles2D particles = null!;
     private double speedBeforePause = 1;
@@ -30,13 +30,7 @@ public sealed class ParticleStream : GalleryEffect
         Blob(particles, 3, 3, Colors.White);
     }
 
-    protected override void Animate()
-    {
-        Keep(particles.TweenSpread(75, Seconds, Cycle));
-        Keep(particles.TweenGravity(new Vector2(15, -55), Seconds, Cycle));
-        Keep(particles.TweenColor(Palette.Amber, Seconds, Cycle));
-        Keep(particles.TweenPositionY(-30, Seconds, Cycle));
-    }
+    protected override void Animate() => TrackTweens(CreateAnimation());
 
     public override void Pause(bool paused)
     {

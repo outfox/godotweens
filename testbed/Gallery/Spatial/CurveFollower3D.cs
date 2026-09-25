@@ -6,7 +6,7 @@ using Godot;
 using tweens.gd;
 namespace testbed;
 
-public sealed class CurveFollower3D : GalleryEffect
+public sealed partial class CurveFollower3D : GalleryEffect
 {
     private const int Beads = 24;
     private PathFollow3D leader = null!;
@@ -51,16 +51,5 @@ public sealed class CurveFollower3D : GalleryEffect
     private static PathFollow3D Follower(Path3D path)
         => path.Add(new PathFollow3D { Loop = false, RotationMode = PathFollow3D.RotationModeEnum.None });
 
-    protected override void Animate()
-    {
-        var lap = Seconds * 1.5;
-        Keep(leader.TweenProgressRatio(1, lap, Cycle));
-        for (var e = 0; e < echoes.Length; e++)
-        {
-            var trailing = CycleAfter((e + 1) * 0.08);
-            Keep(echoes[e].TweenProgressRatio(1, lap, trailing));
-            Keep(echoes[e].TweenVOffset(0.35f, Seconds, trailing));
-        }
-        Keep(leader.TweenVOffset(0.35f, Seconds, Cycle));
-    }
+    protected override void Animate() => TrackTweens(CreateAnimation());
 }

@@ -12,6 +12,53 @@ namespace testbed.Tests;
 public class DemoTests(HeadlessFixture godot)
 {
     private void Pump() { for (var i = 0; i < 3; i++) godot.Engine.Iteration(); }
+
+    [Theory]
+    [InlineData(nameof(BouncingBall))] [InlineData(nameof(SlimeHop))] [InlineData(nameof(JellyCube))]
+    [InlineData(nameof(JellyButton))] [InlineData(nameof(AsyncDelivery))]
+    public void AnimationPartialsRemainTrackedAcrossPhasesAndCallbackCreatedTweens(string name)
+    {
+        // Sample launch, flight, impact, recovery, and subsequent repeats; include the button's OnEnd tween.
+        for (var updates = 0; updates <= 100; updates += 4)
+        {
+            var stage = new Control { Size = new Vector2(600, 300) };
+            godot.Tree.Root.AddChild(stage);
+            var type = typeof(GalleryEffect).Assembly.GetType("testbed." + name)!;
+            var effect = (GalleryEffect)Activator.CreateInstance(type)!;
+            effect.Attach(stage);
+            var scheduler = TweenRuntime.GetRunner(stage).Scheduler;
+            try
+            {
+                effect.Start(1.8, EaseType.CubicInOut, true);
+                var sequence = effect.Sequence!;
+                for (var i = 0; i < updates; i++) scheduler.Update(0.05);
+                Assert.Null(effect.Error);
+                effect.Pause(true);
+                Assert.True(effect.AllPaused);
+                var active = effect.ActiveCount;
+                scheduler.Update(5);
+                Assert.Equal(active, effect.ActiveCount);
+
+                effect.Stop();
+                Assert.True(sequence.IsCompletedSuccessfully);
+                scheduler.Update(5);
+                Assert.Equal(0, scheduler.ActiveCount);
+                Assert.Equal(0, effect.ActiveCount);
+
+                effect.Start(1.8, EaseType.CubicInOut, true);
+                Assert.True(effect.ActiveCount > 0);
+                Assert.NotSame(sequence, effect.Sequence);
+                effect.Stop();
+                Assert.True(effect.Sequence!.IsCompletedSuccessfully);
+                scheduler.Update(5);
+                Assert.Equal(0, scheduler.ActiveCount);
+            }
+            finally { effect.Stop(); stage.Free(); effect.ReleaseResources(); }
+        }
+        Pump();
+        Assert.Empty(godot.Errors.Drain());
+    }
+
     [Fact]
     public void PathTweenGroupPreservesTrailingTimingPauseAndCancellation()
     {

@@ -5,7 +5,7 @@ using Godot;
 using tweens.gd;
 namespace testbed;
 
-public sealed class AlbedoFade : GalleryEffect
+public sealed partial class AlbedoFade : GalleryEffect
 {
     private StandardMaterial3D material = null!;
 
@@ -24,5 +24,5 @@ public sealed class AlbedoFade : GalleryEffect
         Mesh(scene.View, new SphereMesh { Radius = 0.8f, Height = 1.6f }, material);
     }
 
-    protected override void Animate() => Keep(material.TweenAlbedoAlpha(0.08f, Seconds, Stage, Cycle));
+    protected override void Animate() => TrackTweens(CreateAnimation());
 }

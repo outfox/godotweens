@@ -5,7 +5,7 @@ using Godot;
 using tweens.gd;
 namespace testbed;
 
-public sealed class ScrollingList : GalleryEffect
+public sealed partial class ScrollingList : GalleryEffect
 {
     private static readonly Color[] Accents = [Palette.Mint, Palette.Blue, Palette.Amber];
     private static readonly string[] States = ["ready", "queued", "paused"];
@@ -45,5 +45,5 @@ public sealed class ScrollingList : GalleryEffect
         return entry;
     }
 
-    protected override void Animate() => Keep(scroll.TweenScrollVertical(200, Seconds * 2, Cycle));
+    protected override void Animate() => TrackTweens(CreateAnimation());
 }

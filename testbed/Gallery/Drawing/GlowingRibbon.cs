@@ -5,7 +5,7 @@ using Godot;
 using tweens.gd;
 namespace testbed;
 
-public sealed class GlowingRibbon : GalleryEffect
+public sealed partial class GlowingRibbon : GalleryEffect
 {
     private Line2D ribbon = null!, glow = null!;
 
@@ -31,11 +31,5 @@ public sealed class GlowingRibbon : GalleryEffect
         }
     }
 
-    protected override void Animate()
-    {
-        Keep(ribbon.TweenWidth(16, Seconds, Cycle));
-        Keep(ribbon.TweenDefaultColor(Palette.Blue, Seconds, Cycle));
-        Keep(glow.TweenWidth(40, Seconds, Cycle));
-        Keep(glow.TweenDefaultColor(Palette.Blue with { A = 0.28f }, Seconds, Cycle));
-    }
+    protected override void Animate() => TrackTweens(CreateAnimation());
 }

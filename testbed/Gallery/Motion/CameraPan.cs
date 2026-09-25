@@ -5,7 +5,7 @@ using Godot;
 using tweens.gd;
 namespace testbed;
 
-public sealed class CameraPan : GalleryEffect
+public sealed partial class CameraPan : GalleryEffect
 {
     private static readonly Color GridLine = new("2a3b50"), Axis = new("41597a");
     private Camera2D camera = null!;
@@ -35,23 +35,5 @@ public sealed class CameraPan : GalleryEffect
         }
     }
 
-    protected override void Animate()
-    {
-        Keep(camera.TweenZoom(new Vector2(1.8f, 1.8f), Seconds, Cycle));
-        Keep(camera.TweenOffset(new Vector2(90, 25), Seconds, Cycle));
-
-        const double pulse = 1.2;
-        Keep(beacon.TweenScale(new Vector2(2.4f, 2.4f), pulse, t =>
-        {
-            t.From = Vector2.One;
-            t.Ease = EaseType.QuartOut;
-            t.IsInfinite = true;
-        }));
-        Keep(beacon.TweenModulateAlpha(0, pulse, t =>
-        {
-            t.From = 1;
-            t.Ease = EaseType.QuadIn;
-            t.IsInfinite = true;
-        }));
-    }
+    protected override void Animate() => TrackTweens(CreateAnimation());
 }
