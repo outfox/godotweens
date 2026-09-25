@@ -1,6 +1,6 @@
 ---
 title: Definitions and playback
-description: Reusable configurations, independent handles, snapshots, and competing property writes.
+description: Reusable configurations, independent handles, value copies, and competing property writes.
 ---
 
 import DefinitionStamp from '../../../components/DefinitionStamp.astro';
@@ -18,16 +18,40 @@ In this C# example, `sprite` is an in-tree `Sprite2D` and `label` an in-tree
 `Label`. Import `Godot` and `tweens.gd` and run on Godot's main thread.
 
 ```csharp
-var fade = new ModulateAlphaTween { To = 0, Duration = 0.3 };
+var fade = new Tweens.ModulateAlpha { To = 0, Duration = 0.3 };
 var first = sprite.Tween(fade);
-var second = label.Tween(fade);
+var second = label.Tween(fade with { Delay = 0.15 });
 first.Pause();
 first.Resume();
 second.Cancel();
 sprite.CancelTweens(includeChildren: true);
 ```
 
-Each addition snapshots options, endpoints, callbacks, and custom definition fields. Omitted `From`/`To` use the property's value captured once at addition. Editing the definition afterward does not alter a running tween. Custom reference-valued fields and objects captured by delegates are shared, just as ordinary C# closures are; keep them immutable if independent playback is required. Godot Curves are duplicated for each instance.
+Built-in definitions are readonly record structs in the root `Tweens` namespace. A `with` expression copies the configuration and changes only the listed properties; the original remains available for reuse. Each start captures its own initial property value and owns its playback state. Omitted `From`/`To` use that captured value. Delegates and the objects they capture remain shared references. Godot Curves are duplicated for each playback.
+
+Store reusable definitions directly on your class:
+
+```csharp
+private readonly Tweens.PathFollow2DVOffset offset = new()
+{
+    To = 20,
+    Duration = 1.5,
+    Ease = EaseType.SineInOut,
+};
+
+// Inside an animation method:
+var trailing = follower.Tween(offset with { Duration = seconds, Delay = delay });
+```
+
+`TweenOptions` is a readonly record struct too. Share it between different
+definition types with `Options = timing`, then override individual properties:
+`offset with { Options = timing, Delay = 0.2 }`. Put `Options` first because
+it replaces the complete timing configuration.
+
+The copies contain values and managed references; they are not restricted to
+the stack. A `with` copy itself needs no new object. The current typed interface
+entry point boxes a struct when starting it, and playback allocates its own
+mutable state. There is no definition copying or boxing per animation tick.
 
 <DefinitionStamp />
 
@@ -35,11 +59,12 @@ Each addition snapshots options, endpoints, callbacks, and custom definition fie
 Multiple tweens on the same property are allowed: the last application in insertion order wins. Axis and alpha adapters read the other components at application time so independent component tweens compose correctly.
 ## Choose a C# entry point
 
-Use `target.Tween(new Definition { ... })` for reusable definitions, or a typed
+Use `target.Tween(new Tweens.Position2D { ... })` for reusable definitions, or a typed
 convenience method such as `sprite.TweenPosition(destination, 0.5)`. Both return
 independent handles. The configure callback in a convenience method runs before
-snapshotting and may override any option. Alternatively, pass a shared `TweenOptions`
-object; its options are copied, but the explicit duration argument wins.
+snapshotting and may override any option. Shared configure methods accept
+`TweenOptionsBuilder`, the mutable builder base. Alternatively, pass a shared
+`TweenOptions` value; its options are copied, but the explicit duration argument wins.
 
 Callback value tweens have no property to read; omitted endpoints use the type's
 default (zero, transparent black, or identity as applicable). Supply explicit

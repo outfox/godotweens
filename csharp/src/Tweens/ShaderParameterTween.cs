@@ -5,6 +5,7 @@ using Godot;
 namespace tweens.gd;
 
 /// <summary>Animates a typed uniform on the exact shared ShaderMaterial. Names and bindings are captured per playback.</summary>
+[System.ComponentModel.EditorBrowsable(System.ComponentModel.EditorBrowsableState.Never)]
 public sealed class ShaderParameterTween<TValue>(string parameter) : TweenDefinition<ShaderMaterial, TValue>
     where TValue : struct
 {

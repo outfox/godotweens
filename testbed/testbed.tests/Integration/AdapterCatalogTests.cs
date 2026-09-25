@@ -101,7 +101,7 @@ public class AdapterCatalogTests(HeadlessFixture godot)
             var prop = concrete.GetProperty(property)!;
             var initial = Sample(prop.PropertyType, 0.2f);
             prop.SetValue(node, initial);
-            var definition = (TweenOptions)Activator.CreateInstance(adapter)!;
+            var definition = (TweenOptionsBuilder)Activator.CreateInstance(adapter)!;
             definition.Duration = 1;
             var target = Sample(arguments[1], 0.6f);
             adapter.GetProperty("To")!.SetValue(definition, target);

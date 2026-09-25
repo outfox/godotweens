@@ -6,7 +6,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Godot;
-using tweens.gd;
 namespace testbed;
 
 /// <summary>One disposable playground: a grid of effect cards. Only the selected page is instantiated.</summary>
@@ -97,9 +96,9 @@ public abstract partial class GalleryPage : VBoxContainer
         foreach (var frame in frames) FitPreview(frame);
     }
 
-    public void Start(double seconds, EaseType ease, bool pingPong)
+    public void Start(double seconds)
     {
-        foreach (var effect in effects) effect.Start(seconds, ease, pingPong);
+        foreach (var effect in effects) effect.Start(seconds);
         var sequences = effects.Select(e => e.Sequence).OfType<Task>().ToArray();
         SequenceTask = sequences.Length > 0 ? Task.WhenAll(sequences) : null;
     }

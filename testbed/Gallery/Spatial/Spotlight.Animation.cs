@@ -18,10 +18,10 @@ public sealed partial class Spotlight
         ]).End;
     }
 
-    private void Cycle(TweenOptions options)
+    private void Cycle(TweenOptionsBuilder options)
     {
-        options.Ease = Ease;
-        options.UsePingPong = PingPong;
+        options.Ease = DefaultEase;
+        options.UsePingPong = true;
         options.Repeats = TweenOptions.Infinite;
         options.RepeatInterval = 0.25;
         options.PingPongInterval = 0.15;

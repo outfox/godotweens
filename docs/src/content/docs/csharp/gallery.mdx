@@ -26,9 +26,8 @@ The gallery contains eight pages and 32 examples. Each page is a separate C# Con
 ## Controls
 
 - Pick a page in the sidebar. Leaving a page cancels its playback and releases its scene and owned resources.
-- Easing, leg duration and ping-pong apply to repeating examples. Changing a setting rebuilds the current page with fresh initial values. Some examples run at a multiple of the selected duration for a slower visual rhythm.
-- Pause/resume holds all active tweens. The particle example also holds its simulation. Shaders use tweened values rather than a separate shader clock.
-- Cancel holds the current samples. Restart page reconstructs the examples and starts again.
+- Leg duration applies to repeating examples. Changing it rebuilds the current page with fresh initial values. Repeating examples use fixed easing and ping-pong settings; some run at a multiple of the selected duration for a slower visual rhythm.
+- Restart page reconstructs the examples and starts again. Shaders use tweened values rather than a separate shader clock.
 - The delivery sequence is intentionally a one-shot example of async composition; restart replays it. Cancellation and navigation settle its pending waits without starting the next step.
 
 The material page updates explicitly shared resources. The shader page contrasts shared material uniforms with node-owned instance uniforms. Materials are configured for transparency/emission before playback; the tween library does not enable those features itself.
@@ -37,6 +36,9 @@ The default window is 1280 × 900, with canvas scaling and a scrollable page are
 
 ## Explore the source
 
-The gallery lives in `testbed/Gallery/`, with one folder per page and one C# file
-per example. Start with the [quickstart](/csharp/quickstart/) to build your own
+The gallery lives in `testbed/Gallery/`, with one folder per page. Each example’s
+`.Animation.cs` contains its animation task and configuration; the companion
+file builds its scene. The path followers, UV scroll, and instance uniforms
+demonstrate readonly `Tweens.*` definitions and `with` overrides. Other examples
+show convenience methods. Start with the [quickstart](/csharp/quickstart/) to build your own
 scene, or browse the [node catalog](/csharp/nodes/) for the adapters used here.

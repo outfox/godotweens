@@ -63,6 +63,7 @@ public abstract class InstanceShaderParameterTween<TNode, TValue>(string paramet
     }
 }
 
+[System.ComponentModel.EditorBrowsable(System.ComponentModel.EditorBrowsableState.Never)]
 public sealed class CanvasItemInstanceShaderParameterTween<TValue>(string parameter)
     : InstanceShaderParameterTween<CanvasItem, TValue>(parameter) where TValue : struct
 {
@@ -72,6 +73,7 @@ public sealed class CanvasItemInstanceShaderParameterTween<TValue>(string parame
     protected override void SetParameter(CanvasItem target, StringName name, Variant value) => target.SetInstanceShaderParameter(name, value);
 }
 
+[System.ComponentModel.EditorBrowsable(System.ComponentModel.EditorBrowsableState.Never)]
 public sealed class GeometryInstanceShaderParameterTween<TValue>(string parameter)
     : InstanceShaderParameterTween<GeometryInstance3D, TValue>(parameter) where TValue : struct
 {

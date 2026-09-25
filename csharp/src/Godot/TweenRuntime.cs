@@ -81,7 +81,7 @@ public static partial class TweenExtensions
 {
     /// <summary>Start a typed tween, automatically owned by the target's scene-tree lifetime.</summary>
     public static TweenInstance<TTarget, TValue> Tween<TTarget, TValue>(this TTarget target,
-        TweenDefinition<TTarget, TValue> definition) where TTarget : Node where TValue : struct
+        ITweenDefinition<TTarget, TValue> definition) where TTarget : Node where TValue : struct
         => TweenRuntime.GetRunner(target).Scheduler.Add(target, definition);
 
     /// <summary>Start several definitions together as one group, owned by the target's scene-tree lifetime.</summary>

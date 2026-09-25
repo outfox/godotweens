@@ -5,7 +5,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Godot;
-using tweens.gd;
 namespace testbed;
 
 /// <summary>Gallery shell. Pages own their examples; navigation destroys the previous playground.</summary>
@@ -187,7 +186,7 @@ public partial class TweenDemo : Control
         if (!IsInsideTree() || selection != revision || page is null) return;
         try
         {
-            page.Start(duration.Value, EaseType.CubicInOut, pingPong: true);
+            page.Start(duration.Value);
         }
         catch (Exception error)
         {

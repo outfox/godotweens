@@ -9,21 +9,32 @@ namespace testbed;
 // Scene setup is in UvScroll.cs.
 public sealed partial class UvScroll
 {
+    private readonly Tweens.MaterialUv1OffsetX offset = new()
+    {
+        To = 1,
+        Ease = DefaultEase,
+        UsePingPong = true,
+        Repeats = TweenOptions.Infinite,
+        RepeatInterval = 0.25,
+        PingPongInterval = 0.15,
+    };
+
+    private readonly Tweens.MaterialUv1Scale scale = new()
+    {
+        To = new Vector3(2.5f, 2.5f, 1),
+        Ease = DefaultEase,
+        UsePingPong = true,
+        Repeats = TweenOptions.Infinite,
+        RepeatInterval = 0.25,
+        PingPongInterval = 0.15,
+    };
+
     private async Task AnimateAsync()
     {
-        var slow = Seconds * 2;
+        var duration = Seconds * 2;
         await Group.Of([
-            material.TweenUv1OffsetX(1, slow, Stage, Cycle),
-            material.TweenUv1Scale(new Vector3(2.5f, 2.5f, 1), slow, Stage, Cycle),
+            material.Tween(offset with { Duration = duration }, Stage),
+            material.Tween(scale with { Duration = duration }, Stage),
         ]).End;
-    }
-
-    private void Cycle(TweenOptions options)
-    {
-        options.Ease = Ease;
-        options.UsePingPong = PingPong;
-        options.Repeats = TweenOptions.Infinite;
-        options.RepeatInterval = 0.25;
-        options.PingPongInterval = 0.15;
     }
 }

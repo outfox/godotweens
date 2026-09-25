@@ -14,7 +14,7 @@ are in-tree MeshInstance3D and Sprite2D nodes using the declared shaders.
 shaderMaterial.TweenShaderParameter("dissolve", 1f, 0.5, GetTree());
 shaderMaterial.TweenShaderParameter("dissolve", 1f, 0.5, mesh);
 
-var definition = new ShaderParameterTween<float>("dissolve")
+var definition = new Tweens.ShaderParameter<float>("dissolve")
 {
     To = 1,
     Duration = 0.5,
@@ -50,7 +50,7 @@ mesh.TweenInstanceShaderParameter("pulse", 1f, 0.5);
 sprite.TweenInstanceShaderParameter("pulse", 0f, 0.5);
 ```
 
-These methods target `GeometryInstance3D` and `CanvasItem` respectively and follow normal node lifetime/pause rules. Definitions are `GeometryInstanceShaderParameterTween<T>` and `CanvasItemInstanceShaderParameterTween<T>`. The same value types, validation, snapshot and restoration rules apply. An explicit override equal to the default remains explicit after restoration; an originally absent override is removed.
+These methods target `GeometryInstance3D` and `CanvasItem` respectively and follow normal node lifetime/pause rules. Definitions are `Tweens.GeometryInstanceShaderParameter<T>` and `Tweens.CanvasItemInstanceShaderParameter<T>`. The same value types, validation, snapshot and restoration rules apply. An explicit override equal to the default remains explicit after restoration; an originally absent override is removed.
 
 Effective material bindings are captured, including inherited CanvasItem materials, mesh surfaces, overrides, overlays and next passes. Replacing the mesh/material/pass or editing a bound shader faults the next write. Binding checks are conservative: changing a tracked slot can fault playback even if another slot still declares the same uniform. Godot controls instance-uniform indexing, capacity, shader compatibility and multi-material conflicts; this API does not assign or reconcile those declarations.
 

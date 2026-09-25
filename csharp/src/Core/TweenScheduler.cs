@@ -27,19 +27,19 @@ public sealed class TweenScheduler : IDisposable
     }
 
     public TweenInstance<TTarget, TValue> Add<TTarget, TValue>(TTarget target,
-        TweenDefinition<TTarget, TValue> definition) where TTarget : class where TValue : struct
+        ITweenDefinition<TTarget, TValue> definition) where TTarget : class where TValue : struct
         => AddCore(target, definition, target as Node, null);
 
     /// <summary>Animate a separate target, binding playback to an in-tree owner node.</summary>
     public TweenInstance<TTarget, TValue> Add<TTarget, TValue>(TTarget target,
-        TweenDefinition<TTarget, TValue> definition, Node owner) where TTarget : class where TValue : struct
+        ITweenDefinition<TTarget, TValue> definition, Node owner) where TTarget : class where TValue : struct
     {
         ArgumentNullException.ThrowIfNull(owner);
         return AddCore(target, definition, owner, null);
     }
 
     internal TweenInstance<TTarget, TValue> AddCore<TTarget, TValue>(TTarget target,
-        TweenDefinition<TTarget, TValue> definition, Node? owner, SceneTree? tree)
+        ITweenDefinition<TTarget, TValue> definition, Node? owner, SceneTree? tree)
         where TTarget : class where TValue : struct
     {
         EnsureThread();
@@ -58,7 +58,7 @@ public sealed class TweenScheduler : IDisposable
         if (tree is not null) TweenRuntime.ValidateTree(tree);
         if (owner is not null && tree is not null && owner.GetTree() != tree)
             throw new ArgumentException("The owner must belong to the supplied scene tree.", nameof(owner));
-        var instance = new TweenInstance<TTarget, TValue>(this, target, definition, owner, tree);
+        var instance = new TweenInstance<TTarget, TValue>(this, target, definition.CreatePlayback(), owner, tree);
         if (TweenCarry.TryGet(this, instance.Mode, instance.Unscaled, out var credit)) instance.ApplyCredit(credit);
         if (disposed)
         {

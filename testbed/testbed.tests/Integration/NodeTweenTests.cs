@@ -119,7 +119,8 @@ public class NodeTweenTests(HeadlessFixture godot)
             Assert.InRange(offset.Progress, 0.5f, 0.9f);
             Assert.Equal(TweenState.Delayed, delayed.State);
             Assert.Equal(1, options.Duration);
-            Assert.Throws<ArgumentNullException>(() => node.TweenPositionX(10, 10, (TweenOptions)null!));
+            var defaults = node.TweenPositionX(10, 10, default(TweenOptions));
+            defaults.Cancel();
         }
         finally { node.Free(); }
     }

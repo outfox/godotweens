@@ -17,7 +17,7 @@ public sealed partial class PolygonEchoes
         await Task.WhenAll([.. trails, AnimatePolygon(polygon, Cycle)]);
     }
 
-    private async Task AnimatePolygon(Polygon2D target, Action<TweenOptions> timing)
+    private async Task AnimatePolygon(Polygon2D target, Action<TweenOptionsBuilder> timing)
     {
         await Group.Of(
             target.TweenColor(Palette.Amber, Seconds, timing),
@@ -26,16 +26,16 @@ public sealed partial class PolygonEchoes
         ).End;
     }
 
-    private void Cycle(TweenOptions options)
+    private void Cycle(TweenOptionsBuilder options)
     {
-        options.Ease = Ease;
-        options.UsePingPong = PingPong;
+        options.Ease = DefaultEase;
+        options.UsePingPong = true;
         options.Repeats = TweenOptions.Infinite;
         options.RepeatInterval = 0.25;
         options.PingPongInterval = 0.15;
     }
 
-    private Action<TweenOptions> CycleAfter(double delay) => options =>
+    private Action<TweenOptionsBuilder> CycleAfter(double delay) => options =>
     {
         Cycle(options);
         options.Delay = delay;

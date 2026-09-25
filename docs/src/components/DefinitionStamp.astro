@@ -1,14 +1,14 @@
 ---
-// One definition, two independent playbacks; editing the definition later leaves running copies alone.
+// One definition, two independent playbacks; copying the definition with new options leaves running playbacks alone.
 ---
 
 <div class="tw-widget ds not-content" data-definition-stamp>
 	<div class="def" data-def>
-		<p class="decl"><span class="kw">var</span> fade = <span class="kw">new</span> <span class="ty">ModulateAlphaTween</span></p>
+		<p class="decl"><span class="kw">var</span> fade = <span class="kw">new</span> <span class="ty">Tweens.ModulateAlpha</span></p>
 		<p class="field">To = <output data-to-out>0.0</output></p>
 		<p class="field">Duration = <span class="num">2</span></p>
 		<label class="tw-field edit">
-			<span>Edit <code>fade.To</code></span>
+			<span>Vary <code>fade with &#123; To = … &#125;</code></span>
 			<input type="range" min="0" max="1" step="0.1" value="0" data-to />
 		</label>
 	</div>

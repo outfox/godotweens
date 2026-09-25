@@ -115,9 +115,9 @@ public partial class GallerySourceView : VBoxContainer
         };
         foreach (var word in ("using namespace public private protected internal sealed abstract partial static readonly const " +
             "override virtual async await return if else for foreach while in is not null true false new var void bool byte " +
-            "int long float double string object out ref params get set switch case default try catch throw typeof with yield").Split(' '))
+            "int long float double string object out ref params get set init record struct switch case default try catch throw typeof with yield").Split(' '))
             highlighter.AddKeywordColor(word, new Color("d5a6ef"));
-        foreach (var word in ("Vector2 Vector3 Vector4 Vector2I Color Colors Math MathF Mathf Task TweenOptions TweenInstance " +
+        foreach (var word in ("Vector2 Vector3 Vector4 Vector2I Color Colors Math MathF Mathf Task Tweens TweenOptions TweenOptionsBuilder TweenInstance " +
             "Group EaseType TweenState Reason Node Node2D Node3D Control Stage Palette GalleryEffect " +
             "Polygon2D Line2D ShaderMaterial StandardMaterial3D Camera2D Camera3D IEnumerable").Split(' '))
             highlighter.AddKeywordColor(word, Palette.Mint);

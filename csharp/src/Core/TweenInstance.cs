@@ -54,7 +54,7 @@ public abstract class TweenInstance
         }
     }
 
-    internal TweenInstance(TweenScheduler scheduler, TweenOptions options, Node? owner, GodotObject? nativeTarget, SceneTree? tree)
+    internal TweenInstance(TweenScheduler scheduler, TweenOptionsBuilder options, Node? owner, GodotObject? nativeTarget, SceneTree? tree)
     {
         Scheduler = scheduler;
         Owner = owner;
@@ -63,7 +63,7 @@ public abstract class TweenInstance
         Mode = options.ProcessMode;
         pauseMode = options.PauseMode;
         Unscaled = options.UseUnscaledTime;
-        Clock = new Playback(options);
+        Clock = new Playback(options.ToOptions());
     }
 
     public void Pause() => IsPaused = true;
@@ -208,7 +208,7 @@ public sealed class TweenInstance<TTarget, TValue> : TweenInstance
         : base(scheduler, source, owner, target as GodotObject, tree)
     {
         Target = target;
-        definition = source.Snapshot();
+        definition = source;
         try
         {
             if (definition.Curve is not null && definition.EaseFunction is not null)

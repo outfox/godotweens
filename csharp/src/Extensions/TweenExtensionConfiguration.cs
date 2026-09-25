@@ -6,7 +6,7 @@ namespace tweens.gd;
 public static partial class TweenExtensions
 {
     private static TDefinition ConfigureDefinition<TDefinition>(TDefinition definition, Action<TDefinition>? configure)
-        where TDefinition : TweenOptions
+        where TDefinition : TweenOptionsBuilder
     {
         configure?.Invoke(definition);
         return definition;
@@ -14,9 +14,8 @@ public static partial class TweenExtensions
 
     // The explicit duration argument takes precedence over options.Duration.
     private static TDefinition ApplyOptions<TDefinition>(TDefinition definition, TweenOptions options)
-        where TDefinition : TweenOptions
+        where TDefinition : TweenOptionsBuilder
     {
-        ArgumentNullException.ThrowIfNull(options);
         var duration = definition.Duration;
         options.CopyTo(definition);
         definition.Duration = duration;

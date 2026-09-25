@@ -37,10 +37,10 @@ public sealed partial class SquashWave
         await Group.Of([.. tweens]).End;
     }
 
-    private void Cycle(TweenOptions options)
+    private void Cycle(TweenOptionsBuilder options)
     {
-        options.Ease = Ease;
-        options.UsePingPong = PingPong;
+        options.Ease = DefaultEase;
+        options.UsePingPong = true;
         options.Repeats = TweenOptions.Infinite;
         options.RepeatInterval = 0.1;
         options.PingPongInterval = 0.05;

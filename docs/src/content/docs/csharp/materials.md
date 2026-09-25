@@ -23,7 +23,7 @@ var emission = material.TweenEmissionEnergyMultiplier(3, 1, GetTree(),
     d => d.Ease = EaseType.CubicOut, owner: mesh);
 
 // Reusable definitions work with either context.
-var definition = new MaterialRoughnessTween { To = 0.5f, Duration = 1 };
+var definition = new Tweens.MaterialRoughness { To = 0.5f, Duration = 1 };
 material.Tween(definition, GetTree());
 material.Tween(definition, mesh);
 mesh.Tween(material, definition);
@@ -43,19 +43,19 @@ All 25 adapters target `BaseMaterial3D`, supporting both `StandardMaterial3D` an
 
 | Property | Definition | Convenience method |
 | --- | --- | --- |
-| Albedo color | MaterialAlbedoColorTween | TweenAlbedoColor |
-| Albedo alpha | MaterialAlbedoAlphaTween | TweenAlbedoAlpha |
-| Metallic | MaterialMetallicTween | TweenMetallic |
-| Specular | MaterialMetallicSpecularTween | TweenMetallicSpecular |
-| Roughness | MaterialRoughnessTween | TweenRoughness |
-| Emission color | MaterialEmissionTween | TweenEmission |
-| Emission multiplier | MaterialEmissionEnergyMultiplierTween | TweenEmissionEnergyMultiplier |
-| Emission intensity (nits) | MaterialEmissionIntensityTween | TweenEmissionIntensity |
-| Normal strength | MaterialNormalScaleTween | TweenNormalScale |
-| UV1 offset/scale | MaterialUv1OffsetTween / MaterialUv1ScaleTween | TweenUv1Offset / TweenUv1Scale |
-| UV2 offset/scale | MaterialUV2OffsetTween / MaterialUV2ScaleTween | TweenUV2Offset / TweenUV2Scale |
+| Albedo color | Tweens.MaterialAlbedoColor | TweenAlbedoColor |
+| Albedo alpha | Tweens.MaterialAlbedoAlpha | TweenAlbedoAlpha |
+| Metallic | Tweens.MaterialMetallic | TweenMetallic |
+| Specular | Tweens.MaterialMetallicSpecular | TweenMetallicSpecular |
+| Roughness | Tweens.MaterialRoughness | TweenRoughness |
+| Emission color | Tweens.MaterialEmission | TweenEmission |
+| Emission multiplier | Tweens.MaterialEmissionEnergyMultiplier | TweenEmissionEnergyMultiplier |
+| Emission intensity (nits) | Tweens.MaterialEmissionIntensity | TweenEmissionIntensity |
+| Normal strength | Tweens.MaterialNormalScale | TweenNormalScale |
+| UV1 offset/scale | Tweens.MaterialUv1Offset / Tweens.MaterialUv1Scale | TweenUv1Offset / TweenUv1Scale |
+| UV2 offset/scale | Tweens.MaterialUV2Offset / Tweens.MaterialUV2Scale | TweenUV2Offset / TweenUV2Scale |
 
-Each UV property also has X/Y/Z variants, such as `MaterialUv1OffsetXTween` / `TweenUv1OffsetX`. Component setters preserve other components at each write, including concurrent edits. Every convenience method accepts a SceneTree or an owner Node, plus an optional configuration callback.
+Each UV property also has X/Y/Z variants, such as `Tweens.MaterialUv1OffsetX` / `TweenUv1OffsetX`. Component setters preserve other components at each write, including concurrent edits. Every convenience method accepts a SceneTree or an owner Node, plus an optional configuration callback.
 
 Set rendering features explicitly: alpha fading needs a suitable transparency mode; emission needs `EmissionEnabled`; normal strength needs a normal map and `NormalEnabled`. `EmissionIntensity` requires `rendering/lights_and_shadows/use_physical_light_units`. UV animation only becomes visible with suitable textures/mapping. Tweens do not change these modes or flags. Native setters retain their usual limits and renderer-specific behavior. See [BaseMaterial3D](https://docs.godotengine.org/en/stable/classes/class_basematerial3d.html).
 

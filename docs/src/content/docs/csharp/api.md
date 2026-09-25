@@ -3,7 +3,9 @@ title: C# core API
 description: Entry points, reusable definitions, playback handles, scheduler methods, and completion states.
 ---
 
-All library types and extension methods live in `tweens.gd`.
+Import `tweens.gd` for extension methods, timing options, and playback handles.
+Immutable definitions live in the root `Tweens` namespace: for example,
+`Tweens.PathFollow2DVOffset`. No alias or `using Tweens;` is needed.
 
 ## Start playback
 
@@ -26,10 +28,34 @@ for exact examples, [node/value definitions](/csharp/nodes/), and
 
 ## Definitions
 
-`TweenDefinition<TTarget, TValue>` inherits `TweenOptions` and adds nullable
-`From`/`To` endpoints and typed callbacks. `TTarget` must be a class and `TValue`
-a struct. Definitions are reusable; playback snapshots configuration on addition.
-`new TweenOptions { ... }` holds timing alone and can be passed to any convenience method.
+The built-in `Tweens.*` definitions are `readonly record struct` values with
+nullable `From`/`To` endpoints, timing, and typed callbacks. Store them in readonly
+fields and vary a copy when starting playback:
+
+```csharp
+private readonly Tweens.PathFollow2DVOffset offset = new() { To = 20 };
+
+// Inside an animation method:
+var movement = follower.Tween(offset with { Duration = 1.5, Delay = 0.2 });
+```
+
+`TweenOptions` is also a readonly record struct. It holds shared timing and can
+be passed to a convenience method or assigned to a definition's `Options`.
+Flat properties such as `Duration` and `Delay` update that same options value.
+Assign `Options` before individual overrides in an initializer: a later
+`Options` assignment replaces all timing settings. Both `new` and `default`
+retain the final value unless `Fill` is explicitly changed.
+
+`ITweenDefinition<TTarget, TValue>` connects definitions to typed playback;
+`ITweenDefinition<TTarget>` supports groups with different value types.
+`TTarget` is a class and `TValue` is a struct.
+
+Convenience callbacks continue to receive mutable builders. Shared configurator
+methods should accept `TweenOptionsBuilder`, rather than `TweenOptions`.
+The older `*Tween` classes and the custom `TweenDefinition<TTarget, TValue>` base
+remain supported; they inherit `TweenOptionsBuilder` and are snapshotted on start.
+Built-in class builders are hidden from IntelliSense so new code sees the
+structured definitions in `Tweens`.
 
 | Configuration | Reference |
 | --- | --- |

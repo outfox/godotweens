@@ -9,20 +9,21 @@ namespace testbed;
 // Scene setup is in InstanceUniforms.cs.
 public sealed partial class InstanceUniforms
 {
+    private readonly Tweens.CanvasItemInstanceShaderParameter<float> amount = new("amount")
+    {
+        Ease = DefaultEase,
+        UsePingPong = true,
+        Repeats = TweenOptions.Infinite,
+        RepeatInterval = 0.25,
+        PingPongInterval = 0.15,
+    };
+
     private async Task AnimateAsync()
     {
+        var amount = this.amount with { Duration = Seconds };
         await Group.Of([
-            first.TweenInstanceShaderParameter("amount", 0.85f, Seconds, Cycle),
-            second.TweenInstanceShaderParameter("amount", 0.15f, Seconds, Cycle),
+            first.Tween(amount with { To = 0.85f }),
+            second.Tween(amount with { To = 0.15f }),
         ]).End;
-    }
-
-    private void Cycle(TweenOptions options)
-    {
-        options.Ease = Ease;
-        options.UsePingPong = PingPong;
-        options.Repeats = TweenOptions.Infinite;
-        options.RepeatInterval = 0.25;
-        options.PingPongInterval = 0.15;
     }
 }

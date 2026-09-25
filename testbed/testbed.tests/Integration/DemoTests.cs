@@ -48,7 +48,7 @@ public class DemoTests
             var scheduler = TweenRuntime.GetRunner(stage).Scheduler;
             try
             {
-                effect.Start(1.8, EaseType.CubicInOut, true);
+                effect.Start(1.8);
                 var sequence = Assert.IsAssignableFrom<Task>(effect.Sequence);
                 for (var i = 0; i < updates; i++) scheduler.Update(0.05);
                 Assert.False(sequence.IsFaulted);
@@ -77,7 +77,7 @@ public class DemoTests
         var scheduler = TweenRuntime.GetRunner(stage).Scheduler;
         try
         {
-            effect.Start(1, EaseType.Linear, false);
+            effect.Start(1);
             var sequence = Assert.IsAssignableFrom<Task>(effect.Sequence);
             for (var i = 0; i < 41; i++) scheduler.Update(0.05);
             Assert.True(scheduler.ActiveCount > 0);
@@ -104,7 +104,7 @@ public class DemoTests
         var scheduler = TweenRuntime.GetRunner(stage).Scheduler;
         try
         {
-            effect.Start(1, EaseType.Linear, true);
+            effect.Start(1);
             scheduler.Update(0.17);
             Assert.True(leader.ProgressRatio > followers[0].ProgressRatio);
             Assert.True(followers[0].ProgressRatio > followers[1].ProgressRatio);

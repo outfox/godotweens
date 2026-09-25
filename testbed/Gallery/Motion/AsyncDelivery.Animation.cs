@@ -31,14 +31,14 @@ public sealed partial class AsyncDelivery
 
     private const float Left = -150, Right = 150, Rail = 15;
 
-    private TweenInstance Outward() => courier.TweenPositionX(Right, Seconds, options => options.Ease = Ease);
+    private TweenInstance Outward() => courier.TweenPositionX(Right, Seconds, options => options.Ease = DefaultEase);
 
     // Both tweens start together after the outward leg completes.
     private async Task<bool> ReturnAndTurn()
     {
         return await Group.Of([
-            courier.TweenPositionX(Left, Seconds, options => options.Ease = Ease),
-            courier.TweenRotation(Mathf.Tau, Seconds, options => options.Ease = Ease),
+            courier.TweenPositionX(Left, Seconds, options => options.Ease = DefaultEase),
+            courier.TweenRotation(Mathf.Tau, Seconds, options => options.Ease = DefaultEase),
         ]).End == Reason.Completed;
     }
 

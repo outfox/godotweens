@@ -4,7 +4,7 @@ description: Animate callback values and custom properties, or drive a scheduler
 ---
 
 Use a callback value tween when there is no native property adapter. Use
-`PropertyTween<TTarget, TValue>` when you can supply a typed getter, setter, and
+`Tweens.Property<TTarget, TValue>` when you can supply a typed getter, setter, and
 interpolator. Neither approach needs reflection or property paths.
 
 ## Callback values
@@ -12,7 +12,7 @@ interpolator. Neither approach needs reflection or property paths.
 Import `Godot` and `tweens.gd`, and run this in a Node method on Godot's main thread:
 
 ```csharp
-var value = owner.Tween(new FloatTween
+var value = owner.Tween(new Tweens.Float
 {
     From = 10,
     To = 100,
@@ -22,9 +22,9 @@ var value = owner.Tween(new FloatTween
 ```
 
 The owner is an in-tree `Node`. It controls lifetime; values are delivered through
-`OnUpdate`. The eight value definitions are `FloatTween`, `DoubleTween`,
-`Vector2Tween`, `Vector3Tween`, `Vector4Tween`, `ColorTween`, `QuaternionTween`,
-and `Rect2Tween`.
+`OnUpdate`. The eight value definitions are `Tweens.Float`, `Tweens.Double`,
+`Tweens.Vector2`, `Tweens.Vector3`, `Tweens.Vector4`, `Tweens.Color`, `Tweens.Quaternion`,
+and `Tweens.Rect2`.
 
 ## Custom managed properties
 
@@ -44,7 +44,7 @@ public static class MeterExample
     {
         var meter = new Meter();
         using var scheduler = new TweenScheduler();
-        var definition = new PropertyTween<Meter, float>(
+        var definition = new Tweens.Property<Meter, float>(
             target => target.Value,
             (target, value) => target.Value = value,
             Interpolators.Float)

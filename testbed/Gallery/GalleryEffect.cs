@@ -12,6 +12,7 @@ namespace testbed;
 public abstract partial class GalleryEffect
 {
     private const double DefaultSeconds = 1.8;
+    protected const EaseType DefaultEase = EaseType.CubicInOut;
     private readonly List<Resource> resources = [];
 
     public abstract string Title { get; }
@@ -23,8 +24,6 @@ public abstract partial class GalleryEffect
     /// <summary>The card's drawing area. Resource tweens bind to it, so they stop with the page.</summary>
     protected Control Stage { get; private set; } = null!;
     protected double Seconds { get; private set; }
-    protected EaseType Ease { get; private set; }
-    protected bool PingPong { get; private set; }
 
     /// <summary>Timing scale relative to the default leg duration, for choreographed sequences.</summary>
     protected double Tempo => Seconds / DefaultSeconds;
@@ -35,11 +34,9 @@ public abstract partial class GalleryEffect
         Build();
     }
 
-    public void Start(double seconds, EaseType ease, bool pingPong)
+    public void Start(double seconds)
     {
         Seconds = seconds;
-        Ease = ease;
-        PingPong = pingPong;
         Animate();
     }
 

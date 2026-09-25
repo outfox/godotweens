@@ -18,7 +18,7 @@ public class ShaderTweenTests(Fixture godot)
         using var shader = new Shader { Code = "shader_type canvas_item; uniform float amount = 0.25; void fragment() { COLOR = vec4(amount); }" };
         using var material = new ShaderMaterial { Shader = shader };
         using var scheduler = new TweenScheduler();
-        var handle = scheduler.Add(material, new ShaderParameterTween<float>("amount") { To = 0.75f, Duration = 1, Fill = FillMode.None });
+        var handle = scheduler.Add(material, new Tweens.ShaderParameter<float>("amount") { To = 0.75f, Duration = 1, Fill = FillMode.None });
         Assert.Equal(0.25f, handle.Value);
         scheduler.Update(0.5);
         Assert.Null(handle.Error);
@@ -68,18 +68,19 @@ public class ShaderTweenTests(Fixture godot)
         using var shader = new Shader { Code = "shader_type canvas_item; " + Uniforms };
         using var material = new ShaderMaterial { Shader = shader };
         using var scheduler = new TweenScheduler();
-        Assert.Throws<ArgumentException>(() => scheduler.Add(material, new ShaderParameterTween<float>("missing")));
-        Assert.Throws<ArgumentException>(() => scheduler.Add(material, new ShaderParameterTween<int>("scalar")));
-        Assert.Throws<ArgumentException>(() => scheduler.Add(material, new ShaderParameterTween<Vector4>("tint")));
-        Assert.Throws<ArgumentException>(() => scheduler.Add(material, new ShaderParameterTween<Color>("v4")));
-        Assert.Throws<ArgumentException>(() => scheduler.Add(material, new ShaderParameterTween<float>(" ")));
-        Assert.Throws<NotSupportedException>(() => scheduler.Add(material, new ShaderParameterTween<bool>("scalar")));
-        Assert.Throws<ArgumentException>(() => scheduler.Add(material, new ShaderParameterTween<float>("scalar") { To = float.NaN }));
-        Assert.Throws<ArgumentException>(() => scheduler.Add(material, new ShaderParameterTween<Vector3>("v3") { From = new Vector3(float.PositiveInfinity, 0, 0) }));
+        Assert.Throws<ArgumentException>(() => scheduler.Add(material, new Tweens.ShaderParameter<float>("missing")));
+        Assert.Throws<ArgumentException>(() => scheduler.Add(material, new Tweens.ShaderParameter<int>("scalar")));
+        Assert.Throws<ArgumentException>(() => scheduler.Add(material, new Tweens.ShaderParameter<Vector4>("tint")));
+        Assert.Throws<ArgumentException>(() => scheduler.Add(material, new Tweens.ShaderParameter<Color>("v4")));
+        Assert.Throws<ArgumentException>(() => scheduler.Add(material, new Tweens.ShaderParameter<float>(" ")));
+        Assert.Throws<NotSupportedException>(() => scheduler.Add(material, new Tweens.ShaderParameter<bool>("scalar")));
+        Assert.Throws<ArgumentException>(() => scheduler.Add(material, new Tweens.ShaderParameter<float>("scalar") { To = float.NaN }));
+        Assert.Throws<ArgumentException>(() => scheduler.Add(material, new Tweens.ShaderParameter<Vector3>("v3") { From = new Vector3(float.PositiveInfinity, 0, 0) }));
+        Assert.Throws<ArgumentNullException>(() => scheduler.Add(material, default(Tweens.ShaderParameter<float>)));
         Assert.Equal(0, scheduler.ActiveCount);
         Assert.Equal(Variant.Type.Nil, material.GetShaderParameter("scalar").VariantType);
         using var missingShader = new ShaderMaterial();
-        Assert.Throws<ArgumentException>(() => scheduler.Add(missingShader, new ShaderParameterTween<float>("scalar")));
+        Assert.Throws<ArgumentException>(() => scheduler.Add(missingShader, new Tweens.ShaderParameter<float>("scalar")));
     }
 
     [Theory]
@@ -90,7 +91,7 @@ public class ShaderTweenTests(Fixture godot)
         using var replacement = new Shader { Code = "shader_type canvas_item; uniform vec3 amount = vec3(1.0);" };
         using var material = new ShaderMaterial { Shader = shader };
         using var scheduler = new TweenScheduler();
-        var handle = scheduler.Add(material, new ShaderParameterTween<float>("amount") { To = 1, Duration = 1 });
+        var handle = scheduler.Add(material, new Tweens.ShaderParameter<float>("amount") { To = 1, Duration = 1 });
         if (edit) shader.Code = replacement.Code; else material.Shader = replacement;
         scheduler.Update(0.5);
         Assert.Equal(TweenState.Faulted, handle.State);
@@ -107,9 +108,9 @@ public class ShaderTweenTests(Fixture godot)
         using var second = new ShaderMaterial { Shader = shader };
         second.SetShaderParameter("amount", 0.5f);
         using var scheduler = new TweenScheduler();
-        var definition = new ShaderParameterTween<float>("amount") { To = 1, Duration = 1, Fill = FillMode.None };
+        var definition = new Tweens.ShaderParameter<float>("amount") { To = 1, Duration = 1, Fill = FillMode.None };
         var a = scheduler.Add(first, definition); var b = scheduler.Add(second, definition);
-        definition.Parameter = "other"; definition.To = 0;
+        definition = definition with { Parameter = "other", To = 0 };
         scheduler.Update(0.5);
         Assert.Equal(0.625f, first.GetShaderParameter("amount").AsSingle());
         Assert.Equal(0.75f, second.GetShaderParameter("amount").AsSingle());
@@ -297,11 +298,11 @@ public class ShaderTweenTests(Fixture godot)
         using var material = new ShaderMaterial { Shader = shader };
         using var scheduler = new TweenScheduler();
         material.SetShaderParameter("amount", float.NaN);
-        Assert.Throws<ArgumentException>(() => scheduler.Add(material, new ShaderParameterTween<float>("amount")));
+        Assert.Throws<ArgumentException>(() => scheduler.Add(material, new Tweens.ShaderParameter<float>("amount")));
         material.SetShaderParameter("amount", default);
         material.SetShaderParameter("count", (long)int.MaxValue + 1);
-        Assert.Throws<OverflowException>(() => scheduler.Add(material, new ShaderParameterTween<int>("count")));
-        var handle = scheduler.Add(material, new ShaderParameterTween<float>("amount") { From = -float.MaxValue, To = float.MaxValue, Duration = 1 });
+        Assert.Throws<OverflowException>(() => scheduler.Add(material, new Tweens.ShaderParameter<int>("count")));
+        var handle = scheduler.Add(material, new Tweens.ShaderParameter<float>("amount") { From = -float.MaxValue, To = float.MaxValue, Duration = 1 });
         scheduler.Update(0.5);
         await Assert.ThrowsAsync<ArgumentException>(async () => await handle.End);
         Assert.Equal(Variant.Type.Nil, material.GetShaderParameter("amount").VariantType);

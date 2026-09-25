@@ -45,8 +45,8 @@ A group plays tweens as one step. Start definitions on one node together with
 types too:
 
 ```csharp
-var grow = new Scale2DTween { To = new Vector2(1.2f, 1.2f), Duration = 0.2 };
-var dim = new ModulateAlphaTween { To = 0.5f, Duration = 0.2 };
+var grow = new Tweens.Scale2D { To = new Vector2(1.2f, 1.2f), Duration = 0.2 };
+var dim = new Tweens.ModulateAlpha { To = 0.5f, Duration = 0.2 };
 if (await sprite.Tween(grow, dim).End != Reason.Completed)
     return;
 ```

@@ -16,7 +16,7 @@ public partial class MoveAndFade : Sprite2D
     public override async void _Ready()
     {
         // Structured, Readable, Reusable
-        var tween = new Position2DTween
+        var tween = new Tweens.Position2D
         {
             To = Position + new Vector2(240, 0),
             Duration = 0.6,
@@ -33,9 +33,11 @@ public partial class MoveAndFade : Sprite2D
 ```
 
 The move uses the structured style that tweens.gd is built around: a definition
-object keeps the property, endpoints, timing, and easing together. It reads top
+value keeps the property, endpoints, timing, and easing together. It reads top
 to bottom, and you can name it, store it in a field, and start it from as many
-places as you like. Change the definition once and every later start follows.
+places as you like. Use `tween with { Delay = 0.2 }` to vary one start without
+changing the original. Definitions are readonly record structs under `Tweens`;
+keep that qualifier to avoid collisions with Godot types such as `Vector2`.
 The fade uses a shorthand extension method, which builds and starts a definition
 in one call. Use it for one-off motion; prefer definitions for anything you reuse
 or expect to tune.

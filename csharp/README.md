@@ -17,7 +17,7 @@ using Godot;
 using tweens.gd;
 
 // Call from _Ready or later, on Godot's main thread.
-var movement = sprite.Tween(new Position2DTween
+var movement = sprite.Tween(new Tweens.Position2D
 {
     To = new Vector2(400, 180),
     Duration = 0.6,
@@ -30,7 +30,10 @@ if (reason == Reason.Completed)
 ```
 
 The first tween installs a runner automatically. No autoload is required.
-Definitions are snapshotted on addition. Playback supports pause/resume,
+Definitions are readonly record structs in the root `Tweens` namespace. Store a
+definition in a readonly field and use `definition with { Delay = 0.2 }` to vary
+a copy for one playback. `TweenOptions` is an immutable value too; mutable
+convenience configurators use `TweenOptionsBuilder`. Playback supports pause/resume,
 cancellation, delays, loops, ping-pong, easing, and node lifetime handling.
 Create and control tweens on Godot's main thread.
 

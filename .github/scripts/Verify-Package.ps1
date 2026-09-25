@@ -58,8 +58,14 @@ using Godot;
 using tweens.gd;
 public static class Consumer
 {
+    private static readonly Tweens.Position2D movement = new()
+    {
+        To = new Vector2(100, 50),
+        Duration = 0.25,
+    };
+
     public static System.Threading.Tasks.Task<Reason> Animate(Node2D node) =>
-        node.Tween(new Position2DTween { To = new Vector2(100, 50), Duration = 0.25 }).End;
+        node.Tween(movement with { Delay = 0.1 }).End;
 }
 '@ | Set-Content (Join-Path $consumer 'Consumer.cs')
 # Map this ID exclusively to the just-built package and use a fresh cache for each check.

@@ -17,30 +17,32 @@ public enum TweenPauseMode { Bound, SceneTree, Always }
 public enum TweenState { Delayed, Playing, Interval, Completed, Cancelled, Faulted }
 public enum Reason { Completed, Cancelled, TargetFreed, OwnerExited, RunnerDisposed }
 
-/// <summary>Reusable timing configuration. Values are snapshotted on addition.</summary>
-public class TweenOptions
+/// <summary>Immutable timing configuration. Use with expressions to vary a reusable value.</summary>
+public readonly record struct TweenOptions
 {
     /// <summary>A <see cref="Repeats"/> value that repeats until cancelled.</summary>
     public const int Infinite = -1;
 
-    public double Duration { get; set; }
-    public double Delay { get; set; }
-    public double PingPongInterval { get; set; }
-    public double RepeatInterval { get; set; }
-    public double Offset { get; set; }
+    public double Duration { get; init; }
+    public double Delay { get; init; }
+    public double PingPongInterval { get; init; }
+    public double RepeatInterval { get; init; }
+    public double Offset { get; init; }
     /// <summary>Cycles after the first, or <see cref="Infinite"/>. A ping-pong cycle includes both legs.</summary>
-    public int Repeats { get; set; }
-    public bool UsePingPong { get; set; }
-    public bool UseUnscaledTime { get; set; }
-    public FillMode Fill { get; set; } = FillMode.RetainFinalValue;
-    public EaseType Ease { get; set; }
-    public Func<float, float>? EaseFunction { get; set; }
-    public Godot.Curve? Curve { get; set; }
-    public TweenProcessMode ProcessMode { get; set; }
-    public TweenPauseMode PauseMode { get; set; }
-    public bool SuppressCallbacksWhenTargetInvalid { get; set; }
+    public int Repeats { get; init; }
+    public bool UsePingPong { get; init; }
+    public bool UseUnscaledTime { get; init; }
+    private readonly FillMode fill;
+    // Encode the default so default(TweenOptions) and new TweenOptions() behave identically.
+    public FillMode Fill { get => fill ^ FillMode.RetainFinalValue; init => fill = value ^ FillMode.RetainFinalValue; }
+    public EaseType Ease { get; init; }
+    public Func<float, float>? EaseFunction { get; init; }
+    public Godot.Curve? Curve { get; init; }
+    public TweenProcessMode ProcessMode { get; init; }
+    public TweenPauseMode PauseMode { get; init; }
+    public bool SuppressCallbacksWhenTargetInvalid { get; init; }
 
-    internal void CopyTo(TweenOptions target)
+    internal void CopyTo(TweenOptionsBuilder target)
     {
         target.Duration = Duration;
         target.Delay = Delay;
@@ -58,6 +60,47 @@ public class TweenOptions
         target.PauseMode = PauseMode;
         target.SuppressCallbacksWhenTargetInvalid = SuppressCallbacksWhenTargetInvalid;
     }
+}
+
+/// <summary>Mutable options used by convenience-method configurators and custom class definitions.</summary>
+public class TweenOptionsBuilder
+{
+    public const int Infinite = TweenOptions.Infinite;
+
+    public double Duration { get; set; }
+    public double Delay { get; set; }
+    public double PingPongInterval { get; set; }
+    public double RepeatInterval { get; set; }
+    public double Offset { get; set; }
+    public int Repeats { get; set; }
+    public bool UsePingPong { get; set; }
+    public bool UseUnscaledTime { get; set; }
+    public FillMode Fill { get; set; } = FillMode.RetainFinalValue;
+    public EaseType Ease { get; set; }
+    public Func<float, float>? EaseFunction { get; set; }
+    public Godot.Curve? Curve { get; set; }
+    public TweenProcessMode ProcessMode { get; set; }
+    public TweenPauseMode PauseMode { get; set; }
+    public bool SuppressCallbacksWhenTargetInvalid { get; set; }
+
+    internal TweenOptions ToOptions() => new()
+    {
+        Duration = Duration,
+        Delay = Delay,
+        PingPongInterval = PingPongInterval,
+        RepeatInterval = RepeatInterval,
+        Offset = Offset,
+        Repeats = Repeats,
+        UsePingPong = UsePingPong,
+        UseUnscaledTime = UseUnscaledTime,
+        Fill = Fill,
+        Ease = Ease,
+        EaseFunction = EaseFunction,
+        Curve = Curve,
+        ProcessMode = ProcessMode,
+        PauseMode = PauseMode,
+        SuppressCallbacksWhenTargetInvalid = SuppressCallbacksWhenTargetInvalid,
+    };
 }
 
 internal sealed class Playback

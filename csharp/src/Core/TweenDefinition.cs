@@ -9,11 +9,19 @@ public interface ITweenDefinition<in TTarget> where TTarget : class
     internal TweenInstance AddTo(TweenScheduler scheduler, TTarget target);
 }
 
-/// <summary>A reusable typed definition. Override the three property operations for custom tweens.</summary>
-public abstract class TweenDefinition<TTarget, TValue> : TweenOptions, ITweenDefinition<TTarget>
+/// <summary>A typed definition with independent configuration and playback state.</summary>
+public interface ITweenDefinition<TTarget, TValue> : ITweenDefinition<TTarget>
     where TTarget : class where TValue : struct
 {
+    internal TweenDefinition<TTarget, TValue> CreatePlayback();
     TweenInstance ITweenDefinition<TTarget>.AddTo(TweenScheduler scheduler, TTarget target) => scheduler.Add(target, this);
+}
+
+/// <summary>A reusable typed definition. Override the three property operations for custom tweens.</summary>
+public abstract class TweenDefinition<TTarget, TValue> : TweenOptionsBuilder, ITweenDefinition<TTarget, TValue>
+    where TTarget : class where TValue : struct
+{
+    TweenDefinition<TTarget, TValue> ITweenDefinition<TTarget, TValue>.CreatePlayback() => Snapshot();
 
     public TValue? From { get; set; }
     public TValue? To { get; set; }
