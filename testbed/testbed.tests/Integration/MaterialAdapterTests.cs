@@ -6,9 +6,9 @@ using Godot;
 using tweens.gd;
 using twodog.Testing;
 using twodog.Testing.Xunit;
-using static testbed.Tests.ExpandedAdapterTests;
+using static testbed.Tests.Integration.ExpandedAdapterTests;
 
-namespace testbed.Tests;
+namespace testbed.Tests.Integration;
 
 [Collection<HeadlessCollection>]
 public class MaterialAdapterTests(HeadlessFixture godot)

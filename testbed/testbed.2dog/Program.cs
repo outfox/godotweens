@@ -4,6 +4,8 @@
 using Godot;
 using Engine = twodog.Engine;
 
+namespace testbed;
+
 internal static class Program
 {
     // STA matches how godot.exe runs its main thread on Windows: OLE (drag & drop,
@@ -44,7 +46,7 @@ internal static class Program
             GD.Print("2dog is running (no run/main_scene set in project.godot).");
         Console.WriteLine("Close the window to quit.");
 
-        var gallery = engine.Tree.CurrentScene as testbed.TweenDemo;
+        var gallery = engine.Tree.CurrentScene as TweenDemo;
         gallery?.SelectPage(gallerySnapshots is null ? galleryPage : 0);
         if (gallerySource >= 0) gallery?.CurrentPage?.ShowSource(gallerySource);
         var capturedPages = 0;
@@ -71,8 +73,8 @@ internal static class Program
                 Directory.CreateDirectory(gallerySnapshots);
                 var target = Path.Combine(gallerySnapshots, $"{capturedPages + 1:00}.png");
                 if (image.SavePng(target) != Error.Ok) throw new IOException("Could not save " + target);
-                Console.WriteLine($"Captured {testbed.TweenDemo.PageNames[capturedPages]}");
-                if (++capturedPages == testbed.TweenDemo.PageNames.Length) engine.Tree.Quit();
+                Console.WriteLine($"Captured {TweenDemo.PageNames[capturedPages]}");
+                if (++capturedPages == TweenDemo.PageNames.Length) engine.Tree.Quit();
                 else
                 {
                     gallery.SelectPage(capturedPages);

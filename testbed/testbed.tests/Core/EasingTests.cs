@@ -4,7 +4,7 @@
 using Godot;
 using tweens.gd;
 
-namespace testbed.Tests;
+namespace testbed.Tests.Core;
 
 public class EasingTests
 {

@@ -2,7 +2,8 @@
 // SPDX-FileCopyrightText: 2026 Moritz Voss
 
 using tweens.gd;
-namespace testbed.Tests;
+
+namespace testbed.Tests.Core;
 public class IntegerInterpolationTests
 {
     [Theory]

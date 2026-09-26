@@ -5,7 +5,7 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 using tweens.gd;
 
-namespace testbed.Tests;
+namespace testbed.Tests.Core;
 
 public class StructuredDefinitionTests
 {
