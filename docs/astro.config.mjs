@@ -29,7 +29,7 @@ export default defineConfig({
 		tableScroll,
 		starlight({
 			title: 'tweens.gd',
-			description: 'An alternative tweening library for Godot. C# guides, playback concepts, and API reference.',
+			description: "A tweening library for Godot (that doesn't suck.)",
 			tableOfContents: false,
 			customCss: [
 				'@fontsource-variable/bricolage-grotesque/standard.css',

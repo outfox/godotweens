@@ -37,7 +37,13 @@ const ghosts = Array.from({ length: 11 }, (_, i) => i);
 			</span>
 		</h1>
 		{tagline && <p class="tagline" set:html={tagline} />}
-		{data.description && <p class="lede">{data.description}</p>}
+		{
+			data.heroDescription ? (
+				<p class="lede" set:html={data.heroDescription} />
+			) : (
+				data.description && <p class="lede">{data.description}</p>
+			)
+		}
 		{
 			facts.length > 0 && (
 				<ul class="facts">
