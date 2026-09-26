@@ -64,18 +64,19 @@ public class SequenceTimingTests
     {
         using var run = new Harness(posted);
         Box first = new(), second = new();
-        var sequence = Sequence();
+        var sequence = SequenceAsync(run.Scheduler, first, second);
         run.Update(0.6);
         run.Update(0.6);
         Assert.Equal(10, first.Value);
         run.Update(0.3);
         Assert.Equal(expected, second.Value, 3);
-        Assert.False(sequence.IsFaulted);
+        run.Update(1);
+        Assert.True(sequence.IsCompletedSuccessfully);
 
-        async Task Sequence()
+        static async Task SequenceAsync(TweenScheduler scheduler, Box start, Box next)
         {
-            await run.Scheduler.Add(first, Leg(1)).End;
-            await run.Scheduler.Add(second, Leg(1)).End;
+            if (await scheduler.Add(start, Leg(1)).End != Reason.Completed) return;
+            await scheduler.Add(next, Leg(1)).End;
         }
     }
 
@@ -84,17 +85,18 @@ public class SequenceTimingTests
     {
         using var run = new Harness(posted: false);
         Box early = new(), late = new(), next = new();
-        _ = Sequence();
+        var sequence = SequenceAsync(run.Scheduler, early, late, next);
         // The early member overshoots by 0.01 one update before the late one overshoots by 0.05.
         run.Update(0.6);
         run.Update(0.6);
         run.Update(0.3);
         Assert.Equal(3.5f, next.Value, 3);
+        Assert.True(sequence.IsCompletedSuccessfully);
 
-        async Task Sequence()
+        static async Task SequenceAsync(TweenScheduler scheduler, Box earlyTarget, Box lateTarget, Box nextTarget)
         {
-            await Group.Of(run.Scheduler.Add(late, Leg(1.15)), run.Scheduler.Add(early, Leg(0.59))).End;
-            run.Scheduler.Add(next, Leg(1));
+            if (await Group.Of(scheduler.Add(lateTarget, Leg(1.15)), scheduler.Add(earlyTarget, Leg(0.59))).End != Reason.Completed) return;
+            scheduler.Add(nextTarget, Leg(1));
         }
     }
 
@@ -104,19 +106,20 @@ public class SequenceTimingTests
         using var run = new Harness(posted: false);
         Box first = new(), second = new();
         var gate = new TaskCompletionSource();
-        _ = Sequence();
+        var sequence = SequenceAsync(run.Scheduler, first, second, gate.Task);
         run.Update(0.6);
         run.Update(0.6);
         run.Update(0.1);
         gate.SetResult();
         run.Update(0.3);
         Assert.Equal(3, second.Value, 3);
+        Assert.True(sequence.IsCompletedSuccessfully);
 
-        async Task Sequence()
+        static async Task SequenceAsync(TweenScheduler scheduler, Box start, Box next, Task continuationGate)
         {
-            await run.Scheduler.Add(first, Leg(1)).End;
-            await gate.Task;
-            run.Scheduler.Add(second, Leg(1));
+            if (await scheduler.Add(start, Leg(1)).End != Reason.Completed) return;
+            await continuationGate;
+            scheduler.Add(next, Leg(1));
         }
     }
 
@@ -125,23 +128,24 @@ public class SequenceTimingTests
     {
         using var run = new Harness(posted: false);
         Box first = new(), physics = new(), unscaled = new();
-        _ = Sequence();
+        var sequence = SequenceAsync(run.Scheduler, first, physics, unscaled);
         run.Update(0.6);
         run.Update(0.6);
         run.Update(0.3, mode: TweenProcessMode.Physics);
         run.Update(0.3, 0.3);
         Assert.Equal(3, physics.Value, 3);
         Assert.Equal(3, unscaled.Value, 3);
+        Assert.True(sequence.IsCompletedSuccessfully);
 
-        async Task Sequence()
+        static async Task SequenceAsync(TweenScheduler scheduler, Box start, Box physicsTarget, Box unscaledTarget)
         {
-            await run.Scheduler.Add(first, Leg(1)).End;
+            if (await scheduler.Add(start, Leg(1)).End != Reason.Completed) return;
             var toPhysics = Leg(1);
             toPhysics.ProcessMode = TweenProcessMode.Physics;
-            run.Scheduler.Add(physics, toPhysics);
+            scheduler.Add(physicsTarget, toPhysics);
             var toUnscaled = Leg(1);
             toUnscaled.UseUnscaledTime = true;
-            run.Scheduler.Add(unscaled, toUnscaled);
+            scheduler.Add(unscaledTarget, toUnscaled);
         }
     }
 
@@ -151,18 +155,19 @@ public class SequenceTimingTests
         using var run = new Harness(posted);
         Box first = new(), chained = new(), unrelated = new();
         var leg = Leg(1);
-        leg.OnEnd = _ => run.Scheduler.Add(chained, Leg(1));
+        leg.OnEnd = tween => tween.Scheduler.Add(chained, Leg(1));
         run.Scheduler.Add(first, leg);
-        _ = Sequence();
+        var sequence = SequenceAsync(run.Scheduler);
         run.Update(0.6);
         run.Update(0.6);
         run.Scheduler.Add(unrelated, Leg(1));
         run.Update(0.3);
         Assert.Equal(5, chained.Value, 3);
         Assert.Equal(3, unrelated.Value, 3);
+        Assert.True(sequence.IsCompletedSuccessfully);
 
         // A carry handed to an awaiting method ends when the continuation yields.
-        async Task Sequence() => await run.Scheduler.Add(new Box(), Leg(1)).End;
+        static async Task SequenceAsync(TweenScheduler scheduler) => await scheduler.Add(new Box(), Leg(1)).End;
     }
 
     [Fact]
@@ -170,18 +175,19 @@ public class SequenceTimingTests
     {
         using var run = new Harness(posted: false);
         Box first = new(), second = new();
-        _ = Sequence();
+        var sequence = SequenceAsync(run.Scheduler, first, second);
         run.Update(0.6);
         run.Update(0.6);
         run.Update(0.3);
         Assert.Equal(4, second.Value, 3);
+        Assert.True(sequence.IsCompletedSuccessfully);
 
-        async Task Sequence()
+        static async Task SequenceAsync(TweenScheduler scheduler, Box start, Box next)
         {
-            await run.Scheduler.Add(first, Leg(1)).End;
+            if (await scheduler.Add(start, Leg(1)).End != Reason.Completed) return;
             var delayed = Leg(1);
             delayed.Delay = 0.1;
-            run.Scheduler.Add(second, delayed);
+            scheduler.Add(next, delayed);
         }
     }
 

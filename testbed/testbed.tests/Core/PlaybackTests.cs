@@ -177,7 +177,7 @@ public class PlaybackTests
         scheduler.Add(first, new BoxTween { To = 0, OnStart = t =>
         {
             t.Cancel();
-            scheduler.Add(second, new BoxTween { To = 0 });
+            t.Scheduler.Add(second, new BoxTween { To = 0 });
         } });
         scheduler.Update(1);
         Assert.Equal(7, first.Value);
@@ -251,8 +251,8 @@ public class PlaybackTests
     public void RecursiveCancellationAndDisposalAreSafe()
     {
         using var scheduler = new TweenScheduler();
-        scheduler.Add(new Box(), new BoxTween { OnCancel = _ => scheduler.CancelAll() });
-        scheduler.Add(new Box(), new BoxTween { OnCancel = _ => scheduler.Dispose() });
+        scheduler.Add(new Box(), new BoxTween { OnCancel = static tween => tween.Scheduler.CancelAll() });
+        scheduler.Add(new Box(), new BoxTween { OnCancel = static tween => tween.Scheduler.Dispose() });
         scheduler.Add(new Box(), new BoxTween());
         scheduler.CancelAll();
         Assert.Equal(0, scheduler.ActiveCount);

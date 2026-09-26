@@ -39,26 +39,26 @@ public class ShaderTweenTests(Fixture godot)
         using var material = new ShaderMaterial { Shader = shader };
         switch (type)
         {
-            case "float": Check("scalar", 0.25f, 0.75f, 0.5f); break;
-            case "double": Check("scalar", 0.25d, 0.75d, 0.5d); break;
-            case "int": Check("count", 2, 5, 4); break;
-            case "Vector2": Check("v2", Vector2.One * 0.25f, Vector2.One * 0.75f, Vector2.One * 0.5f); break;
-            case "Vector3": Check("v3", Vector3.One * 0.25f, Vector3.One * 0.75f, Vector3.One * 0.5f); break;
-            case "Vector4": Check("v4", Vector4.One * 0.25f, Vector4.One * 0.75f, Vector4.One * 0.5f); break;
-            case "Color": Check("tint", new Color(0.25f, 0.25f, 0.25f, 0.25f), new Color(0.75f, 0.75f, 0.75f, 0.75f), new Color(0.5f, 0.5f, 0.5f, 0.5f)); break;
+            case "float": Check(material, godot.Tree, "scalar", 0.25f, 0.75f, 0.5f); break;
+            case "double": Check(material, godot.Tree, "scalar", 0.25d, 0.75d, 0.5d); break;
+            case "int": Check(material, godot.Tree, "count", 2, 5, 4); break;
+            case "Vector2": Check(material, godot.Tree, "v2", Vector2.One * 0.25f, Vector2.One * 0.75f, Vector2.One * 0.5f); break;
+            case "Vector3": Check(material, godot.Tree, "v3", Vector3.One * 0.25f, Vector3.One * 0.75f, Vector3.One * 0.5f); break;
+            case "Vector4": Check(material, godot.Tree, "v4", Vector4.One * 0.25f, Vector4.One * 0.75f, Vector4.One * 0.5f); break;
+            case "Color": Check(material, godot.Tree, "tint", new Color(0.25f, 0.25f, 0.25f, 0.25f), new Color(0.75f, 0.75f, 0.75f, 0.75f), new Color(0.5f, 0.5f, 0.5f, 0.5f)); break;
         }
-        void Check<[MustBeVariant] T>(string name, T initial, T to, T middle) where T : struct
+        static void Check<[MustBeVariant] T>(ShaderMaterial target, SceneTree tree, string name, T initial, T to, T middle) where T : struct
         {
-            var handle = material.TweenShaderParameter(name, to, 1, godot.Tree, d => d.Fill = FillMode.None);
+            var handle = target.TweenShaderParameter(name, to, 1, tree, d => d.Fill = FillMode.None);
             Assert.Equal(initial, handle.Value);
-            var scheduler = TweenRuntime.GetRunner(godot.Tree).Scheduler;
-            scheduler.Update(0.5); Assert.Null(handle.Error); Assert.Equal(middle, material.GetShaderParameter(name).As<T>());
+            var scheduler = TweenRuntime.GetRunner(tree).Scheduler;
+            scheduler.Update(0.5); Assert.Null(handle.Error); Assert.Equal(middle, target.GetShaderParameter(name).As<T>());
             scheduler.Update(0.5); Assert.Equal(TweenState.Completed, handle.State);
-            Assert.Equal(Variant.Type.Nil, material.GetShaderParameter(name).VariantType);
-            material.SetShaderParameter(name, Variant.From(initial));
-            var explicitOverride = material.TweenShaderParameter(name, to, 1, godot.Tree, d => d.Fill = FillMode.None);
+            Assert.Equal(Variant.Type.Nil, target.GetShaderParameter(name).VariantType);
+            target.SetShaderParameter(name, Variant.From(initial));
+            var explicitOverride = target.TweenShaderParameter(name, to, 1, tree, d => d.Fill = FillMode.None);
             scheduler.Update(1); Assert.Equal(TweenState.Completed, explicitOverride.State);
-            Assert.Equal(initial, material.GetShaderParameter(name).As<T>());
+            Assert.Equal(initial, target.GetShaderParameter(name).As<T>());
         }
     }
 
