@@ -61,6 +61,12 @@ jobs:
       - name: Run headless testbed
         timeout-minutes: 2
         run: dotnet run --project testbed/testbed.2dog -c Release --no-build --no-restore -- --headless --quit-after 12
+      - name: Test pure GDScript addon
+        timeout-minutes: 2
+        run: dotnet run --project testbed-gdscript/host -c Release --no-build --no-restore
+      - name: Test GDScript debug validation
+        timeout-minutes: 2
+        run: dotnet run --project testbed-gdscript/host -c Debug --no-restore
       - name: Pack
         run: dotnet pack csharp/tweens.gd.csproj -c Release --no-build --no-restore -p:ContinuousIntegrationBuild=true -p:Version=$env:PACKAGE_VERSION -o artifacts/packages
       - name: Verify package and compile a package consumer

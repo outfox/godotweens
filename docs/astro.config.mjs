@@ -110,7 +110,7 @@ export default defineConfig({
 				},
 				{
 					label: 'GDScript',
-					items: [{ label: 'Addon status', slug: 'gdscript', badge: { text: 'Planned', variant: 'note' } }],
+					items: [{ label: 'Addon guide', slug: 'gdscript', badge: { text: 'Experimental', variant: 'note' } }],
 				},
 			],
 		}),

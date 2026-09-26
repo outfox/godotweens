@@ -39,7 +39,7 @@ Create and control tweens on Godot's main thread.
 
 ## Documentation
 
-The GDScript addon is planned separately and is not included in this package.
+The experimental pure GDScript addon lives separately in `addons/tweens_gd/` and is not included in this package.
 Guides, concepts, and the API reference live at [tweens.gd](https://tweens.gd).
 The site's source is in the [repository](https://github.com/outfox/tweens.gd/tree/main/docs).
 

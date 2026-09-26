@@ -1,14 +1,20 @@
 # tweens.gd
 
-Tween libraries for Godot, inspired by Jeffrey Lanters' **unity-tweens**. A typed C# NuGet package and a planned GDScript addon with equivalent functionality.
+Tween libraries for Godot, inspired by Jeffrey Lanters' **unity-tweens**. A typed C# NuGet package and an experimental pure GDScript addon.
 
 | Project | Location | Status |
 | --- | --- | --- |
 | C# NuGet package `tweens.gd` | `csharp/` | Implemented; examples below |
-| GDScript Godot addon | `addons/tweens_gd/` (planned) | Backend and performance evaluation pending |
+| GDScript Godot addon | [addons/tweens_gd/](addons/tweens_gd/README.md) | Core API implemented in pure GDScript; full parity and exports pending |
 | Public documentation | [docs/](docs/README.md) | C# guides/reference and GDScript status; deployment pending |
 
 Internal working documents live in the gitignored `docs-internal/` directory. The following documentation describes the C# implementation.
+
+For GDScript, copy `addons/tweens_gd/` into your project and follow the
+[addon quickstart](addons/tweens_gd/README.md). No .NET, autoload or GDExtension is
+required. Run its real-GDScript conformance suite with
+`dotnet run --project testbed-gdscript/host -c Release`; see the
+[test project](testbed-gdscript/README.md) for benchmarks and standard Godot commands.
 
 Reuse definitions, control independent playback handles, and compose animations with `async`/`await`.
 

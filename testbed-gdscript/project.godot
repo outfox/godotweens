@@ -1,0 +1,9 @@
+; Standard Godot project: the optional 2dog host is only a test launcher.
+config_version=5
+
+[application]
+config/name="tweens.gd GDScript tests"
+run/main_scene="res://main.tscn"
+
+[rendering]
+renderer/rendering_method="gl_compatibility"

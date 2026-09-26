@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <OutputType>Exe</OutputType>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <IsPackable>false</IsPackable>
+    <GodotProjectDir>..</GodotProjectDir>
+    <TwoDogVariant Condition="'$(Configuration)' == 'Debug'">debug</TwoDogVariant>
+    <TwoDogVariant Condition="'$(Configuration)' == 'Editor'">editor</TwoDogVariant>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="2dog.engine" Version="$(TwoDogVersion)" />
+  </ItemGroup>
+  <!-- Stage the real addon in a standalone project; no dependency on the C# library. -->
+  <Target Name="StageGDScript" BeforeTargets="Build">
+    <ItemGroup>
+      <AddonSource Include="../../addons/tweens_gd/**/*" />
+      <ConformanceSource Include="../../tests/conformance/*.json" />
+    </ItemGroup>
+    <Copy SourceFiles="@(AddonSource)" DestinationFiles="@(AddonSource->'../addons/tweens_gd/%(RecursiveDir)%(Filename)%(Extension)')" />
+    <Copy SourceFiles="@(ConformanceSource)" DestinationFolder="../conformance" />
+  </Target>
+</Project>

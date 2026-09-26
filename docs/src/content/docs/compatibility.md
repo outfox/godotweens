@@ -4,12 +4,12 @@ description: Implementation status, engine requirements, and validated targets f
 ---
 
 The C# library works with .NET 10 and Godot 4.7.2 .NET today. The GDScript addon
-is planned.
+has an experimental pure GDScript core.
 
 | Implementation | Availability | Requirements |
 | --- | --- | --- |
 | C# | Implemented; project reference and local NuGet package supported | .NET 10, GodotSharp 4.7.2, matching engine |
-| GDScript addon | Planned; no installable addon yet | Minimum Godot version and exports pending validation |
+| GDScript addon | Experimental core available from source | Tested on 2dog/Godot 4.7.2; no .NET/native extension dependency; exports pending validation |
 
 The C# package ID and namespace are both `tweens.gd`. The local development
 version is `0.1.0`, which hasn't been published to nuget.org.
@@ -41,8 +41,8 @@ See [materials](/csharp/materials/) and [shader uniforms](/csharp/shaders/).
 
 ## GDScript availability
 
-The addon is intended for Godot projects without .NET. Its implementation may
-use GDScript alone or GDScript with GDExtension, depending on measured performance.
-Whether it gets a native backend isn't decided, and there's no supported platform
-list or parity claim yet.
-See [addon status](/gdscript/) for the intended scope.
+The addon is implemented in pure GDScript for projects without .NET. Windows
+headless conformance tests run real GDScript through the pinned 2dog engine.
+Standard Godot exports, older versions, mobile and Web/WASM remain unvalidated.
+The initial API covers core playback and generic properties; full adapter and
+group parity is still in progress. See the [GDScript guide](/gdscript/).
