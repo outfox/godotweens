@@ -72,6 +72,25 @@ public class TweenInstanceTests
         Assert.Equal(0.25f, custom.Value);
     }
 
+    [Theory]
+    [InlineData(EaseType.SmoothStep, 0.15625f)]
+    [InlineData(EaseType.SmootherStep, 0.103515625f)]
+    public void SmoothStepsShapeForwardAndPingPongPlayback(EaseType ease, float quarterWeight)
+    {
+        using var scheduler = new TweenScheduler();
+        var box = new Box();
+        var tween = scheduler.Add(box, new PlainTween { To = 1, Duration = 1, Ease = ease, UsePingPong = true });
+        scheduler.Update(0.25);
+        Assert.Equal(quarterWeight, box.Value);
+        scheduler.Update(0.75);
+        Assert.Equal(1, box.Value);
+        scheduler.Update(0.25);
+        Assert.Equal(1 - quarterWeight, box.Value);
+        scheduler.Update(0.75);
+        Assert.Equal(0, box.Value);
+        Assert.Equal(Reason.Completed, tween.CompletionReason);
+    }
+
     [Fact]
     public void NonFiniteEasingFaultsTheTween()
     {

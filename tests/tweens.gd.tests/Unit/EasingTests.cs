@@ -29,7 +29,7 @@ public class EasingTests
     [MemberData(nameof(All))]
     public void InOutEasesAreSymmetricAroundTheMidpoint(EaseType ease)
     {
-        if (!ease.ToString().EndsWith("InOut")) return;
+        if (!ease.ToString().EndsWith("InOut") && ease is not (EaseType.SmoothStep or EaseType.SmootherStep)) return;
         Assert.Equal(0.5f, Easing.Evaluate(ease, 0.5f), 4);
         foreach (var t in new[] { 0.1f, 0.25f, 0.4f })
             Assert.Equal(1 - Easing.Evaluate(ease, t), Easing.Evaluate(ease, 1 - t), 4);
@@ -61,8 +61,46 @@ public class EasingTests
     [InlineData(EaseType.QuintInOut, 0.25f, 0.015625f)]
     [InlineData(EaseType.ExpoIn, 0.5f, 0.03125f)]
     [InlineData(EaseType.SineInOut, 0.5f, 0.5f)]
+    [InlineData(EaseType.SmoothStep, 0.25f, 0.15625f)]
+    [InlineData(EaseType.SmoothStep, 0.75f, 0.84375f)]
+    [InlineData(EaseType.SmootherStep, 0.25f, 0.103515625f)]
+    [InlineData(EaseType.SmootherStep, 0.75f, 0.896484375f)]
     public void KnownSamples(EaseType ease, float progress, float expected)
         => Assert.Equal(expected, Easing.Evaluate(ease, progress), 5);
+
+    [Theory]
+    [InlineData(EaseType.SmoothStep)]
+    [InlineData(EaseType.SmootherStep)]
+    public void SmoothStepsIncreaseWithoutOvershooting(EaseType ease)
+    {
+        var previous = 0f;
+        for (var i = 0; i <= 100; i++)
+        {
+            var value = Easing.Evaluate(ease, i / 100f);
+            Assert.InRange(value, previous, 1f);
+            previous = value;
+        }
+    }
+
+    [Theory]
+    [InlineData(EaseType.SmoothStep)]
+    [InlineData(EaseType.SmootherStep)]
+    public void SmoothStepsHaveZeroEndpointVelocity(EaseType ease)
+    {
+        const float h = 0.001f;
+        Assert.InRange(Math.Abs(Easing.Evaluate(ease, h) / h), 0, 0.004f);
+        Assert.InRange(Math.Abs((1 - Easing.Evaluate(ease, 1 - h)) / h), 0, 0.004f);
+    }
+
+    [Fact]
+    public void SmootherStepHasZeroEndpointAcceleration()
+    {
+        const float h = 0.01f;
+        var start = (Easing.Evaluate(EaseType.SmootherStep, 2 * h) - 2 * Easing.Evaluate(EaseType.SmootherStep, h)) / (h * h);
+        var end = (1 - 2 * Easing.Evaluate(EaseType.SmootherStep, 1 - h) + Easing.Evaluate(EaseType.SmootherStep, 1 - 2 * h)) / (h * h);
+        Assert.InRange(Math.Abs(start), 0, 0.6f);
+        Assert.InRange(Math.Abs(end), 0, 0.6f);
+    }
 
     [Fact]
     public void OvershootingEasesLeaveTheUnitRange()

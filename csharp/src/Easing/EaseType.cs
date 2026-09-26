@@ -35,5 +35,9 @@ namespace tweens.gd {
     BounceIn = 100,
     BounceOut = 101,
     BounceInOut = 102,
+    /// <summary>Cubic ease-in-out with zero velocity at both endpoints.</summary>
+    SmoothStep = 110,
+    /// <summary>Quintic ease-in-out with zero velocity and acceleration at both endpoints.</summary>
+    SmootherStep = 120,
   }
 }
