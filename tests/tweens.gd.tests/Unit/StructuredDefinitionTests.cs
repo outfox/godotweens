@@ -19,7 +19,7 @@ public class StructuredDefinitionTests
     {
         ["Duration"] = 1.25, ["Delay"] = 0.5, ["PingPongInterval"] = 0.25, ["RepeatInterval"] = 0.75,
         ["Offset"] = 0.125, ["Repeats"] = 2, ["UsePingPong"] = true, ["UseUnscaledTime"] = true,
-        ["Fill"] = FillMode.None, ["Ease"] = EaseType.QuadIn, ["EaseFunction"] = Ease, ["Curve"] = null,
+        ["Fill"] = FillMode.None, ["Ease"] = EaseType.QuadIn, ["Skew"] = 2.0, ["EaseFunction"] = Ease, ["Curve"] = null,
         ["ProcessMode"] = TweenProcessMode.Physics, ["PauseMode"] = TweenPauseMode.Always,
         ["SuppressCallbacksWhenTargetInvalid"] = true,
     };

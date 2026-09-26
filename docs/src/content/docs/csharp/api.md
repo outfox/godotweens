@@ -64,7 +64,7 @@ retain the final value unless `Fill` is explicitly changed.
 | Configuration | Reference |
 | --- | --- |
 | `Duration`, `Delay`, `Offset`, `Repeats`, `UsePingPong`, `PingPongInterval`, `RepeatInterval`, `Fill` | [Timing and loops](/concepts/timing/) |
-| `Ease`, `EaseFunction`, `Curve` | [Easing](/concepts/easing/) |
+| `Ease`, `Skew`, `EaseFunction`, `Curve` | [Easing](/concepts/easing/) |
 | `ProcessMode`, `UseUnscaledTime` | [Process and physics](/concepts/timing/#process-and-physics) |
 | `PauseMode`, `SuppressCallbacksWhenTargetInvalid` | [Lifetime and ownership](/concepts/lifetime/) |
 | `OnAdd`, `OnStart`, `OnUpdate`, `OnEnd`, `OnCancel`, `OnFinally` | [Callbacks](/csharp/playback/#callbacks) |

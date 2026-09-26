@@ -43,6 +43,30 @@ and `EaseType.CubicInOut`.
 Back and elastic weights aren't clamped. Overshoot suits motion, but native
 property limits still apply to constrained values such as alpha or ranges.
 
+## Skew the timing
+
+Set `Skew` to feed normalized time through `Math.Pow(t, Skew)` before the easing
+function. It defaults to `1`, which leaves the easing unchanged. Values above `1`
+rear-load the curve; values between `0` and `1` front-load it. For example, at
+`t = 0.25`, a skew of `2` passes `0.0625` to the ease, while `0.5` passes `0.5`.
+
+```csharp
+var movement = sprite.Tween(new Tweens.Position2D
+{
+    To = new Vector2(300, 120),
+    Duration = 0.5,
+    Ease = EaseType.CubicOut,
+    Skew = 2,
+});
+```
+
+`Skew` must be finite and greater than zero. It applies to built-in eases,
+`EaseFunction`, and Godot `Curve` samples. Duration and the handle's raw
+`Progress` stay unchanged, and ping-pong retraces the same skewed curve in
+reverse. Both time endpoints are preserved. For bounce, elastic, and other
+non-monotonic eases, skew shifts when their features happen; it does not remove
+bounces or overshoot.
+
 ## Custom functions and curves
 
 For a shape the built-in eases don't cover, pass a function that maps normalized

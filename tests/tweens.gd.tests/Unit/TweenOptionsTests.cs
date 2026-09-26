@@ -13,7 +13,7 @@ public class TweenOptionsTests
     {
         Duration = 1.5, Delay = 0.25, PingPongInterval = 0.5, RepeatInterval = 0.75, Offset = 0.125, Repeats = 3,
         UsePingPong = true, UseUnscaledTime = true, Fill = FillMode.Both, Ease = EaseType.BounceOut,
-        EaseFunction = Ease, ProcessMode = TweenProcessMode.Physics, PauseMode = TweenPauseMode.Always,
+        Skew = 2, EaseFunction = Ease, ProcessMode = TweenProcessMode.Physics, PauseMode = TweenPauseMode.Always,
         SuppressCallbacksWhenTargetInvalid = true,
     };
 
@@ -54,6 +54,7 @@ public class TweenOptionsTests
         Assert.True(builder.UseUnscaledTime);
         Assert.Equal(FillMode.Both, builder.Fill);
         Assert.Equal(EaseType.BounceOut, builder.Ease);
+        Assert.Equal(2, builder.Skew);
         Assert.Same(Ease, builder.EaseFunction);
         Assert.Null(builder.Curve);
         Assert.Equal(TweenProcessMode.Physics, builder.ProcessMode);
@@ -71,5 +72,32 @@ public class TweenOptionsTests
         Assert.Equal(a, b with { Delay = 0.25 });
         Assert.Equal(a.GetHashCode(), (b with { Delay = 0.25 }).GetHashCode());
         Assert.Contains("Delay", a.ToString());
+    }
+
+    [Fact]
+    public void SkewDefaultsToIdentityForOptionsBuildersAndGeneratedDefinitions()
+    {
+        Assert.Equal(1, default(TweenOptions).Skew);
+        Assert.Equal(1, new TweenOptions().Skew);
+        Assert.Equal(1, new PlainTween().Skew);
+        Assert.Equal(1, default(Tweens.Float).Skew);
+        Assert.Equal(default, new TweenOptions { Skew = 1 });
+        Assert.Equal(default, (new TweenOptions { Skew = 2 }) with { Skew = 1 });
+    }
+
+    [Theory]
+    [InlineData(double.Epsilon)]
+    [InlineData(0.5)]
+    [InlineData(1)]
+    [InlineData(2)]
+    [InlineData(double.MaxValue)]
+    public void SkewPreservesTheConfiguredExponent(double skew)
+    {
+        var options = new TweenOptions { Skew = skew };
+        Assert.Equal(skew, options.Skew);
+        var builder = new TweenOptionsBuilder();
+        options.CopyTo(builder);
+        Assert.Equal(skew, builder.Skew);
+        Assert.Equal(options, builder.ToOptions());
     }
 }

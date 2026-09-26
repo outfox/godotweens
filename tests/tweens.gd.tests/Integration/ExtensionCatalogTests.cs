@@ -19,6 +19,19 @@ public class ExtensionCatalogTests(HeadlessFixture godot)
 {
     private static readonly TweenOptions Options = new() { Duration = 99, Delay = 0.25, Fill = FillMode.Both };
 
+    [Fact]
+    public void SkewWorksThroughOptionsConfiguratorsAndGeneratedDefinitions()
+    {
+        using var scope = new SceneScope(godot);
+        var options = scope.Add(new Node2D()).TweenPositionX(16, 1, new TweenOptions { Skew = 2 });
+        var configured = scope.Add(new Node2D()).TweenPositionX(16, 1, d => d.Skew = 0.5);
+        var generated = scope.Add(new Node2D()).Tween(new Tweens.Position2DX { To = 16, Duration = 1, Skew = 2 });
+        scope.Advance(0.25);
+        Assert.Equal(1, options.Value);
+        Assert.Equal(8, configured.Value);
+        Assert.Equal(1, generated.Value);
+    }
+
     private static Dictionary<string, MethodInfo[]> Families() => typeof(TweenExtensions)
         .GetMethods(BindingFlags.Public | BindingFlags.Static)
         .Where(method => !method.IsGenericMethodDefinition && method.Name != nameof(TweenExtensions.CancelTweens))

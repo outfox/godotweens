@@ -36,6 +36,9 @@ public readonly record struct TweenOptions
     // Encode the default so default(TweenOptions) and new TweenOptions() behave identically.
     public FillMode Fill { get => fill ^ FillMode.RetainFinalValue; init => fill = value ^ FillMode.RetainFinalValue; }
     public EaseType Ease { get; init; }
+    private readonly double? skew;
+    /// <summary>Positive finite exponent applied to normalized time before easing. Defaults to 1 (identity).</summary>
+    public double Skew { get => skew ?? 1; init => skew = value == 1 ? null : value; }
     public Func<float, float>? EaseFunction { get; init; }
     public Godot.Curve? Curve { get; init; }
     public TweenProcessMode ProcessMode { get; init; }
@@ -54,6 +57,7 @@ public readonly record struct TweenOptions
         target.UseUnscaledTime = UseUnscaledTime;
         target.Fill = Fill;
         target.Ease = Ease;
+        target.Skew = Skew;
         target.EaseFunction = EaseFunction;
         target.Curve = Curve;
         target.ProcessMode = ProcessMode;
@@ -77,6 +81,8 @@ public class TweenOptionsBuilder
     public bool UseUnscaledTime { get; set; }
     public FillMode Fill { get; set; } = FillMode.RetainFinalValue;
     public EaseType Ease { get; set; }
+    /// <summary>Positive finite exponent applied to normalized time before easing. Defaults to 1 (identity).</summary>
+    public double Skew { get; set; } = 1;
     public Func<float, float>? EaseFunction { get; set; }
     public Godot.Curve? Curve { get; set; }
     public TweenProcessMode ProcessMode { get; set; }
@@ -95,6 +101,7 @@ public class TweenOptionsBuilder
         UseUnscaledTime = UseUnscaledTime,
         Fill = Fill,
         Ease = Ease,
+        Skew = Skew,
         EaseFunction = EaseFunction,
         Curve = Curve,
         ProcessMode = ProcessMode,
@@ -122,6 +129,8 @@ internal sealed class Playback
         turn = Nonnegative(options.PingPongInterval, nameof(options.PingPongInterval));
         var repeat = Nonnegative(options.RepeatInterval, nameof(options.RepeatInterval));
         offset = Nonnegative(options.Offset, nameof(options.Offset));
+        if (!double.IsFinite(options.Skew) || options.Skew <= 0)
+            throw new ArgumentOutOfRangeException(nameof(options.Skew), "Skew must be finite and greater than zero.");
         if (offset > duration) throw new ArgumentOutOfRangeException(nameof(options.Offset));
         if (options.Repeats < TweenOptions.Infinite) throw new ArgumentOutOfRangeException(nameof(options.Repeats));
         if (!Enum.IsDefined(options.ProcessMode) || !Enum.IsDefined(options.PauseMode) ||
