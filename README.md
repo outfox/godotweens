@@ -120,6 +120,7 @@ Create/control tweens on Godot's main thread. `End` is settled from that thread;
 | `RepeatInterval` | Wait between cycles, never after the final cycle. |
 | `Offset` | Starting seconds into the first forward leg, within `[0, Duration]`. Delay still comes first. |
 | `Ease` | 33 built-in functions, including `SmoothStep` and `SmootherStep`. Back/elastic overshoot remains unclamped. |
+| `Skew` | Positive finite exponent applied as `Math.Pow(t, Skew)` before any easing source. Default `1` is identity; `2` rear-loads the curve and `0.5` front-loads it. |
 | `EaseFunction` / `Curve` | One custom source may override `Ease`; specifying both is rejected. Curve samples use normalized time 0–1. |
 | `ProcessMode` | `Process` by default; `Physics` opts into physics updates. |
 | `PauseMode` | `Bound` follows owner `CanProcess()`, `SceneTree` follows tree pause only, `Always` ignores both. Instance pause always wins. |

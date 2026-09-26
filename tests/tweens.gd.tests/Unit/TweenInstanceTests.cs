@@ -7,6 +7,78 @@ namespace tweens.gd.Tests.Unit;
 
 public class TweenInstanceTests
 {
+    [Theory]
+    [InlineData(1, 0.25f)]
+    [InlineData(2, 0.0625f)]
+    [InlineData(0.5, 0.5f)]
+    public void SkewWarpsTimeBeforeEasingAndRetracesItDuringPingPong(double skew, float quarterTime)
+    {
+        using var scheduler = new TweenScheduler();
+        var linear = new Box();
+        var eased = new Box();
+        var custom = new Box();
+        var definition = new PlainTween { To = 1, Duration = 1, Skew = skew, UsePingPong = true };
+        var tween = scheduler.Add(linear, definition);
+        definition.Ease = EaseType.QuadOut;
+        scheduler.Add(eased, definition);
+        definition.EaseFunction = static t => t + 1;
+        scheduler.Add(custom, definition);
+        definition.Skew = 3; // Active playbacks keep their captured exponent.
+
+        scheduler.Update(0);
+        Assert.Equal(0, linear.Value);
+        Assert.Equal(0, eased.Value);
+        Assert.Equal(1, custom.Value);
+        scheduler.Update(0.25);
+        Assert.Equal(0.25f, tween.Progress);
+        Assert.Equal(quarterTime, linear.Value);
+        Assert.Equal(1 - (1 - quarterTime) * (1 - quarterTime), eased.Value);
+        Assert.Equal(1 + quarterTime, custom.Value); // Easing output remains unclamped.
+        scheduler.Update(0.75);
+        Assert.Equal(1, linear.Value);
+        Assert.Equal(1, eased.Value);
+        Assert.Equal(2, custom.Value);
+        scheduler.Update(0.75);
+        Assert.Equal(0.25f, tween.Progress);
+        Assert.Equal(quarterTime, linear.Value);
+        Assert.Equal(1 - (1 - quarterTime) * (1 - quarterTime), eased.Value);
+        Assert.Equal(1 + quarterTime, custom.Value);
+        scheduler.Update(0.25);
+        Assert.Equal(0, linear.Value);
+        Assert.Equal(0, eased.Value);
+        Assert.Equal(1, custom.Value);
+        Assert.Equal(Reason.Completed, tween.CompletionReason);
+    }
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(-1)]
+    [InlineData(double.NaN)]
+    [InlineData(double.PositiveInfinity)]
+    [InlineData(double.NegativeInfinity)]
+    public void InvalidSkewIsRejectedBeforeReadingOrWritingTheTarget(double skew)
+    {
+        using var scheduler = new TweenScheduler();
+        var box = new Box { Value = 3 };
+        var error = Assert.Throws<ArgumentOutOfRangeException>(() => scheduler.Add(box,
+            new ProbeTween { Skew = skew, Reader = _ => throw new Exception("Must not read") }));
+        Assert.Equal("Skew", error.ParamName);
+        Assert.Equal(3, box.Value);
+    }
+
+    [Theory]
+    [InlineData(false, 1f)]
+    [InlineData(true, 0f)]
+    public void SkewPreservesZeroDurationEndpoints(bool pingPong, float expected)
+    {
+        using var scheduler = new TweenScheduler();
+        var box = new Box();
+        var tween = scheduler.Add(box, new PlainTween { To = 1, Skew = 0.5, UsePingPong = pingPong });
+        scheduler.Update(0);
+        Assert.Equal(expected, box.Value);
+        Assert.Equal(Reason.Completed, tween.CompletionReason);
+    }
+
     [Fact]
     public async Task CallbacksRunInOrderWithTheirValues()
     {

@@ -263,7 +263,9 @@ public sealed class TweenInstance<TTarget, TValue> : TweenInstance
                 definition!.OnStart?.Invoke(this);
                 if (!CheckTarget()) return;
             }
-            var weight = ease!(Math.Clamp(Progress, 0, 1));
+            var time = Math.Clamp(Progress, 0, 1);
+            if (definition!.Skew != 1) time = (float)Math.Pow(time, definition.Skew);
+            var weight = ease!(time);
             if (!float.IsFinite(weight)) throw new InvalidOperationException("Easing returned a non-finite value.");
             if (!CheckTarget()) return;
             var value = definition!.InterpolateValue(from, to, weight);

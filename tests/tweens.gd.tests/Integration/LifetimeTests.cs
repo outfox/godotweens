@@ -266,8 +266,11 @@ public class LifetimeTests(HeadlessFixture godot)
         godot.Errors.Expect("broken start");
     }
 
-    [Fact]
-    public void CurveEasingSamplesAPrivateCopy()
+    [Theory]
+    [InlineData(1, 0.5f)]
+    [InlineData(2, 0.25f)]
+    [InlineData(0.5, 0.70710677f)]
+    public void CurveEasingSamplesAPrivateCopy(double skew, float sampleTime)
     {
         using var scope = new SceneScope(godot);
         var curve = scope.Track(new Curve());
@@ -275,10 +278,11 @@ public class LifetimeTests(HeadlessFixture godot)
         curve.AddPoint(new Vector2(0.5f, 0.8f));
         curve.AddPoint(new Vector2(1, 1));
         var node = scope.Add(new Node2D());
-        var tween = node.TweenPositionX(10, 1, d => d.Curve = curve);
+        var expected = 10 * curve.Sample(sampleTime);
+        var tween = node.TweenPositionX(10, 1, d => { d.Curve = curve; d.Skew = skew; });
         curve.ClearPoints();
         scope.Advance(0.5);
-        Assert.Equal(8, node.Position.X, 3);
+        Assert.Equal(expected, node.Position.X, 3);
         scope.Advance(0.5);
         Assert.Equal(Reason.Completed, tween.CompletionReason);
         Assert.Throws<ArgumentException>(() => node.TweenPositionX(10, 1, d =>
