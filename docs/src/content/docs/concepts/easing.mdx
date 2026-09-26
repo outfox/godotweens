@@ -1,12 +1,12 @@
 ---
 title: Easing
-description: Pick an ease for each kind of motion, from the 31 built-in functions to custom functions and Godot curves.
+description: Pick an ease for each kind of motion, from the 33 built-in functions to custom functions and Godot curves.
 ---
 
 import EasingPlayground from '../../../components/EasingPlayground.astro';
 
-Easing decides how motion speeds up and slows down; the duration stays the same.
-The default, `EaseType.Linear`, moves at constant speed, which rarely suits
+Easing controls how a tween speeds up and slows down without changing how long it
+takes. The default, `EaseType.Linear`, moves at constant speed, which rarely suits
 characters or UI. Pick an ease for every definition.
 
 ## Choose an ease
@@ -15,13 +15,15 @@ characters or UI. Pick an ease for every definition.
 | --- | --- | --- |
 | Arriving, settling into place | `CubicOut`, `QuartOut` | Starts fast, lands gently |
 | Leaving the screen | `CubicIn`, `QuadIn` | Gathers speed on the way out |
-| Moving between two resting spots | `SineInOut`, `CubicInOut` | Eases out of rest and into rest |
+| Moving between two resting spots | `SmootherStep`, `SineInOut` | Eases out of rest and into rest |
 | A playful pop or emphasis | `BackOut`, `ElasticOut` | Overshoots, then settles |
 | Dropping onto a surface | `BounceOut` | Lands with bounces |
 | Constant motion, such as spinners or progress | `Linear` | No acceleration |
 
-`Out` eases decelerate, `In` eases accelerate, and `InOut` does both. Every family
-below has all three variants, such as `EaseType.CubicOut`.
+`Out` eases decelerate, `In` eases accelerate, and `InOut` eases do both.
+`Linear`, `SmoothStep`, and `SmootherStep` have no variants. Each of the ten
+families below comes in all three, such as `EaseType.CubicIn`, `EaseType.CubicOut`,
+and `EaseType.CubicInOut`.
 
 ## Compare the curves
 
@@ -36,20 +38,22 @@ below has all three variants, such as `EaseType.CubicOut`.
 | `Back` | Overshoots an endpoint |
 | `Elastic` | Oscillates around an endpoint |
 | `Bounce` | Repeated bounces |
+| `SmoothStep`, `SmootherStep` | S-curves that start and stop at zero speed; `SmootherStep` also starts and stops with zero acceleration |
 
-Back and elastic weights are not clamped. Overshoot suits motion, but native
+Back and elastic weights aren't clamped. Overshoot suits motion, but native
 property limits still apply to constrained values such as alpha or ranges.
 
 ## Custom functions and curves
 
-Supply a function from normalized progress to weight:
+For a shape the built-in eases don't cover, pass a function that maps normalized
+progress to a weight:
 
 ```csharp
 var eased = sprite.TweenPosition(new Vector2(300, 120), 0.5,
     options => options.EaseFunction = t => t * t);
 ```
 
-`EaseFunction` overrides `Ease`. A Godot `Curve` can override `Ease` instead: its
-samples use normalized time from 0 to 1, and each playback gets its own
-duplicate. Set only one of `EaseFunction` and `Curve`; setting both is rejected.
-An exception inside an easing function faults the tween.
+`EaseFunction` overrides `Ease`. A Godot `Curve` can override `Ease` instead. It's
+sampled with normalized time from 0 to 1, and each playback gets its own
+duplicate. Pick one of `EaseFunction` and `Curve`, since setting both is rejected.
+If an easing function throws, the tween faults.

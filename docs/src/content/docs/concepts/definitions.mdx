@@ -1,13 +1,14 @@
 ---
 title: Reusable definitions
-description: Name motion in fields, share its feel with TweenOptions, vary single starts with `with`, and build steps from methods.
+description: Keep motion in fields, share timing and easing with TweenOptions, vary single starts with `with`, and build steps from methods.
 ---
 
 import DefinitionStamp from '../../../components/DefinitionStamp.astro';
 import Moves from '../../../components/Moves.astro';
 
-A definition is a value that describes one motion. Name it once, start it on any
-number of nodes, and tune it in one place: every start takes its own copy.
+A definition is a value that describes one motion. You write it once and start
+it on any number of nodes. Each start takes its own copy, so when you change the
+definition, the next start picks up the change and tweens already playing don't.
 
 Examples assume `using Godot;` and `using tweens.gd;`, plus
 `System.Threading.Tasks` if implicit usings are off, and run on Godot's main thread.
@@ -50,24 +51,26 @@ public partial class Coin : Sprite2D
 }
 ```
 
-1. **Share the feel.** One `TweenOptions` value sets the timing and easing of
+1. **Share options.** One `TweenOptions` value sets the timing and easing of
    every coin motion.
-2. **Name the motion.** Each definition is a field with a name that says what
-   it is for. `Pop` and `Lift` leave an endpoint open.
-3. **Vary with `with`.** Each start picks its own delay; `Pop` itself never
-   changes.
+2. **Keep definitions in fields.** Each field's name says what the motion is
+   for. `Pop` and `Lift` each leave out an endpoint.
+3. **Vary a start.** Each call to `Appear` passes its own delay through `with`,
+   and `Pop` itself never changes.
 4. **Build steps from methods.** `Collect` plays two tweens as one step and
    reports whether it completed.
 
 </Moves>
 
-## Share the feel
+## Share timing and easing
 
 `TweenOptions` holds timing and easing without a property or endpoints. Assign
-it with `Options = Snappy` and different properties move with one rhythm. Change
-`Snappy` and the whole coin feels different.
+it with `Options = Snappy`. `Pop`, `Fade`, and `Lift` animate different
+properties but share its duration and ease, so editing `Snappy` changes how the
+whole coin moves.
 
-List single overrides after `Options`. Shorthand methods accept options too:
+To override one setting, list it after `Options`. Shorthand methods accept
+options too:
 
 ```csharp
 var snappy = new TweenOptions { Duration = 0.25, Ease = EaseType.BackOut };
@@ -83,16 +86,17 @@ sprite.TweenPosition(new Vector2(400, 180), 0.5, snappy);
   options.
 :::
 
-## Name the motion
+## Keep definitions in fields
 
-Keep definitions in `static readonly` fields. The name says what a motion is
-for, the initializer says how it moves, and there is one place to tune it.
+Declare definitions as `static readonly` fields. The field name tells a reader
+what the motion is for and the initializer shows how it moves, so adjusting the
+motion means editing one declaration.
 
 Built-in definitions are immutable `readonly record struct` values in the root
 `Tweens` namespace. One field can serve every coin in the level, because each
 start takes its own copy.
 
-## Leave endpoints open
+## Leave out `From` or `To`
 
 An omitted `From` or `To` is read from the property when the tween starts.
 
@@ -102,13 +106,14 @@ An omitted `From` or `To` is read from the property when the tween starts.
   scale the coin has in the scene.
 
 Set both only when the motion must span fixed values. Callback value tweens such
-as `Tweens.Float` have no property to read; their omitted endpoints fall back to
-zero, transparent black, or identity.
+as `Tweens.Float` have no property to read, so their omitted endpoints fall back
+to zero, transparent black, or identity.
 
 ## Vary a start with `with`
 
-`with` copies a definition and changes only the listed properties. The field
-stays untouched, so per-start details never leak into the shared motion:
+`with` copies a definition and changes only the properties you list. The field
+itself stays as declared, so a delay or target you set for one start doesn't
+carry over to the next:
 
 - `Pop with { Delay = delay }` staggers coins that share one definition. Its
   `Fill = FillMode.Both` applies `From` during the delay, so waiting coins stay
@@ -125,7 +130,7 @@ playback keeps the value it started with.
 ## Build steps from methods
 
 Wrap each step in a method that returns whether it completed. Callers chain steps
-with `&&`, which stops at the first step that did not complete:
+with `&&`, which stops at the first step that didn't complete:
 
 ```csharp title="Chest.cs"
 public partial class Chest : Node2D
@@ -171,11 +176,11 @@ value. Reusable configure callbacks take a `TweenOptionsBuilder`.
 ## What each start copies
 
 Starting a definition snapshots it and captures the property's current value.
-Later `with` copies never reach running playback. Delegates, and the objects they
-capture, stay shared; Godot `Curve` resources are duplicated for each playback.
+Later `with` copies never reach running playback. Delegates and the objects they
+capture stay shared, but Godot `Curve` resources are duplicated for each playback.
 
 A `with` copy allocates nothing. Starting boxes the definition once and allocates
-its playback state; nothing is copied per frame.
+its playback state. After that, nothing is copied per frame.
 
 ## When tweens compete
 

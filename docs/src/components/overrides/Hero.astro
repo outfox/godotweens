@@ -6,7 +6,7 @@ const { title = data.title, tagline, actions = [] } = data.hero || {};
 const facts = data.facts ?? [];
 
 const [name, ext] = title.split('.');
-const eases = ['BackOut', 'CubicOut', 'ElasticOut', 'BounceOut', 'SineInOut', 'ExpoInOut'];
+const eases = ['BackOut', 'SmootherStep', 'ElasticOut', 'SmoothStep', 'BounceOut'];
 const ghosts = Array.from({ length: 11 }, (_, i) => i);
 ---
 
@@ -171,7 +171,7 @@ const ghosts = Array.from({ length: 11 }, (_, i) => i);
 			const w = EASES[name](p);
 			if (local < REWIND) {
 				// The ball slides home from wherever the last play left it.
-				x = rewindFrom + (FROM - rewindFrom) * EASES.CubicInOut(local / REWIND);
+				x = rewindFrom + (FROM - rewindFrom) * EASES.SmootherStep(local / REWIND);
 			} else {
 				x = laneX(w);
 				// Onion skin: one ring per tenth of the leg's time.

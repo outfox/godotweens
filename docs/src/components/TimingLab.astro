@@ -145,7 +145,7 @@ const slots = 1 + MAX_LOOPS * 3 + (MAX_LOOPS - 1);
 			else if (seg.kind === 'repeat') progress = o.pingpong ? 0 : 1;
 			if (t >= total) progress = o.pingpong ? 0 : 1;
 
-			const w = EASES.SineInOut(progress);
+			const w = EASES.SmootherStep(progress);
 			ball.setAttribute('transform', `translate(${(20 + w * 360).toFixed(2)} 30)`);
 			playhead.style.left = `${total ? (clamped / total) * 100 : 0}%`;
 			const label = t >= total ? 'Completed' : LABEL[seg.kind];

@@ -10,8 +10,8 @@ tweens stop by themselves, so you rarely need cleanup code.
 
 ## Target and owner
 
-The **target** receives values; the **owner** decides when playback stops. For a
-node tween, the node is both. Resource tweens, such as material tweens, bind to a
+The **target** receives values, and the **owner** decides when playback stops. For
+a node tween, the node is both. Resource tweens, such as material tweens, bind to a
 separate owner or to the scene tree.
 
 ## Nodes
@@ -23,9 +23,9 @@ Start node tweens from `_Ready` or later, while the node is inside the tree.
 - A freed or queued-for-deletion target is never written again.
 - Freeing an owner still finishes `End`, even while its tween is paused.
 
-`node.CancelTweens()` cancels the tweens a node owns. Pass
-`includeChildren: true` to include its descendants. It does not reach manual
-schedulers you created yourself.
+`node.CancelTweens()` cancels the tweens a node owns, and `includeChildren: true`
+extends that to its descendants. It doesn't reach manual schedulers you created
+yourself.
 
 ## Pausing
 
@@ -38,8 +38,8 @@ With the default pause mode, a tween pauses when its owner stops processing:
 | `Always` | Ignore owner and tree pause | Ignore tree pause |
 
 Pausing the handle always stops it, even with `Always`. A node's
-`SetProcess(false)` does not pause its tweens; its `ProcessMode` and the tree's
-pause state decide `CanProcess()`.
+`SetProcess(false)` doesn't pause its tweens, because `CanProcess()` depends on
+the node's `ProcessMode` and the tree's pause state.
 
 <OwnershipDemo />
 
@@ -56,11 +56,12 @@ it. See [material lifetimes](/csharp/materials/#choose-the-playback-lifetime).
 ## How playback ends
 
 Completion, cancellation, owner exit, target destruction, and runner teardown all
-finish `End` with a [reason](/csharp/playback/#why-it-ended). Cancellation is a
-result, not an error. Failures in interpolation, easing, setters, or callbacks
-fault the tween instead. `SuppressCallbacksWhenTargetInvalid` skips callbacks for
-an invalid target while still finishing `End` and releasing bindings.
+finish `End` with a [reason](/csharp/playback/#why-it-ended). Cancelling isn't an
+error, so awaiting `End` returns `Reason.Cancelled` instead of throwing. A failure
+in interpolation, easing, a setter, or a callback faults the tween.
+`SuppressCallbacksWhenTargetInvalid` skips callbacks for an invalid target while
+still finishing `End` and releasing bindings.
 
-Handles keep their `Target` for inspection; drop handles you no longer need.
+Handles keep their `Target` for inspection, so drop handles you no longer need.
 Create and control tweens on Godot's main thread. A manual scheduler belongs to
 the thread that created it, and native targets still need the main thread.

@@ -4,7 +4,7 @@ description: Chain, group, stagger, wait, loop, and stop multi-step animations w
 ---
 
 A sequence is ordinary async C#. Await each step before starting the next, play
-steps together as a group, and stop as soon as a step does not complete.
+steps together as a group, and stop as soon as a step doesn't complete.
 
 | Goal | Tool |
 | --- | --- |
@@ -69,8 +69,8 @@ when one stops, and it can hand the next step a slightly wrong start time. See
 
 ## Stagger with Delay
 
-`Delay` offsets tweens inside one step, exact to the frame. Combined with a
-definition and `with`, a whole menu fades in one item after another:
+`Delay` offsets tweens inside one step, exact to the frame. Combine it with a
+definition and `with` to fade in a whole menu, one item after another:
 
 ```csharp title="Menu.cs"
 public partial class Menu : VBoxContainer
@@ -95,7 +95,7 @@ public partial class Menu : VBoxContainer
 waiting stay hidden instead of showing at full opacity first.
 
 :::caution[Stagger different targets, not one property]
-A tween reads its omitted `From` when it is added, not when its delay ends. A
+A tween reads its omitted `From` when it's added, not when its delay ends. A
 delayed tween on the same property starts from the value captured at the start,
 and snaps the property back to it:
 
@@ -128,8 +128,8 @@ sequence can resume against a paused or freed scene.
 
 ## Loops
 
-Repeat a whole sequence with an ordinary loop that ends when a step does not
-complete. A single tween repeats with `Repeats` instead; see
+Repeat a whole sequence with an ordinary loop that ends when a step doesn't
+complete. To repeat a single tween, set `Repeats` instead, as described in
 [timing](/concepts/timing/).
 
 ```csharp
@@ -142,7 +142,8 @@ while (await sprite.TweenPositionY(120, 0.4).End == Reason.Completed
 ## Stop a sequence
 
 A sequence stops when its current step ends with a reason other than `Completed`
-and your code returns. Anything that stops the running tweens does it:
+and your code returns, so anything that stops the running tweens stops the
+sequence:
 
 - Call `Cancel()` on the current tween or group.
 - Call `owner.CancelTweens(includeChildren: true)` on a common ancestor.
@@ -167,9 +168,9 @@ catch (OperationCanceledException)
 
 ## Pause a sequence
 
-`Pause()` on a tween or group pauses only that step. If the sequence starts its
-next step while you are paused, the new tweens play. To pause every current and
-future step, pause the node the tweens are bound to. With the default
+`Pause()` on a tween or group pauses only that step. If your code starts the next
+step while that one is paused, the new tweens play normally. To pause every
+current and future step, pause the node the tweens are bound to. With the default
 `TweenPauseMode.Bound`, tweens follow the node's `CanProcess()`:
 
 ```csharp
@@ -196,13 +197,13 @@ synchronization context. See [errors](/csharp/playback/#errors).
 When a step completes, the code awaiting it resumes immediately, inside the same
 scheduler update. Tweens it starts inherit the time by which the finished step
 overshot its end. They appear from the next frame at exactly the point a gapless
-timeline would put them, so long sequences do not drift. For a group, the time
+timeline would put them, so long sequences don't drift. For a group, the time
 comes from the member that finished last.
 
 The handover applies when all of these hold:
 
 - You await the tween's or the group's `End` directly. With `Task.WhenAll`, the
-  time comes from whichever member the scheduler settled last, which is not
+  time comes from whichever member the scheduler settled last, which isn't
   necessarily the last to finish.
 - The next tweens start before the sequence awaits anything else.
 - They use the same `ProcessMode` and time base (`UseUnscaledTime`) as the step
@@ -212,5 +213,5 @@ The handover applies when all of these hold:
   context, starts its tweens without the handover.
 
 Tweens started from an `OnEnd` callback continue the finishing tween's timeline in
-the same way. Callbacks cannot check a reason as easily as async code, so prefer
+the same way. Callbacks can't check a reason as easily as async code, so prefer
 async code for anything longer than a single follow-up.

@@ -3,13 +3,13 @@ title: Core API
 description: Entry points, reusable definitions, playback handles, scheduler methods, and completion states.
 ---
 
-This page lists the core C# API: the methods that start playback and the types
+Look up the core C# API here: the methods that start playback and the types
 they return, what a definition holds, the members of a playback handle, and the
-manual scheduler. Explanations and examples are in the linked guides.
+manual scheduler. For explanations and examples, follow the links to the guides.
 
 `using tweens.gd;` brings in extension methods, timing options, and playback
-handles. Definitions live in the root `Tweens` namespace, such as
-`Tweens.PathFollow2DVOffset`; no alias or `using Tweens;` is needed.
+handles. Definitions such as `Tweens.PathFollow2DVOffset` live in the root
+`Tweens` namespace, so you don't need an alias or `using Tweens;`.
 
 ## Start playback
 
@@ -29,9 +29,9 @@ handles. Definitions live in the root `Tweens` namespace, such as
 node: `sprite.TweenPosition(...)` returns `TweenInstance<Node2D, Vector2>`.
 
 Resource convenience methods also take the tree or owner context. Tree-based
-resource overloads accept an optional owner. See [materials](/csharp/materials/)
-for exact examples, [node/value definitions](/csharp/nodes/), and
-[shader definitions](/csharp/shaders/).
+resource overloads accept an optional owner. [Materials](/csharp/materials/) has
+examples, and the definitions themselves are listed under
+[node/value definitions](/csharp/nodes/) and [shader definitions](/csharp/shaders/).
 
 ## Definitions
 
@@ -94,8 +94,8 @@ handles with different type arguments fit in one collection.
 | `Target` | `TTarget` | Original target |
 | `Value` | `TValue` | Value read at start, then the latest value written |
 
-Pause is separate from `State`: there is no `Paused` state. Reading state does not
-replace awaiting completion when coordinating async work.
+Pause is separate from `State`: there's no `Paused` state. To coordinate async
+work, await completion instead of reading `State`.
 
 `Reason` has five members: `Completed`, `Cancelled`, `TargetFreed`, `OwnerExited`,
 and `RunnerDisposed`. [Why it ended](/csharp/playback/#why-it-ended) describes each.
@@ -121,8 +121,8 @@ The automatic Godot runner is built on `TweenScheduler`. Create one with
 | `UnhandledException` | `event Action<Exception>` | Receive errors after failing tweens are cleaned up |
 | `Dispose()` | `void` | Stop and release remaining playback |
 
-Create, update, and dispose on the same thread. Recursive scheduler updates are
-rejected. Use a manual scheduler for deterministic tests or managed targets;
+Create, update, and dispose on the same thread. The scheduler rejects recursive
+updates. Use a manual scheduler for deterministic tests or managed targets;
 ordinary Godot node/resource tweens use the automatic runner.
 
 ## Class-based definitions
@@ -130,9 +130,9 @@ ordinary Godot node/resource tweens use the automatic runner.
 The older `*Tween` classes, such as `Position2DTween`, and custom subclasses of
 `TweenDefinition<TTarget, TValue>` remain supported. They inherit
 `TweenOptionsBuilder`, the mutable form of `TweenOptions`, and are snapshotted on
-start. The built-in classes are hidden from IntelliSense so that new code sees the
-structured definitions in `Tweens`.
+start. The built-in classes are hidden from IntelliSense, which offers the
+structured definitions in `Tweens` instead.
 
-The configure callback of a convenience method still receives a mutable builder:
-`TweenPosition` on a `Node2D` passes a `Position2DTween`. Shared configurator
-methods should accept `TweenOptionsBuilder` rather than `TweenOptions`.
+A convenience method's configure callback still receives a mutable builder:
+`TweenPosition` on a `Node2D` passes a `Position2DTween`. Write shared
+configurator methods against `TweenOptionsBuilder`, not `TweenOptions`.

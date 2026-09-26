@@ -1,13 +1,13 @@
 ---
 title: Your first tween
-description: Move a sprite, then fade it out. Meet the three moves every tween uses - define, start, await.
+description: Write a script that moves a sprite and fades it out, and learn to define, start, and await a tween.
 ---
 
 import { Steps } from '@astrojs/starlight/components';
 import Moves from '../../../components/Moves.astro';
 
-Move a sprite, then fade it out once it arrives. Along the way you meet the
-three moves every tween uses: define, start, and await.
+Move a sprite, then fade it out once it arrives. Along the way you define a
+tween, start it on the sprite, and await it to find out how it ended.
 
 <Steps>
 
@@ -47,18 +47,19 @@ public partial class MoveAndFade : Sprite2D
 }
 ```
 
-1. **Define.** `Tweens.Position2D` names the property; the initializer holds the
-   endpoint, duration, and easing. `From` is left out, so the tween starts
-   wherever the sprite is. Keep the `Tweens.` prefix: it keeps definitions apart
-   from Godot types such as `Vector2`.
+1. **Define.** `Tweens.Position2D` names the property, and the initializer holds
+   the endpoint, duration, and easing. `From` is left out, so the tween starts
+   wherever the sprite is. Keep the `Tweens.` prefix. Some definitions share a
+   name with a Godot type, such as `Vector2`, and the prefix tells them apart.
 2. **Start.** `this.Tween(arrive)` starts playback and returns a handle. The
-   first tween sets up its own runner, so there is no autoload to add.
+   first tween sets up its own runner, so there's no autoload to add.
 3. **Await.** `End` finishes when playback ends and says why. If the sprite was
-   freed, removed, or cancelled, the reason is not `Completed` and the script
-   stops, so the fade never runs on a node that is gone.
+   freed or removed, or the tween was cancelled, the reason isn't `Completed`
+   and the script stops. The fade never runs on a node that's gone.
 4. **Shorthand.** `TweenModulateAlpha(0, 0.3)` builds and starts a definition in
-   one call. It suits one-off motion. Anything you reuse or tune deserves a
-   definition.
+   one call, which is handy for one-off motion. If you start the same motion in
+   several places or expect to adjust it, write a definition instead, so its
+   settings live in one field.
 
 </Moves>
 
@@ -75,12 +76,12 @@ movement.Resume();
 movement.Cancel();
 ```
 
-Cancelling keeps the latest value. To stop everything a node owns, call
-`sprite.CancelTweens(includeChildren: true)`.
+Cancelling keeps the latest value. To stop every tween the sprite and its
+descendants own, call `sprite.CancelTweens(includeChildren: true)`.
 
 ## Make it reusable
 
-`arrive` lives inside `_Ready`, so nothing else can use it. Move it to a field,
-compute the endpoint per start with `with`, and every sprite, button, or enemy
-can share the motion. The next page, [definitions](/concepts/definitions/),
-shows how.
+`arrive` lives inside `_Ready`, so nothing else can use it. Move it to a field
+and compute the endpoint for each start with `with`, and other nodes can start
+the same motion. The next page, [definitions](/concepts/definitions/), shows
+how.

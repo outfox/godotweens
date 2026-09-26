@@ -1,6 +1,6 @@
 ---
 title: Control and completion
-description: Pause, resume, and cancel playback; read why a tween ended; handle callbacks, errors, and threads.
+description: Use the handle to pause, resume, or cancel a tween and find out why it ended. Also covers callbacks, errors, and threading.
 ---
 
 import PlaybackRemote from '../../../components/PlaybackRemote.astro';
@@ -17,7 +17,7 @@ and assume `using Godot;`, `using tweens.gd;`, and `using System;`.
 
 Handles are `TweenInstance<TTarget, TValue>`. Their non-generic `TweenInstance`
 base lets you keep different tween types in one collection. Cancelling keeps the
-latest value; `node.CancelTweens()` cancels every tween a node owns.
+latest value. To cancel every tween a node owns, call `node.CancelTweens()`.
 
 ## Why it ended
 
@@ -32,8 +32,8 @@ playback has ended.
 | `OwnerExited` | The owner left the scene tree |
 | `RunnerDisposed` | The runner, tree, or manual scheduler shut down |
 
-Continue a sequence only on `Completed`; [sequences](/csharp/sequences/) shows
-the pattern. Godot emits tree exit before it invalidates a node freed with
+Continue a sequence only on `Completed`, as [sequences](/csharp/sequences/)
+shows. Godot emits tree exit before it invalidates a node freed with
 `Free()`, so that case may report `OwnerExited`. `QueueFree()` reports
 `TargetFreed` for a node that owns its own tween.
 
@@ -55,8 +55,8 @@ catch (OperationCanceledException)
 }
 ```
 
-Cancelling playback itself never throws `OperationCanceledException`; `End`
-reports `Cancelled`.
+Cancelling playback itself never throws `OperationCanceledException`. `End`
+reports `Cancelled` instead.
 
 ## Callbacks
 
@@ -71,9 +71,9 @@ Definitions accept typed callbacks. They run in this order:
 6. `OnFinally` in every case, including faults.
 
 The handle's terminal state is visible before terminal callbacks run, and each
-terminal callback runs at most once. A long frame does not replay the callbacks
-of skipped cycles. Tweens created in `OnUpdate` begin on the next update; tweens
-created in `OnEnd` continue the finished tween's timeline exactly.
+terminal callback runs at most once. A long frame doesn't replay the callbacks
+of skipped cycles. Tweens created in `OnUpdate` begin on the next update, while
+tweens created in `OnEnd` continue the finished tween's timeline exactly.
 
 ## Errors
 
@@ -81,7 +81,7 @@ An exception in interpolation, easing, a setter, or a callback faults the tween.
 `End` throws when awaited, `Error` holds the exception, and several failures are
 kept in an `AggregateException`. Cleanup and `OnFinally` still run, and other
 tweens keep playing. Schedulers also report the error through
-`UnhandledException`; the automatic runner forwards it to `GD.PushError`.
+`UnhandledException`, and the automatic runner forwards it to `GD.PushError`.
 
 :::caution[Catch errors in `async void` callbacks]
 `_Ready` and other Godot callbacks are often `async void`. Wrap their sequences in
@@ -93,7 +93,7 @@ tweens keep playing. Schedulers also report the error through
 Create and control tweens, and await `End`, on Godot's main thread. `End` finishes
 there, and ordinary Godot async code keeps its synchronization context.
 
-- Do not block with `.Wait()` or `.Result`.
-- Do not use `Task.Run` or `ConfigureAwait(false)` around engine access.
+- Don't block with `.Wait()` or `.Result`.
+- Don't use `Task.Run` or `ConfigureAwait(false)` around engine access.
 - Use Godot's `ToSignal` to wait for unrelated engine signals; tweens.gd has no
   coroutine API.

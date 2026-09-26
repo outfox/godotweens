@@ -122,7 +122,7 @@
 				if (t.playback) {
 					const p = t.playback;
 					p.elapsed = Math.min(DURATION, p.elapsed + dt);
-					t.alpha = lerp(p.from, p.to, EASES.SineInOut(p.elapsed / DURATION));
+					t.alpha = lerp(p.from, p.to, EASES.SmoothStep(p.elapsed / DURATION));
 					t.meter.style.scale = `${p.elapsed / DURATION} 1`;
 				} else {
 					t.meter.style.scale = '0 1';

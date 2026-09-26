@@ -3,7 +3,9 @@ title: Material tweens
 description: Animate shared material properties with explicit ownership and rendering prerequisites.
 ---
 
-Material tweens write directly to the resource you supply. If several nodes share that resource, all of them see the change. Playback never clones, reassigns, or disposes your material, shader, textures, or mesh.
+Material tweens write directly to the resource you supply. If several nodes share
+that resource, all of them see the change. Playback never clones, reassigns, or
+disposes your material, shader, textures, or mesh.
 
 Import `Godot` and `tweens.gd`. The snippets run in a Node method on Godot's main
 thread with configured materials and an in-tree `MeshInstance3D` named `mesh`.
@@ -29,17 +31,31 @@ material.Tween(definition, mesh);
 mesh.Tween(material, definition);
 ```
 
-A tree-scoped tween keeps running when a mesh is removed or changes its material assignment. It retains the originally supplied resource. With an owner, tree exit cancels with `OwnerExited`; `owner.CancelTweens()` cancels only that owner's automatic tweens (optionally its descendants), including material tweens. Other owners and tree-scoped tweens are unaffected.
+A tree-scoped tween keeps running when a mesh is removed or gets a different
+material, because it retains the resource you originally supplied. A tween with an
+owner cancels with `OwnerExited` when the owner leaves the tree.
+`owner.CancelTweens()` cancels only that owner's automatic tweens, material tweens
+included, and optionally its descendants' tweens. Other owners and tree-scoped
+tweens are unaffected.
 
-Disposed resource targets cancel with `TargetFreed`, even while paused. Runner/tree teardown settles pending work with `RunnerDisposed`. Cleanup releases playback bindings, never the supplied resources. Handles retain their `Target` for inspection.
+Tweens on a disposed resource cancel with `TargetFreed`, even while paused.
+Runner or tree teardown settles pending work with `RunnerDisposed`. Cleanup
+releases playback bindings but never the resources you supplied, and handles
+retain their `Target` for inspection.
 
-With no owner, `Bound` and `SceneTree` pause modes follow tree pause. With an owner, `Bound` follows `owner.CanProcess()`; `SceneTree` follows tree pause. `Always` ignores those policies, while pausing the handle always stops advancement. All native-resource access requires Godot's main thread.
+With no owner, the `Bound` and `SceneTree` pause modes both follow tree pause.
+With an owner, `Bound` follows `owner.CanProcess()` and `SceneTree` still follows
+tree pause. `Always` ignores both, although pausing the handle always stops
+advancement. All access to native resources has to happen on Godot's main thread.
 
-Manual scheduling uses `scheduler.Add(material, definition)` or `scheduler.Add(material, definition, owner)`. Without an owner, a manual scheduler has no tree pause policy. Dispose it when finished.
+For manual scheduling, call `scheduler.Add(material, definition)` or
+`scheduler.Add(material, definition, owner)`. Without an owner, a manual scheduler
+has no tree pause policy. Dispose the scheduler when you're finished with it.
 
 ## Built-in material properties
 
-All 25 adapters target `BaseMaterial3D`, supporting both `StandardMaterial3D` and `OrmMaterial3D`.
+All 25 adapters target `BaseMaterial3D`, so they work with both
+`StandardMaterial3D` and `OrmMaterial3D`.
 
 | Property | Definition | Convenience method |
 | --- | --- | --- |
@@ -55,11 +71,25 @@ All 25 adapters target `BaseMaterial3D`, supporting both `StandardMaterial3D` an
 | UV1 offset/scale | Tweens.MaterialUv1Offset / Tweens.MaterialUv1Scale | TweenUv1Offset / TweenUv1Scale |
 | UV2 offset/scale | Tweens.MaterialUV2Offset / Tweens.MaterialUV2Scale | TweenUV2Offset / TweenUV2Scale |
 
-Each UV property also has X/Y/Z variants, such as `Tweens.MaterialUv1OffsetX` / `TweenUv1OffsetX`. Component setters preserve other components at each write, including concurrent edits. Every convenience method accepts a SceneTree or an owner Node, plus an optional configuration callback.
+Each UV property also has X/Y/Z variants, such as `Tweens.MaterialUv1OffsetX` /
+`TweenUv1OffsetX`. A component setter leaves the other components as they are at
+each write, including concurrent edits to them. Every convenience method accepts a
+SceneTree or an owner Node, plus an optional configuration callback.
 
-Set rendering features explicitly: alpha fading needs a suitable transparency mode; emission needs `EmissionEnabled`; normal strength needs a normal map and `NormalEnabled`. `EmissionIntensity` requires `rendering/lights_and_shadows/use_physical_light_units`. UV animation only becomes visible with suitable textures/mapping. Tweens do not change these modes or flags. Native setters retain their usual limits and renderer-specific behavior. See [BaseMaterial3D](https://docs.godotengine.org/en/stable/classes/class_basematerial3d.html).
+Tweens don't change rendering modes or flags, so enable the features you animate
+yourself:
 
-For independent ordinary-material values, duplicate once during scene setup, assign that duplicate, and use it for subsequent tweens:
+- Alpha fading needs a suitable transparency mode.
+- Emission needs `EmissionEnabled`.
+- Normal strength needs a normal map and `NormalEnabled`.
+- `EmissionIntensity` requires `rendering/lights_and_shadows/use_physical_light_units`.
+- UV animation only becomes visible with suitable textures and mapping.
+
+Native setters keep their usual limits and renderer-specific behavior. See
+[BaseMaterial3D](https://docs.godotengine.org/en/stable/classes/class_basematerial3d.html).
+
+To give one node its own values on an ordinary material, duplicate the material
+once during scene setup, assign the duplicate, and use that for later tweens:
 
 ```csharp
 var unique = (StandardMaterial3D)shared.Duplicate();

@@ -12,8 +12,8 @@ is planned.
 | GDScript addon | Planned; no installable addon yet | Minimum Godot version and exports pending validation |
 
 The C# package ID and namespace are both `tweens.gd`. The local development
-version is `0.1.0`; it has not been published to nuget.org. [Install](/csharp/installation/)
-it from source or from a locally packed package.
+version is `0.1.0`, which hasn't been published to nuget.org.
+[Install](/csharp/installation/) it from source or from a locally packed package.
 
 ## C# engine and platform support
 
@@ -34,14 +34,15 @@ is a private build dependency.
 
 ## Rendering requirements
 
-Changing a property does not enable a rendering feature. Configure transparency,
+Changing a property doesn't enable a rendering feature. Configure transparency,
 emission, normal maps, and particle modes before animating them. Shader default
-lookup needs a working renderer; a dummy headless renderer may not supply it.
+lookup needs a working renderer, which a dummy headless renderer may not supply.
 See [materials](/csharp/materials/) and [shader uniforms](/csharp/shaders/).
 
 ## GDScript availability
 
 The addon is intended for Godot projects without .NET. Its implementation may
 use GDScript alone or GDScript with GDExtension, depending on measured performance.
-No native backend, supported platform list, or parity claim is established yet.
+Whether it gets a native backend isn't decided, and there's no supported platform
+list or parity claim yet.
 See [addon status](/gdscript/) for the intended scope.

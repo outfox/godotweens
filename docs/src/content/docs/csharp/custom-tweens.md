@@ -3,9 +3,10 @@ title: Custom tweens
 description: Animate callback values and custom properties, or drive a scheduler yourself.
 ---
 
-Use a callback value tween when there is no native property adapter. Use
-`Tweens.Property<TTarget, TValue>` when you can supply a typed getter, setter, and
-interpolator. Neither approach needs reflection or property paths.
+When there's no native property adapter for what you want to animate, use a
+callback value tween. If you can supply a typed getter, setter, and interpolator,
+use `Tweens.Property<TTarget, TValue>` instead. Neither approach needs reflection
+or property paths.
 
 ## Callback values
 
@@ -21,10 +22,10 @@ var value = owner.Tween(new Tweens.Float
 });
 ```
 
-The owner is an in-tree `Node`. It controls lifetime; values are delivered through
-`OnUpdate`. The eight value definitions are `Tweens.Float`, `Tweens.Double`,
-`Tweens.Vector2`, `Tweens.Vector3`, `Tweens.Vector4`, `Tweens.Color`, `Tweens.Quaternion`,
-and `Tweens.Rect2`.
+`owner` is an in-tree `Node` that controls the tween's lifetime, and each value
+arrives through `OnUpdate`. The eight value definitions are `Tweens.Float`,
+`Tweens.Double`, `Tweens.Vector2`, `Tweens.Vector3`, `Tweens.Vector4`,
+`Tweens.Color`, `Tweens.Quaternion`, and `Tweens.Rect2`.
 
 ## Custom managed properties
 
@@ -61,24 +62,27 @@ public static class MeterExample
 }
 ```
 
-`TweenScheduler` belongs to its creating thread. Drive it with `Update(delta,
-unscaledDelta, mode)` and dispose it when finished; disposal settles remaining
-work. A manual scheduler with no owner has no tree pause policy. Native targets
-still require Godot's main thread, and nodes must have an in-tree owner.
+A `TweenScheduler` belongs to the thread that created it. Drive it with
+`Update(delta, unscaledDelta, mode)`, and dispose it when you're finished to
+settle any remaining work. A manual scheduler with no owner has no tree pause
+policy. Native targets still require Godot's main thread, and nodes must have an
+in-tree owner.
 
 For a custom property on a `Node`, pass its definition to `node.Tween(definition)`
-to use automatic scheduling instead. Automatic `CancelTweens` does not reach
-separate manual schedulers.
+to use automatic scheduling instead. `CancelTweens` only cancels automatically
+scheduled tweens and doesn't reach separate manual schedulers.
 
 ## Custom definitions and bindings
 
-Derive from `TweenDefinition<TTarget, TValue>` and implement protected `Read`,
-`Write`, and `Interpolate` methods. `TTarget` is a reference type; `TValue` is a
-value type. The `Interpolators` helpers cover the built-in numeric/vector types.
+Derive from `TweenDefinition<TTarget, TValue>` and implement the protected `Read`,
+`Write`, and `Interpolate` methods. `TTarget` is a reference type and `TValue` is a
+value type. The `Interpolators` helpers cover the built-in numeric and vector
+types.
 
 For per-playback bindings, override `Prepare`, `Restore`, and `Release`.
-Preparation runs on the private definition snapshot before its initial read.
-Restoration may restore a property value or remove an override. Cleanup also
-runs after failed preparation and must release only resources owned by that
-snapshot. Custom reference-valued configuration remains shared after the shallow
-snapshot; do not mutate shared configuration during independent playbacks.
+`Prepare` runs on the playback's private definition snapshot, before its initial
+read. `Restore` may write back a property value or remove an override instead.
+`Release` also runs after a failed preparation, and it must release only resources
+owned by that snapshot. The snapshot is shallow, so reference-valued configuration
+on a custom definition stays shared. Don't mutate that shared configuration while
+independent playbacks use it.

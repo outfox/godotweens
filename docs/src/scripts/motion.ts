@@ -62,6 +62,9 @@ export const EASES = {
 	BounceIn: (t: number) => 1 - bounceOut(1 - t),
 	BounceOut: bounceOut,
 	BounceInOut: (t: number) => (t < 0.5 ? (1 - bounceOut(1 - 2 * t)) / 2 : (1 + bounceOut(2 * t - 1)) / 2),
+	// Hermite smoothstep and Perlin's smootherstep: symmetric, no overshoot, zero speed at both ends.
+	SmoothStep: (t: number) => t * t * (3 - 2 * t),
+	SmootherStep: (t: number) => t * t * t * (t * (6 * t - 15) + 10),
 } as const;
 
 export type EaseName = keyof typeof EASES;

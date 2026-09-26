@@ -55,7 +55,7 @@
 		let state: State = 'Ready';
 		let elapsed = 0;
 
-		const x = () => 24 + 352 * EASES.CubicInOut(elapsed / DURATION);
+		const x = () => 24 + 352 * EASES.SmootherStep(elapsed / DURATION);
 		const render = () => {
 			const px = x();
 			sprite.setAttribute('transform', `translate(${px.toFixed(2)} 32)`);
@@ -85,7 +85,7 @@
 				reasonOut.textContent = `Reason.${next}`;
 				reasonOut.parentElement!.classList.add('is-settled');
 				highlight('await');
-				announce.textContent = `End settled: ${next}`;
+				announce.textContent = `End settled with ${next}.`;
 			} else if (next === 'Playing' && elapsed === 0) {
 				reasonOut.textContent = 'pending…';
 				reasonOut.parentElement!.classList.remove('is-settled');

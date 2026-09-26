@@ -4,12 +4,12 @@ description: Planned Godot addon scope and availability; no installable GDScript
 ---
 
 :::note[Planned implementation]
-The GDScript addon is not implemented or available to install yet. The C#
+The GDScript addon isn't implemented yet, so there's nothing to install. The C#
 documentation describes the existing library, not a GDScript API you can call.
 :::
 
-tweens.gd will also contain a Godot addon intended for projects without .NET.
-The aim is equivalent functionality: reusable definitions, independent playback,
+tweens.gd will also include a Godot addon for projects without .NET. It aims to
+match what the C# library does: reusable definitions, independent playback,
 timing and easing, cancellation, node ownership, and property/material/shader
 adapters.
 
@@ -27,9 +27,9 @@ adapters.
 | Package/download | Not available |
 
 The [definitions](/concepts/definitions/), [timing](/concepts/timing/), and
-[lifetime](/concepts/lifetime/) pages describe the model the addon is intended to follow. Exact parity will be documented as implementations are tested.
-The choice of a native backend depends on measurements, not an assumption that
-every workload requires it.
+[lifetime](/concepts/lifetime/) pages describe the model the addon is meant to
+follow. Exact parity will be documented as implementations are tested. Whether
+the addon needs a native backend will be decided by measuring performance.
 
 ## Documentation to expect
 

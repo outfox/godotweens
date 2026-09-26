@@ -7,13 +7,13 @@ import TimingLab from '../../../components/TimingLab.astro';
 import FillModes from '../../../components/FillModes.astro';
 
 A tween waits out its delay, plays a forward leg, and optionally returns and
-repeats. Most tweens only need `Duration`, `Delay`, and an ease; the rest of this
-page is for loops and edge cases.
+repeats. Most tweens only need `Duration`, `Delay`, and an ease. Everything else
+here is for loops and edge cases.
 
 ## Loop forever
 
-Idle motion such as bobbing or pulsing is one definition that ping-pongs forever.
-It stops by itself when its node leaves the tree:
+For idle motion such as bobbing or pulsing, use one definition that ping-pongs
+forever. It stops by itself when `sprite` leaves the tree:
 
 ```csharp
 var bob = new Tweens.Position2DY
@@ -35,7 +35,7 @@ All times are double-precision seconds.
 | --- | --- | --- |
 | `Duration` | `0` | Seconds per leg. Zero completes on the first eligible update. |
 | `Delay` | `0` | Initial wait before the first leg. |
-| `Repeats` | `0` | Cycles after the first. `TweenOptions.Infinite` (-1) repeats until cancelled; an infinite cycle that takes zero time is rejected. |
+| `Repeats` | `0` | Cycles after the first. `TweenOptions.Infinite` (-1) repeats until cancelled. An infinite cycle that takes zero time is rejected. |
 | `UsePingPong` | `false` | A forward and a backward leg form one cycle. |
 | `PingPongInterval` | `0` | Wait at the far endpoint before returning. |
 | `RepeatInterval` | `0` | Wait between cycles, never after the last one. |
@@ -48,8 +48,8 @@ and one 0.3-second gap. Drag the timeline to see each phase:
 <TimingLab />
 
 Negative and non-finite values are rejected. A long frame advances to the correct
-phase, even across several cycles, without losing time at boundaries. It does not
-replay the callbacks of the cycles it skipped.
+phase, even across several cycles, without losing time at boundaries, but it
+doesn't replay the callbacks of the cycles it skipped.
 
 ## Fill and restoration
 
@@ -67,17 +67,19 @@ Use `Both` for staggered entrances, so items that are still waiting show their
 
 <FillModes />
 
-A ping-pong tween ends at its starting endpoint. Cancellation always keeps the
-latest value, whatever the fill mode. Shader restoration also preserves whether an
-explicit override existed; see [shader uniforms](/csharp/shaders/).
+A ping-pong tween ends at its starting endpoint, so that endpoint is its final
+value. Cancelling always keeps the latest value, whatever the fill mode. Shader
+restoration also preserves whether an explicit override existed (see
+[shader uniforms](/csharp/shaders/)).
 
 ## Process and physics
 
 `ProcessMode` defaults to `TweenProcessMode.Process`. Choose
-`TweenProcessMode.Physics` to update with physics. The automatic runner uses
-process and physics priority `1000`, after nodes with default priority.
+`TweenProcessMode.Physics` to update with physics instead. The automatic runner
+uses process and physics priority `1000`, so it runs after nodes with default
+priority.
 
-`UseUnscaledTime = true` ignores `Engine.TimeScale`: process updates use
+`UseUnscaledTime = true` ignores `Engine.TimeScale`. Process updates then use
 monotonic engine ticks, and physics updates use `1 / PhysicsTicksPerSecond` per
 tick, which is simulation time rather than wall-clock time during catch-up.
 Neither option changes pause or ownership rules.
@@ -85,5 +87,5 @@ Neither option changes pause or ownership rules.
 ## Progress
 
 A handle's `Progress` is the current leg's position from 0 to 1, before easing. It
-runs backwards during a ping-pong return and is not the fraction of all cycles
+runs backwards during a ping-pong return, and it isn't the fraction of all cycles
 completed.

@@ -34,9 +34,9 @@ const modes = [
 		}
 	</div>
 	<p class="key">
-		<span><b class="k-from">From</b> left</span>
-		<span><b class="k-init">captured initial value</b> dashed</span>
-		<span><b class="k-to">To</b> right</span>
+		<span><b class="k-from">From</b> at left</span>
+		<span><b class="k-init">captured initial value</b> (dashed)</span>
+		<span><b class="k-to">To</b> at right</span>
 	</p>
 </div>
 
@@ -71,7 +71,7 @@ const modes = [
 					const restore = row.dataset.restore === 'true';
 					let x: number;
 					if (phase === 'delay') x = delayFrom ? FROM : INITIAL;
-					else if (phase === 'play') x = FROM + (TO - FROM) * EASES.CubicInOut((c - DELAY) / LEG);
+					else if (phase === 'play') x = FROM + (TO - FROM) * EASES.SmootherStep((c - DELAY) / LEG);
 					else x = restore ? INITIAL : TO;
 
 					// Snaps (to From, or back to the initial value) get a short tween so the eye can follow them.

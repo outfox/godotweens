@@ -3,7 +3,15 @@ import { curvePath, type EaseName } from '../scripts/motion';
 
 const families = ['Sine', 'Quad', 'Cubic', 'Quart', 'Quint', 'Expo', 'Circ', 'Back', 'Elastic', 'Bounce'];
 const variants = ['In', 'Out', 'InOut'] as const;
+// Symmetric eases without In/Out variants, shown on their own row.
+const smooth: [EaseName, string][] = [
+	['SmoothStep', 'Step'],
+	['SmootherStep', 'Smoother'],
+];
+const total = 1 + smooth.length + families.length * variants.length;
 const TILE_W = 100;
+// Two smooth tiles share the width of three, so their drawings run wider at the same height.
+const SMOOTH_W = 150;
 const TILE_H = 64;
 const TILE_PAD = 14;
 const ghosts = Array.from({ length: 11 }, (_, i) => i);
@@ -32,7 +40,7 @@ const ghosts = Array.from({ length: 11 }, (_, i) => i);
 		</div>
 		<div class="side">
 			<p class="name"><span class="ns">EaseType.</span><span data-name>BackOut</span></p>
-			<p class="hint">Onion-skin rings mark equal slices of time. Wide gaps are fast; bunched rings are slow. Dashed zones catch overshoot.</p>
+			<p class="hint">Onion-skin rings mark equal slices of time, so the ball moves fast where they spread out and slow where they bunch up. The dashed zones show where an ease goes past an endpoint.</p>
 			<label class="tw-field">
 				<span>Duration <output data-duration-out>0.8 s</output></span>
 				<input type="range" min="0.2" max="3" step="0.1" value="0.8" data-duration />
@@ -42,7 +50,7 @@ const ghosts = Array.from({ length: 11 }, (_, i) => i);
 					<svg viewBox="0 0 16 16" fill="currentColor"><path d="M5 3l8 5-8 5z"></path></svg>
 					Play
 				</button>
-				<button type="button" class="tw-btn" data-race>Race all 31</button>
+				<button type="button" class="tw-btn" data-race>Race all {total}</button>
 			</div>
 		</div>
 	</div>
@@ -57,6 +65,20 @@ const ghosts = Array.from({ length: 11 }, (_, i) => i);
 				</svg>
 				<span class="v">Linear</span>
 			</button>
+		</div>
+		<div class="family smooth">
+			<span class="fam">Smooth</span>
+			{
+				smooth.map(([name, label]) => (
+					<button type="button" class="tile" data-ease={name} aria-pressed="false" aria-label={name}>
+						<svg viewBox={`0 0 ${SMOOTH_W} ${TILE_H}`} aria-hidden="true">
+							<path d={curvePath(name, SMOOTH_W, TILE_H, TILE_PAD)} />
+							<circle r="4" cx="0" cy={TILE_H - TILE_PAD} />
+						</svg>
+						<span class="v">{label}</span>
+					</button>
+				))
+			}
 		</div>
 		{
 			families.map((f) => (
@@ -84,7 +106,6 @@ const ghosts = Array.from({ length: 11 }, (_, i) => i);
 <script>
 	import { EASES, type EaseName, curvePath, tween, onceVisible, type TweenHandle } from '../scripts/motion';
 
-	const TILE_W = 100;
 	const TILE_H = 64;
 	const TILE_PAD = 14;
 
@@ -146,7 +167,7 @@ const ghosts = Array.from({ length: 11 }, (_, i) => i);
 		const runTile = (tile: HTMLButtonElement, p: number) => {
 			const dot = tile.querySelector('circle')!;
 			const w = EASES[tile.dataset.ease as EaseName](p);
-			dot.setAttribute('cx', (p * TILE_W).toFixed(2));
+			dot.setAttribute('cx', (p * tile.querySelector('svg')!.viewBox.baseVal.width).toFixed(2));
 			dot.setAttribute('cy', (TILE_H - TILE_PAD - w * (TILE_H - 2 * TILE_PAD)).toFixed(2));
 			tile.style.setProperty('--w', w.toFixed(3));
 		};
@@ -346,6 +367,9 @@ const ghosts = Array.from({ length: 11 }, (_, i) => i);
 	}
 	.linear .tile {
 		grid-column: 2 / span 1;
+	}
+	.smooth {
+		grid-template-columns: 3.6rem repeat(2, minmax(0, 1fr));
 	}
 	.is-racing .tile {
 		background: color-mix(in oklab, var(--tw-mint) calc(var(--w, 0) * 22%), var(--tw-stage));

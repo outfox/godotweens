@@ -3,7 +3,10 @@ title: Node and value catalog
 description: Typed definitions, convenience methods, units, and Godot property constraints.
 ---
 
-The node/value catalog provides 306 built-in definitions (298 node/property definitions and 8 callback value definitions). Each has a typed convenience extension. Adapters use Godot properties directly; no runtime reflection or string property paths are used.
+The node/value catalog has 306 built-in definitions: 298 for node properties and
+8 that deliver callback values. Each one has a typed convenience extension.
+Adapters use Godot properties directly, without runtime reflection or string
+property paths.
 
 ## Usage
 
@@ -22,18 +25,18 @@ await Group.Of(movement, fade).End;
 Signatures are `target.TweenProperty(to, duration, configure = null)`. The optional
 typed configure callback runs synchronously before playback starts and may override
 `From`, `To`, `Duration`, or any other definition setting, including callbacks.
-Configuration errors propagate before playback is added. Keep using
-`target.Tween(new Definition { ... })` for reusable definitions. Both forms return a
+Configuration errors propagate before playback is added. For reusable definitions,
+use `target.Tween(new Definition { ... })`. Both forms return a
 `TweenInstance<TTarget, TValue>` handle with pause, cancel, and completion support,
 and the same [owner lifetime](/concepts/lifetime/).
 
-Base-class extensions apply to derived nodes: `Node2D` and `Node3D` provide
-transforms, `CanvasItem` provides 2D modulation, `Control` provides layout,
-`SpriteBase3D` provides 3D sprite appearance, `GeometryInstance3D` provides
-transparency, and `Range` provides `Value`. Specific overloads take precedence over
-the generic `Node` callback value helpers: a node with a color property uses its
-property-specific `TweenColor` overload. Use an explicit value definition when that
-distinction matters.
+Extensions on a base class work on every node derived from it. `Node2D` and
+`Node3D` carry the transforms, `CanvasItem` the 2D modulation, `Control` the layout,
+`SpriteBase3D` the 3D sprite appearance, `GeometryInstance3D` the transparency, and
+`Range` the `Value`. Specific
+overloads take precedence over the generic `Node` callback value helpers, so on a
+node with a color property, `TweenColor` resolves to the property-specific
+overload. Use an explicit value definition when that distinction matters.
 
 Units, value types, and the Godot constraints that still apply are listed under
 [units and engine constraints](#units-and-engine-constraints), after the catalog.
@@ -46,7 +49,7 @@ Units, value types, and the Godot constraints that still apply are listed under
 - Animation and audio: [AnimationPlayer](#animationplayer) · [AudioStreamPlayer](#audiostreamplayer) · [AudioStreamPlayer2D](#audiostreamplayer2d) · [AudioStreamPlayer3D](#audiostreamplayer3d)
 - Any node: [Callback values](#callback-values)
 
-Each row is a supported definition and its convenience method. Names ending in X, Y,
+Each row pairs a definition with its convenience method. Names ending in X, Y,
 Z, or Alpha affect one component. Each method takes the target value, a duration,
 and either an optional configure callback or a `TweenOptions` value.
 
@@ -580,32 +583,33 @@ These target any `Node`, write no property, and deliver each sample to `OnUpdate
   sprite `Frame`) interpolate continuously, round to nearest with midpoint ties away
   from zero, and saturate at `Int32` limits. Native constraints still apply. Set up
   sprite frames and animations, and scrollable content, before tweening them. A
-  negative `VisibleCharacters` value keeps its native Godot meaning; set `From = 0`
-  explicitly for a reveal.
+  negative `VisibleCharacters` value keeps its native Godot meaning, so set
+  `From = 0` explicitly for a reveal.
 - `Tweens.GlobalQuaternion3D` interpolates along the shortest quaternion path, then
   writes Godot's YXZ global rotation. It preserves the current global position and
-  basis scale. Like Godot's `GlobalRotation`, it replaces shear and can change local
-  scale under a nonuniformly scaled parent. It does not preserve an arbitrary sheared
-  transform. Singular transforms are not a supported orientation use case.
+  basis scale. Like Godot's `GlobalRotation`, it replaces shear, so an arbitrary
+  sheared transform isn't preserved, and it can change local scale under a
+  nonuniformly scaled parent. Singular transforms aren't a supported orientation
+  use case.
 - `Node2D` global scale and skew follow Godot's parent-relative decomposition. Under
-  a nonuniformly scaled parent, changing skew can also change apparent scale; the two
-  are not independent transform channels. Axis definitions (`...X`, `...Y`) preserve
-  the other components of the property they write, not every derived transform
-  component.
+  a nonuniformly scaled parent the two aren't independent transform channels:
+  changing skew can also change apparent scale. Axis definitions (`...X`, `...Y`)
+  preserve the other components of the property they write, but not every derived
+  transform component.
 - `Control` anchors use push-opposite behavior. Minimum and maximum size constraints
   and containers still apply. The `OffsetTransform` properties require
-  `OffsetTransformEnabled = true`; they move and scale a control visually without
+  `OffsetTransformEnabled = true`. They move and scale a control visually without
   rewriting its container-controlled `Position` and `Size`. The pivot and position
   `Ratio` variants are relative to `Control.Size`.
 - Path definitions require a `PathFollow2D` or `PathFollow3D` under a matching
   `Path2D` or `Path3D` with a nonempty curve. `ProgressRatio` is normalized;
   `Progress` is a distance. The node still controls looping and wrapping.
 - `Camera3D` `Size` and `FrustumOffset` depend on the projection mode,
-  `LightTemperature` depends on physical light settings, and particle emission
-  parameters depend on the configured emitter modes and materials. Setting a property
-  does not enable a rendering feature or create a resource.
+  `LightTemperature` on physical light settings, and particle emission parameters on
+  the configured emitter modes and materials. Setting a property doesn't enable a
+  rendering feature or create a resource.
 - `GeometryInstance3D.Transparency` is an amount of transparency (0 opaque,
   1 transparent), not opacity. Renderer support and sorting limitations are Godot's.
-  A headless property test does not guarantee identical rendering across backends.
-- Materials and shader parameters are covered in [materials](/csharp/materials/) and
+  A headless property test doesn't guarantee identical rendering across backends.
+- For materials and shader parameters, see [materials](/csharp/materials/) and
   [shaders](/csharp/shaders/).
