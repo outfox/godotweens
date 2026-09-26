@@ -1,0 +1,21 @@
+{
+  "tolerance": 0.000001,
+  "cases": [
+    {"name":"short member inserted first", "durations":[0.5,1], "order":[0,1],
+      "samples":[{"delta":1.25,"settled":true}], "next_delta":0.25,"next_value":0.5},
+    {"name":"long member inserted first", "durations":[1,0.5], "order":[0,1],
+      "samples":[{"delta":1.25,"settled":true}], "next_delta":0.25,"next_value":0.5},
+    {"name":"reversed group order", "durations":[0.5,1], "order":[1,0],
+      "samples":[{"delta":1.25,"settled":true}], "next_delta":0.25,"next_value":0.5},
+    {"name":"completion across ticks", "durations":[0.5,1], "order":[0,1],
+      "samples":[{"delta":0.75,"settled":false},{"delta":0.5,"settled":true}], "next_delta":0.25,"next_value":0.5},
+    {"name":"completion across ticks reversed", "durations":[1,0.5], "order":[1,0],
+      "samples":[{"delta":0.75,"settled":false},{"delta":0.5,"settled":true}], "next_delta":0.25,"next_value":0.5},
+    {"name":"equal finish times", "durations":[0.5,0.5], "order":[0,1],
+      "samples":[{"delta":0.75,"settled":true}], "next_delta":0.25,"next_value":0.5},
+    {"name":"zero duration member", "durations":[0,0.5], "order":[0,1],
+      "samples":[{"delta":0.75,"settled":true}], "next_delta":0.25,"next_value":0.5},
+    {"name":"three different finish ticks", "durations":[2,1,0.25], "order":[2,0,1],
+      "samples":[{"delta":0.5,"settled":false},{"delta":1,"settled":false},{"delta":0.75,"settled":true}], "next_delta":0.25,"next_value":0.5}
+  ]
+}

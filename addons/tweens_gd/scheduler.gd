@@ -10,6 +10,7 @@ const Types = preload("types.gd")
 const Definition = preload("definition.gd")
 const Handle = preload("handle.gd")
 const Interpolation = preload("interpolation.gd")
+const Carry = preload("carry.gd")
 
 var last_error: String = ""
 var active_count: int:
@@ -25,7 +26,6 @@ var _instances: Array[Handle] = []
 var _updating: bool = false
 var _disposed: bool = false
 var _ticks: Array[int] = [0, 0]
-var _carry: Dictionary = {}
 
 ## Node targets bind to themselves. Other Objects can optionally bind to an owner.
 ## Always returns a handle. Invalid starts are already settled with Reason.FAILED.
@@ -57,8 +57,7 @@ func add(target: Variant, definition: Definition, owner: Variant = null) -> Hand
 			return _reject("Quaternion endpoints must have nonzero length.")
 	var tree: SceneTree = owner.get_tree() if is_instance_valid(owner) else null
 	var instance := Handle.new(self, target, snapshot, initial, owner, tree)
-	if not _carry.is_empty() and _carry.mode == instance._mode and _carry.unscaled == instance._unscaled and _carry.tick == _ticks[instance._mode]:
-		instance._clock.elapsed = _carry.seconds
+	instance._clock.elapsed = Carry.credit(self, instance._mode, instance._unscaled, _ticks[instance._mode])
 	if _disposed:
 		instance._finish(Types.Reason.RUNNER_DISPOSED)
 		return instance
@@ -108,7 +107,6 @@ func dispose() -> void:
 	_disposed = true
 	for instance in _instances.duplicate(): instance._finish(Types.Reason.RUNNER_DISPOSED)
 	if not _updating: _instances.clear()
-	_carry = {}
 
 func _compact() -> void:
 	var kept := 0

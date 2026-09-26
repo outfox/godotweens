@@ -7,6 +7,7 @@ extends RefCounted
 const Types = preload("types.gd")
 const Definition = preload("definition.gd")
 const Handle = preload("handle.gd")
+const Group = preload("group.gd")
 const Scheduler = preload("scheduler.gd")
 const Easing = preload("easing.gd")
 const Runner = preload("runner.gd")
@@ -51,6 +52,10 @@ static func play(target: Variant, definition: Definition, owner: Variant = null)
 	if owner.get_tree().has_meta(Runner.CLOSING_KEY):
 		return _reject("The scene tree is shutting down.")
 	return _runner(owner.get_tree()).scheduler.add(target, definition, owner)
+
+## Groups existing playback handles; interrupted members cancel their siblings.
+static func group(members: Variant) -> Group:
+	return Group.of(members)
 
 static func _reject(message: String) -> Handle:
 	push_error("tweens.gd: " + message)

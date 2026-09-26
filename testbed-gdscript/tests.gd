@@ -6,6 +6,7 @@ const T = preload("res://addons/tweens_gd/tweens.gd")
 const Playback = preload("res://addons/tweens_gd/playback.gd")
 const ErrorCollector = preload("error_collector.gd")
 const Benchmark = preload("benchmark.gd")
+const GroupTests = preload("group_tests.gd")
 
 var finished := false
 var checks := 0
@@ -66,6 +67,7 @@ func run_tests() -> void:
 			_callbacks, _setter_reentrancy, _lifetime, _pause_and_lanes, _detected_faults, _reference_cleanup]:
 		check(test.call() == true, "Test returned normally: " + test.get_method())
 	await _await_and_carry()
+	check(await GroupTests.new().run(self) == true, "group suite returned normally")
 	await _automatic_runner()
 	await _rejected_starts()
 	failures.append_array(_collector.take_errors())
@@ -453,6 +455,7 @@ func _automatic_runner() -> void:
 	var node := Node2D.new()
 	add_child(node)
 	var h := T.play(node, T.property(^"position:x", 10.0, 0.0))
+	var group := T.group([h, T.play(node, T.property(^"position:y", 20.0, 0.0))])
 	var runner = get_tree().get_meta(T.Runner.META_KEY)
 	check(runner == T._runner(get_tree()), "one automatic runner per tree")
 	check(not runner.is_inside_tree(), "runner attachment is deferred")
@@ -460,6 +463,7 @@ func _automatic_runner() -> void:
 	await get_tree().process_frame
 	check(runner.is_inside_tree() and runner.process_priority == 1000, "runner attached with correct priority")
 	check(h.is_settled and node.position.x == 10.0, "automatic processing completes tween")
+	check(await group.wait() == T.Reason.COMPLETED and node.position.y == 20.0, "automatic runner completes and awaits group")
 	var child := Node2D.new()
 	node.add_child(child)
 	var a := T.play(node, T.property(^"position:x", 0.0, 10.0))

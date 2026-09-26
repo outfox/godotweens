@@ -148,7 +148,49 @@ in a separate coroutine awaiting `wait()`. GDScript cannot catch arbitrary scrip
 errors as C# exceptions. Invalid configuration, stale Callables, nonnumeric/nonfinite
 easing and nonfinite interpolation are detected; arbitrary errors inside callbacks
 or custom property setters remain Godot script errors, with no promised conversion
-to `FAILED`. There is no per-wait cancellation token, group API or C# task parity.
+to `FAILED`. There is no per-wait cancellation token or C# task parity.
+
+## Groups
+
+Group existing handles to control and await parallel playback as one step:
+
+```gdscript
+var motion := Tweens.group([
+	Tweens.play(sprite, Tweens.property(^"position", Vector2(400, 180), 0.6)),
+	Tweens.play(sprite, Tweens.property(^"modulate:a", 0.0, 0.3)),
+])
+motion.pause()
+motion.resume()
+if await motion.wait() == Tweens.Reason.COMPLETED:
+	print("Moved and faded")
+```
+
+`Tweens.Group.of(handles)` is equivalent. A group completes after every member
+settles, including its callbacks and cleanup. When a member stops without completing,
+the group cancels its active siblings and keeps that first stop reason. This includes
+already-rejected `FAILED` handles. `group.cancel()` cancels the remaining playback;
+completed members keep their result. The group supports multiple and late waits,
+and emits `ended(reason)` once. Use `wait()` for possibly already-settled groups.
+
+`is_terminal`, `is_settled`, `completion_reason`, `error` and `errors` expose the
+result. `error` joins detected member diagnostics with newlines; `errors` returns
+a copy of the individual messages. `is_paused` is true only when there is active
+playback and every active member is paused; assigning it pauses/resumes those members.
+`members` returns a copy of the handles, with duplicates removed in first-occurrence
+order. Input arrays can be changed after construction without changing the group.
+Groups retain their handles for inspection; release groups you no longer need.
+Dropping a group does not cancel playback or remove its sibling-cancellation rule.
+
+An empty array or a non-handle member logs an error and returns an already-settled
+`FAILED` group, without changing any supplied handles. The factory never returns
+null. Groups contain playback handles; definitions must be started with `play()`
+or `scheduler.add()` first.
+
+Successful inline group continuations inherit the overshoot of the member that
+finished last: the latest update, then the smallest overshoot within that update.
+Every member and the continuation must share a scheduler, process lane and time
+scale. Mixed-clock groups and interrupted groups carry no overshoot. New playback
+still first samples on the next eligible update.
 
 ## Manual scheduling and diagnostics
 
@@ -176,11 +218,11 @@ inspection; release handles you no longer need.
 ## Validation and remaining work
 
 The repository's `testbed-gdscript/` contains a standalone Godot test project,
-a minimal 2dog launcher, shared C#/GDScript timing/easing fixtures and a reproducible
+a minimal 2dog launcher, shared C#/GDScript timing/easing/group fixtures and a reproducible
 desktop microbenchmark. See its README for commands. Performance at high tween
 counts needs further work; this implementation is not advertised as equivalent
 to the built-in native Tween's throughput.
 
-Next slices: groups, typed property conveniences, custom adapters, shader uniforms,
+Next slices: typed property conveniences, custom adapters, shader uniforms,
 broader conformance and rendering coverage, constrained-device/web benchmarks,
 export validation and distributable packages. The addon remains pure GDScript.

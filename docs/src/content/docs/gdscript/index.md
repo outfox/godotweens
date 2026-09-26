@@ -47,6 +47,7 @@ without an editor-generated class cache.
 | `Tweens.play(target, definition, owner = null)` | Always return a handle; node targets bind to themselves, other Objects require an owner |
 | `handle.pause()` / `resume()` / `cancel()` | Control independent playback |
 | `await handle.wait()` | Get a completion reason, including when already finished |
+| `Tweens.group(handles)` / `Tweens.Group.of(handles)` | Group existing handles for shared controls, sibling cancellation and `await group.wait()` |
 | `Tweens.cancel_tweens(owner, include_children = false)` | Cancel that owner's automatic playback |
 | `Tweens.Scheduler.new()` | Create a manual scheduler with `add()`, `update()`, `cancel_all()` and `dispose()` |
 
@@ -97,15 +98,50 @@ written. Instance pause always wins; `BOUND`, `SCENE_TREE` and `ALWAYS` select
 the owner/tree pause policy. The automatic runner attaches deferred and processes
 at priority 1000. Dispose manually created schedulers to settle their work.
 
+## Groups
+
+```gdscript
+var motion := Tweens.group([
+	Tweens.play(self, Tweens.property(^"position", Vector2(400, 180), 0.6)),
+	Tweens.play(self, Tweens.property(^"modulate:a", 0.0, 0.3)),
+])
+if await motion.wait() == Tweens.Reason.COMPLETED:
+	print("Moved and faded")
+```
+
+A group awaits every member's settlement, including callbacks and cleanup. The
+first member that stops without completing cancels active siblings; the group
+preserves that stop reason. Already-rejected handles participate too, so a failed
+start cancels the rest of its group. Completed members retain their own results.
+
+Use `pause()`, `resume()`, `cancel()` or assign `is_paused` for shared controls.
+`is_paused` is true when every active member is paused, and false when none remain.
+The result exposes `is_terminal`, `is_settled`, `completion_reason`, an `error`
+string and an `errors` array of detected member diagnostics. Multiple and late
+`wait()` calls work; prefer them to awaiting the one-shot `ended(reason)` signal.
+
+`members` and `errors` return copies. Input handles are snapshotted and duplicates
+are removed in first-occurrence order. An empty array or invalid member reports an
+error and returns an already-settled `FAILED` group, without changing the supplied
+handles. `group()` never returns null. Pass playback handles; start definitions
+with `play()` or `scheduler.add()` first. Release groups when you no longer need
+their member handles. Dropping a group leaves playback and sibling cancellation active.
+
+Successful inline continuations use the last-finishing member's overshoot: the
+latest update, then the smallest overshoot in that update. All members and the
+new playback must share a scheduler, process lane and time scale. Mixed-clock and
+interrupted groups carry no overshoot. The next tween first samples on the next update.
+
 ## Parity and current limits
 
 | Area | Status |
 | --- | --- |
 | Definitions, handles, timing, easing, fills | Implemented; timing/easing fixtures also run against C# |
 | Await, callbacks, cancellation, owner lifetime | Implemented with GDScript completion reasons |
+| Groups, shared controls, sibling cancellation and continuation overshoot | Implemented; shared completion/carry fixtures also run against C# |
 | Process/physics, pause and unscaled clocks | Implemented |
 | Node2D/3D, Control, ordinary resource properties | Available through generic property paths |
-| Named typed adapters, groups, custom adapters, shader uniforms | Follow-up work |
+| Named typed adapters, custom adapters, shader uniforms | Follow-up work |
 | Per-wait cancellation tokens and C# exception tasks | Not provided |
 | Platform validation | Windows headless tests on pinned 2dog/Godot 4.7.2 |
 | Standard Godot exports, older engines, Web/WASM | Not yet validated |

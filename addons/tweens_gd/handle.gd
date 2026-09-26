@@ -11,6 +11,7 @@ const Definition = preload("definition.gd")
 const Playback = preload("playback.gd")
 const Easing = preload("easing.gd")
 const Interpolation = preload("interpolation.gd")
+const Carry = preload("carry.gd")
 
 var target: Object:
 	get: return _target
@@ -211,7 +212,7 @@ func _finish(reason: int) -> void:
 	if reason == Types.Reason.FAILED: _state = Types.State.FAULTED
 	var scheduler = _scheduler.get_ref()
 	if reason == Types.Reason.COMPLETED and scheduler != null:
-		_stamp = {"mode": _mode, "unscaled": _unscaled, "tick": scheduler._ticks[_mode], "seconds": _clock.overshoot}
+		_stamp = {"scheduler": _scheduler, "mode": _mode, "unscaled": _unscaled, "tick": scheduler._ticks[_mode], "seconds": _clock.overshoot}
 	var previous: Dictionary = _enter_carry()
 	var suppress := _options.suppress_callbacks_when_target_invalid and (
 		_invalid_target() or _invalid_owner() or reason in [Types.Reason.TARGET_FREED, Types.Reason.OWNER_EXITED])
@@ -242,12 +243,7 @@ func _settle() -> void:
 	_leave_carry(previous)
 
 func _enter_carry() -> Dictionary:
-	var scheduler = _scheduler.get_ref()
-	if scheduler == null: return {}
-	var previous: Dictionary = scheduler._carry
-	scheduler._carry = _stamp if _reason == Types.Reason.COMPLETED else {}
-	return previous
+	return Carry.enter(_stamp if _reason == Types.Reason.COMPLETED else {})
 
 func _leave_carry(previous: Dictionary) -> void:
-	var scheduler = _scheduler.get_ref()
-	if scheduler != null: scheduler._carry = previous
+	Carry.leave(previous)
