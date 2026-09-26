@@ -1,10 +1,8 @@
 // SPDX-License-Identifier: MIT
 // SPDX-FileCopyrightText: 2026 Moritz Voss
 
-using System;
 using System.Linq;
 using Godot;
-using tweens.gd;
 namespace testbed;
 
 public sealed partial class CardDeal : GalleryEffect

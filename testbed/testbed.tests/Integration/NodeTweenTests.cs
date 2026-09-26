@@ -129,13 +129,13 @@ public class NodeTweenTests(HeadlessFixture godot)
     public void AxisAndAlphaTweensPreserveConcurrentChanges()
     {
         using var scheduler = new TweenScheduler();
-        var node = Attach(new Node2D { Position = new Vector2(2, 3), Modulate = new Color(1, 0, 0, 1) });
+        var node = Attach(new Node2D { Position = new Vector2(2, 3), Modulate = new Color(1, 0, 0) });
         try
         {
             scheduler.Add(node, new Position2DXTween { To = 12, Duration = 1 });
             scheduler.Add(node, new Position2DYTween { To = 23, Duration = 1 });
-            scheduler.Add<CanvasItem, float>(node, new ModulateAlphaTween { To = 0, Duration = 1 });
-            node.Modulate = new Color(0, 1, 0, 1);
+            scheduler.Add(node, new ModulateAlphaTween { To = 0, Duration = 1 });
+            node.Modulate = new Color(0, 1, 0);
             scheduler.Update(0.5);
             Assert.Equal(new Vector2(7, 13), node.Position);
             Assert.Equal(new Color(0, 1, 0, 0.5f), node.Modulate);
@@ -300,14 +300,14 @@ public class NodeTweenTests(HeadlessFixture godot)
         try
         {
             scheduler.Add(control, new ControlPositionTween { To = new Vector2(30, 40), Duration = 1 });
-            scheduler.Add<Godot.Range, double>(range, new RangeValueTween { To = 100, Duration = 1 });
+            scheduler.Add(range, new RangeValueTween { To = 100, Duration = 1 });
             scheduler.Add(audio, new AudioVolumeDbTween { To = 0, Duration = 1 });
             scheduler.Add(audio2D, new AudioVolumeLinear2DTween { To = 0, Duration = 1 });
             scheduler.Add(audio3D, new AudioPitchScale3DTween { To = 2, Duration = 1 });
-            scheduler.Add<Light3D, float>(light, new LightEnergy3DTween { To = 3, Duration = 1 });
+            scheduler.Add(light, new LightEnergy3DTween { To = 3, Duration = 1 });
             scheduler.Add(light, new OmniRangeTween { To = 20, Duration = 1 });
             scheduler.Add(spot, new SpotAngleTween { To = 40, Duration = 1 });
-            scheduler.Add<Light2D, float>(light2D, new LightEnergy2DTween { To = 3, Duration = 1 });
+            scheduler.Add(light2D, new LightEnergy2DTween { To = 3, Duration = 1 });
             scheduler.Update(0.5);
             Assert.Equal(new Vector2(20, 30), control.Position);
             Assert.Equal(60, range.Value);

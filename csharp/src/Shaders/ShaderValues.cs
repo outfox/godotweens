@@ -34,7 +34,7 @@ internal static class ShaderValues<T> where T : struct
     internal static T Read(Variant value)
     {
         ValidateType(value.VariantType);
-        object result = typeof(T) == typeof(float) ? (object)value.AsSingle()
+        object result = typeof(T) == typeof(float) ? value.AsSingle()
             : typeof(T) == typeof(double) ? value.AsDouble()
             : typeof(T) == typeof(int) ? checked((int)value.AsInt64())
             : typeof(T) == typeof(Vector2) ? value.AsVector2()

@@ -78,12 +78,12 @@ public sealed class RangeValueTween() : PropertyTween<Godot.Range, double>(
 /// <summary>Animates Control ControlAnchorMin; values use Godot property units.</summary>
 [System.ComponentModel.EditorBrowsable(System.ComponentModel.EditorBrowsableState.Never)]
 public sealed class ControlAnchorMinTween() : PropertyTween<Control, Vector2>(
-    static n => new Vector2(n.AnchorLeft, n.AnchorTop), static (n, value) => { n.SetAnchor(Side.Left, value.X, false, true); n.SetAnchor(Side.Top, value.Y, false, true); }, Interpolators.Vector2);
+    static n => new Vector2(n.AnchorLeft, n.AnchorTop), static (n, value) => { n.SetAnchor(Side.Left, value.X); n.SetAnchor(Side.Top, value.Y); }, Interpolators.Vector2);
 
 /// <summary>Animates Control ControlAnchorMax; values use Godot property units.</summary>
 [System.ComponentModel.EditorBrowsable(System.ComponentModel.EditorBrowsableState.Never)]
 public sealed class ControlAnchorMaxTween() : PropertyTween<Control, Vector2>(
-    static n => new Vector2(n.AnchorRight, n.AnchorBottom), static (n, value) => { n.SetAnchor(Side.Right, value.X, false, true); n.SetAnchor(Side.Bottom, value.Y, false, true); }, Interpolators.Vector2);
+    static n => new Vector2(n.AnchorRight, n.AnchorBottom), static (n, value) => { n.SetAnchor(Side.Right, value.X); n.SetAnchor(Side.Bottom, value.Y); }, Interpolators.Vector2);
 
 /// <summary>Animates Control ControlOffsets; values use Godot property units.</summary>
 [System.ComponentModel.EditorBrowsable(System.ComponentModel.EditorBrowsableState.Never)]

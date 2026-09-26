@@ -2,7 +2,6 @@
 // SPDX-FileCopyrightText: 2026 Moritz Voss
 
 using Godot;
-using tweens.gd;
 namespace testbed;
 
 public sealed partial class ScrollingList : GalleryEffect
@@ -38,7 +37,7 @@ public sealed partial class ScrollingList : GalleryEffect
             Color = accent, CustomMinimumSize = new Vector2(4, 26), SizeFlagsVertical = Control.SizeFlags.ShrinkCenter,
         });
         line.AddChild(GalleryTheme.Label($"0{index + 1}", 16, Palette.Muted));
-        var name = GalleryTheme.Label($"Item {(char)('A' + index)}", 16);
+        var name = GalleryTheme.Label($"Item {(char)('A' + index)}");
         name.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
         line.AddChild(name);
         line.AddChild(GalleryTheme.Label(States[index % States.Length], 13, accent));

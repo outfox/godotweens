@@ -1,9 +1,7 @@
 // SPDX-License-Identifier: MIT
 // SPDX-FileCopyrightText: 2026 Moritz Voss
 
-using System;
 using Godot;
-using tweens.gd;
 namespace testbed;
 
 public sealed partial class Spirograph : GalleryEffect

@@ -4,7 +4,6 @@
 using System;
 using System.Linq;
 using Godot;
-using tweens.gd;
 namespace testbed;
 
 public sealed partial class SlimeHop : GalleryEffect
@@ -20,7 +19,7 @@ public sealed partial class SlimeHop : GalleryEffect
     protected override void Build()
     {
         var view = View();
-        Line(view, [new(-210, Ground), new(210, Ground)], Palette.Outline, 2);
+        Line(view, [new(-210, Ground), new(210, Ground)], Palette.Outline);
         drops = Enumerable.Range(0, 5).Select(_ => Blob(view, 4, 4, Palette.Mint)).ToArray();
         foreach (var drop in drops) drop.Modulate = Colors.Transparent;
 

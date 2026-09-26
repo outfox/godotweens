@@ -2,7 +2,6 @@
 // SPDX-FileCopyrightText: 2026 Moritz Voss
 
 using Godot;
-using tweens.gd;
 namespace testbed;
 
 public sealed partial class ParentedRotation : GalleryEffect

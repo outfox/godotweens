@@ -3,7 +3,6 @@
 // SPDX-FileCopyrightText: 2020 Jeffrey Lanters
 
 // Easing math adapted from unity-tweens. See THIRD-PARTY-NOTICES.md.
-using System;
 using Godot;
 
 namespace tweens.gd {

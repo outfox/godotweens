@@ -187,13 +187,13 @@ public class AdapterCatalogTests(HeadlessFixture godot)
             Check(new Vector2Tween(), new Vector2(2, 4), new Vector2(1, 2));
             Check(new Vector3Tween(), new Vector3(2, 4, 6), new Vector3(1, 2, 3));
             Check(new Vector4Tween(), new Vector4(2, 4, 6, 8), new Vector4(1, 2, 3, 4));
-            Check(new ColorTween(), new Color(1, 0, 0, 1), new Color(0.5f, 0, 0, 0.5f));
+            Check(new ColorTween(), new Color(1, 0, 0), new Color(0.5f, 0, 0, 0.5f));
             Check(new Rect2Tween(), new Rect2(2, 4, 6, 8), new Rect2(1, 2, 3, 4));
             var q = new QuaternionTween { To = new Quaternion(Vector3.Up, 0.6f), Duration = 1 };
-            Quaternion output = default; q.OnUpdate = (_, value) => output = value;
+            Quaternion rotation = default; q.OnUpdate = (_, value) => rotation = value;
             using var scheduler = new TweenScheduler();
             scheduler.Add(owner, q); scheduler.Update(0.5);
-            Assert.True(output.IsEqualApprox(new Quaternion(Vector3.Up, 0.3f)));
+            Assert.True(rotation.IsEqualApprox(new Quaternion(Vector3.Up, 0.3f)));
 
             void Check<T>(TweenDefinition<Node, T> definition, T target, T expected) where T : struct
             {

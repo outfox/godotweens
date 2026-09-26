@@ -26,7 +26,7 @@ public partial class TweenDemo : Control
 
     private readonly List<Button> navigation = [];
     private readonly List<Resource> themeResources = [];
-    private VBoxContainer content = null!;
+    private VBoxContainer? content;
     private Label durationLabel = null!;
     private HSlider duration = null!;
     private GalleryPage? page;
@@ -94,7 +94,7 @@ public partial class TweenDemo : Control
         settings.AddThemeConstantOverride("separation", 10);
 
         settings.AddChild(GalleryTheme.Label("Leg duration", 16, Palette.Muted));
-        durationLabel = GalleryTheme.Label("1.8 s", 16);
+        durationLabel = GalleryTheme.Label("1.8 s");
         durationLabel.CustomMinimumSize = new Vector2(44, 0);
         settings.AddChild(durationLabel);
         duration = new HSlider
@@ -155,18 +155,17 @@ public partial class TweenDemo : Control
         return actions;
     }
 
-    private static Button ActionButton(HBoxContainer row, string text, Action action)
+    private static void ActionButton(HBoxContainer row, string text, Action action)
     {
         var button = new Button { Text = text, CustomMinimumSize = new Vector2(100, 34) };
         button.Pressed += action;
         row.AddChild(button);
-        return button;
     }
 
     public void SelectPage(int index)
     {
         if (index < 0 || index >= Pages.Length) throw new ArgumentOutOfRangeException(nameof(index));
-        if (!IsInsideTree()) return;
+        if (!IsInsideTree() || content is null) return;
         DestroyPage();
         SelectedPage = index;
         for (var i = 0; i < navigation.Count; i++) navigation[i].SetPressedNoSignal(i == index);

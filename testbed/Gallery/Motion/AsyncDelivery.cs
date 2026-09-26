@@ -1,10 +1,8 @@
 // SPDX-License-Identifier: MIT
 // SPDX-FileCopyrightText: 2026 Moritz Voss
 
-using System;
 using System.Linq;
 using Godot;
-using tweens.gd;
 namespace testbed;
 
 /// <summary>A one-shot sequence: restart the page to replay it.</summary>
@@ -20,8 +18,8 @@ public sealed partial class AsyncDelivery : GalleryEffect
     protected override void Build()
     {
         var view = View();
-        Line(view, [new(Left, Rail), new(Right, Rail)], Palette.Track, 2);
-        foreach (var x in new[] { Left, Right }) Line(view, [new(x, Rail - 10), new(x, Rail + 10)], Palette.Track, 2);
+        Line(view, [new(Left, Rail), new(Right, Rail)], Palette.Track);
+        foreach (var x in new[] { Left, Right }) Line(view, [new(x, Rail - 10), new(x, Rail + 10)], Palette.Track);
 
         courier = Diamond(view, new Vector2(Left, Rail), Palette.Mint, 18);
         Blob(courier, 28, 28, Palette.Mint with { A = 0.12f }).ShowBehindParent = true;

@@ -2,7 +2,6 @@
 // SPDX-FileCopyrightText: 2026 Moritz Voss
 
 using Godot;
-using tweens.gd;
 namespace testbed;
 
 public sealed partial class CameraPan : GalleryEffect
@@ -19,8 +18,8 @@ public sealed partial class CameraPan : GalleryEffect
         var view = View();
         camera = view.GetChild<Camera2D>(0);
 
-        for (var x = -400; x <= 400; x += 40) Line(view, [new(x, -200), new(x, 200)], GridLine, 2);
-        for (var y = -200; y <= 200; y += 40) Line(view, [new(-400, y), new(400, y)], GridLine, 2);
+        for (var x = -400; x <= 400; x += 40) Line(view, [new(x, -200), new(x, 200)], GridLine);
+        for (var y = -200; y <= 200; y += 40) Line(view, [new(-400, y), new(400, y)], GridLine);
         Line(view, [new(0, -200), new(0, 200)], Axis, 3);
         Line(view, [new(-400, 0), new(400, 0)], Axis, 3);
 

@@ -3,7 +3,6 @@
 
 using System.Linq;
 using Godot;
-using tweens.gd;
 namespace testbed;
 
 public sealed partial class EasingRace : GalleryEffect
@@ -21,7 +20,7 @@ public sealed partial class EasingRace : GalleryEffect
         var view = View();
         racers = Lanes.Select((lane, index) =>
         {
-            var y = (index - Lanes.Length / 2) * LaneHeight;
+            var y = (index - (Lanes.Length - 1) / 2f) * LaneHeight;
             var color = Palette.Mint.Lerp(Palette.Blue, index / (Lanes.Length - 1f));
             var name = GalleryTheme.Label(lane.Name, 12, Palette.Muted);
             name.Position = new Vector2(-208, y - 9);

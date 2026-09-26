@@ -14,6 +14,16 @@ internal static class Program
     [STAThread]
     private static void Main(string[] args)
     {
+        var options = ParseArguments(args);
+        Run(options);
+        if (options.RestartCheck) Run(options with { Snapshot = null, GallerySnapshots = null });
+    }
+
+    private sealed record LaunchOptions(string[] Forwarded, string? Snapshot, string? GallerySnapshots,
+        int GalleryPage, int GallerySource, bool RestartCheck);
+
+    private static LaunchOptions ParseArguments(string[] args)
+    {
         var forwarded = new List<string>();
         string? snapshot = null;
         var restartCheck = false;
@@ -22,33 +32,41 @@ internal static class Program
         var gallerySource = -1;
         for (var i = 0; i < args.Length; i++)
         {
-            if (args[i] == "--snapshot" && i + 1 < args.Length) snapshot = Path.GetFullPath(args[++i]);
-            else if (args[i] == "--gallery-snapshots" && i + 1 < args.Length) gallerySnapshots = Path.GetFullPath(args[++i]);
-            else if (args[i] == "--gallery-page" && i + 1 < args.Length) galleryPage = int.Parse(args[++i]);
-            else if (args[i] == "--gallery-source" && i + 1 < args.Length) gallerySource = int.Parse(args[++i]);
-            else if (args[i] == "--restart-check") restartCheck = true;
-            else forwarded.Add(args[i]);
+            switch (args[i])
+            {
+                case "--snapshot" when i + 1 < args.Length:
+                    snapshot = Path.GetFullPath(args[++i]);
+                    break;
+                case "--gallery-snapshots" when i + 1 < args.Length:
+                    gallerySnapshots = Path.GetFullPath(args[++i]);
+                    break;
+                case "--gallery-page" when i + 1 < args.Length:
+                    galleryPage = int.Parse(args[++i]);
+                    break;
+                case "--gallery-source" when i + 1 < args.Length:
+                    gallerySource = int.Parse(args[++i]);
+                    break;
+                case "--restart-check":
+                    restartCheck = true;
+                    break;
+                default:
+                    forwarded.Add(args[i]);
+                    break;
+            }
         }
-        Run(forwarded.ToArray(), snapshot, gallerySnapshots, galleryPage, gallerySource);
-        if (restartCheck) Run(forwarded.ToArray(), null, null, galleryPage, gallerySource);
+        return new LaunchOptions(forwarded.ToArray(), snapshot, gallerySnapshots, galleryPage, gallerySource, restartCheck);
     }
 
-    private static void Run(string[] args, string? snapshot, string? gallerySnapshots, int galleryPage, int gallerySource)
+    private static void Run(LaunchOptions options)
     {
         // The default constructor finds raw project content during development
         // and the exe-adjacent .pck after publish. Arguments are forwarded to Godot.
-        using var engine = new Engine("testbed", args: args);
+        using var engine = new Engine("testbed", args: options.Forwarded);
         engine.Start();
-
-        if (engine.Tree.CurrentScene is { } scene)
-            GD.Print($"2dog is running '{scene.Name}'!");
-        else
-            GD.Print("2dog is running (no run/main_scene set in project.godot).");
-        Console.WriteLine("Close the window to quit.");
+        PrintStartup(engine.Tree);
 
         var gallery = engine.Tree.CurrentScene as TweenDemo;
-        gallery?.SelectPage(gallerySnapshots is null ? galleryPage : 0);
-        if (gallerySource >= 0) gallery?.CurrentPage?.ShowSource(gallerySource);
+        SelectPage(gallery, options.GallerySnapshots is null ? options.GalleryPage : 0, options.GallerySource);
         var capturedPages = 0;
 
         // Iteration() returns true when Godot wants to quit.
@@ -56,33 +74,44 @@ internal static class Program
         while (!engine.Iteration())
         {
             frame++;
-            if (frame == 20 && snapshot is not null)
+            if (frame == 20 && options.Snapshot is { } snapshot)
             {
-                using var image = engine.Tree.Root.GetTexture().GetImage();
-                if (image.IsEmpty()) throw new InvalidOperationException("Screenshot requires a rendering display driver.");
-                Directory.CreateDirectory(Path.GetDirectoryName(snapshot)!);
-                var result = image.SavePng(snapshot);
-                if (result != Error.Ok) throw new IOException($"Screenshot failed: {result}");
+                SaveScreenshot(engine.Tree, snapshot);
                 Console.WriteLine($"Saved {snapshot}");
                 engine.Tree.Quit();
             }
-            if (gallerySnapshots is not null && frame % 60 == 0 && gallery is not null)
-            {
-                using var image = engine.Tree.Root.GetTexture().GetImage();
-                if (image.IsEmpty()) throw new InvalidOperationException("Gallery capture requires a renderer.");
-                Directory.CreateDirectory(gallerySnapshots);
-                var target = Path.Combine(gallerySnapshots, $"{capturedPages + 1:00}.png");
-                if (image.SavePng(target) != Error.Ok) throw new IOException("Could not save " + target);
-                Console.WriteLine($"Captured {TweenDemo.PageNames[capturedPages]}");
-                if (++capturedPages == TweenDemo.PageNames.Length) engine.Tree.Quit();
-                else
-                {
-                    gallery.SelectPage(capturedPages);
-                    if (gallerySource >= 0) gallery.CurrentPage?.ShowSource(gallerySource);
-                }
-            }
+            if (options.GallerySnapshots is null || frame % 60 != 0 || gallery is null) continue;
+            var target = Path.Combine(options.GallerySnapshots, $"{capturedPages + 1:00}.png");
+            SaveScreenshot(engine.Tree, target);
+            Console.WriteLine($"Captured {TweenDemo.PageNames[capturedPages]}");
+            if (++capturedPages == TweenDemo.PageNames.Length) engine.Tree.Quit();
+            else SelectPage(gallery, capturedPages, options.GallerySource);
         }
 
         Console.WriteLine("Shutting down...");
+    }
+
+    private static void PrintStartup(SceneTree tree)
+    {
+        if (tree.CurrentScene is { } scene)
+            GD.Print($"2dog is running '{scene.Name}'!");
+        else
+            GD.Print("2dog is running (no run/main_scene set in project.godot).");
+        Console.WriteLine("Close the window to quit.");
+    }
+
+    private static void SelectPage(TweenDemo? gallery, int page, int source)
+    {
+        gallery?.SelectPage(page);
+        if (source >= 0) gallery?.CurrentPage?.ShowSource(source);
+    }
+
+    private static void SaveScreenshot(SceneTree tree, string path)
+    {
+        using var image = tree.Root.GetTexture().GetImage();
+        if (image.IsEmpty()) throw new InvalidOperationException("Screenshot requires a rendering display driver.");
+        Directory.CreateDirectory(Path.GetDirectoryName(path)!);
+        var result = image.SavePng(path);
+        if (result != Error.Ok) throw new IOException($"Screenshot failed: {result} ({path})");
     }
 }

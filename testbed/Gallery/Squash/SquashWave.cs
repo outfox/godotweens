@@ -4,7 +4,6 @@
 using System;
 using System.Linq;
 using Godot;
-using tweens.gd;
 namespace testbed;
 
 public sealed partial class SquashWave : GalleryEffect
@@ -23,9 +22,9 @@ public sealed partial class SquashWave : GalleryEffect
         pills = Enumerable.Range(0, Count).Select(i => view.Add(new Polygon2D
         {
             Polygon = outline, Color = Gradient(i / (Count - 1f)), Antialiased = true,
-            Position = new Vector2((i - Count / 2) * Spacing, Ground),
+            Position = new Vector2((i - (Count - 1) / 2f) * Spacing, Ground),
         })).ToArray();
-        Line(view, [new(-210, Ground + 1), new(210, Ground + 1)], Palette.Outline, 2);
+        Line(view, [new(-210, Ground + 1), new(210, Ground + 1)], Palette.Outline);
     }
 
     /// <summary>Mint through blue to amber.</summary>

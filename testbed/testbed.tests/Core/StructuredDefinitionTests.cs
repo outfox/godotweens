@@ -26,17 +26,13 @@ public class StructuredDefinitionTests
         using var scheduler = new TweenScheduler();
         var first = new Meter { Value = 2 };
         var second = new Meter { Value = 4 };
-        var samples = new List<float>();
+        var samples = new List<(Meter Target, float Value)>();
         var a = scheduler.Add(first, movement);
         var b = scheduler.Add(second, movement with
         {
             To = 20,
             Delay = 0.5,
-            OnUpdate = (instance, value) =>
-            {
-                Assert.Same(second, instance.Target);
-                samples.Add(value);
-            },
+            OnUpdate = (instance, value) => samples.Add((instance.Target, value)),
         });
 
         scheduler.Update(0.5);
@@ -49,7 +45,7 @@ public class StructuredDefinitionTests
         Assert.Equal(20, second.Value);
         Assert.Equal(Reason.Cancelled, await a.End);
         Assert.Equal(Reason.Completed, await b.End);
-        Assert.Equal(new float[] { 4, 12, 20 }, samples);
+        Assert.Equal(new[] { (second, 4f), (second, 12f), (second, 20f) }, samples);
         Assert.Equal(10, movement.To);
         Assert.Equal(0, movement.Delay);
         Assert.Null(movement.OnUpdate);

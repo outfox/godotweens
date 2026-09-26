@@ -62,7 +62,7 @@ public sealed partial class JellyButton : GalleryEffect
         tap.AddThemeFontSizeOverride("font_size", 24);
         foreach (var state in new[] { "normal", "hover", "pressed", "hover_pressed" })
         {
-            var box = Own(GalleryTheme.Box(state.Contains("hover") ? new Color("97ecc8") : Palette.Mint, 18, 0));
+            var box = Own(GalleryTheme.Box(state.Contains("hover") ? new Color("97ecc8") : Palette.Mint, 18));
             box.ShadowColor = new Color(0, 0, 0, 0.35f);
             box.ShadowSize = 8;
             box.ShadowOffset = new Vector2(0, 4);

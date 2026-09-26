@@ -23,18 +23,20 @@ public class PlaybackTests
         using var scheduler = new TweenScheduler();
         var box = new Box();
         var events = new List<string>();
+        var terminalAtFinally = false;
         var tween = scheduler.Add(box, new BoxTween
         {
             From = 0, To = 10, Duration = 1, Delay = 0.25,
             OnAdd = _ => events.Add("add"), OnStart = _ => events.Add("start"),
             OnUpdate = (_, _) => events.Add("update"), OnEnd = _ => events.Add("end"),
-            OnFinally = t => { Assert.True(t.IsTerminal); events.Add("finally"); },
+            OnFinally = t => { terminalAtFinally = t.IsTerminal; events.Add("finally"); },
         });
         scheduler.Update(0.5);
         Assert.Equal(2.5f, box.Value);
         scheduler.Update(0.75);
         Assert.Equal(10, box.Value);
         Assert.Equal(Reason.Completed, await tween.End);
+        Assert.True(terminalAtFinally);
         Assert.Equal(new[] { "add", "start", "update", "update", "end", "finally" }, events);
         Assert.Equal(0, scheduler.ActiveCount);
     }
@@ -346,6 +348,8 @@ public class PlaybackTests
     public void InjectedClockDoesNotAccumulatePausedFrames()
     {
         ulong ticks = 100;
+        // The injected clock deliberately observes changes to the simulated time.
+        // ReSharper disable once AccessToModifiedClosure
         var clock = new MonotonicClock(() => ticks);
         using var scheduler = new TweenScheduler();
         var box = new Box();

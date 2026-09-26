@@ -2,7 +2,6 @@
 // SPDX-FileCopyrightText: 2026 Moritz Voss
 
 using System.Threading.Tasks;
-using Godot;
 using tweens.gd;
 namespace testbed;
 

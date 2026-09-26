@@ -13,7 +13,7 @@ public class StructuredGeneratorTests
     private static readonly MetadataReference[] References = ((string)AppContext.GetData("TRUSTED_PLATFORM_ASSEMBLIES")!)
         .Split(Path.PathSeparator)
         .Where(path => Path.GetDirectoryName(path) == Path.GetDirectoryName(typeof(object).Assembly.Location))
-        .Select(path => MetadataReference.CreateFromFile(path))
+        .Select(static MetadataReference (path) => MetadataReference.CreateFromFile(path))
         .ToArray();
 
     // Compile an independent library to exercise semantic discovery and generated

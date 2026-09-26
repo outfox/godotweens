@@ -60,7 +60,7 @@ public abstract partial class GalleryPage : VBoxContainer
         for (var i = 0; i < effects.Length; i++)
         {
             examplePicker.AddItem(effects[i].Title);
-            effects[i].Attach(AddCard(grid, $"{i + 1:00} / {effects[i].Title}", effects[i].Caption, i));
+            effects[i].Attach(AddCard($"{i + 1:00} / {effects[i].Title}", effects[i].Caption, i));
         }
     }
 
@@ -113,7 +113,7 @@ public abstract partial class GalleryPage : VBoxContainer
     }
 
     /// <summary>Adds a titled card to the grid and returns its stage, the area an effect draws into.</summary>
-    private Control AddCard(GridContainer grid, string title, string caption, int index)
+    private Control AddCard(string title, string caption, int index)
     {
         var panel = grid.Add(new PanelContainer
         {

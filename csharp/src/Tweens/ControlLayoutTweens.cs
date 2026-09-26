@@ -153,7 +153,7 @@ public sealed class ControlOffsetTransformRotationTween() : PropertyTween<Contro
 /// <summary>Animates Control.AnchorLeft in Godot property units.</summary>
 [System.ComponentModel.EditorBrowsable(System.ComponentModel.EditorBrowsableState.Never)]
 public sealed class ControlAnchorLeftTween() : PropertyTween<Control, float>(
-    static n => n.AnchorLeft, static (n, value) => n.SetAnchor(Side.Left, value, false, true), Interpolators.Float);
+    static n => n.AnchorLeft, static (n, value) => n.SetAnchor(Side.Left, value), Interpolators.Float);
 
 /// <summary>Animates Control.OffsetLeft in Godot property units.</summary>
 [System.ComponentModel.EditorBrowsable(System.ComponentModel.EditorBrowsableState.Never)]
@@ -163,7 +163,7 @@ public sealed class ControlOffsetLeftTween() : PropertyTween<Control, float>(
 /// <summary>Animates Control.AnchorTop in Godot property units.</summary>
 [System.ComponentModel.EditorBrowsable(System.ComponentModel.EditorBrowsableState.Never)]
 public sealed class ControlAnchorTopTween() : PropertyTween<Control, float>(
-    static n => n.AnchorTop, static (n, value) => n.SetAnchor(Side.Top, value, false, true), Interpolators.Float);
+    static n => n.AnchorTop, static (n, value) => n.SetAnchor(Side.Top, value), Interpolators.Float);
 
 /// <summary>Animates Control.OffsetTop in Godot property units.</summary>
 [System.ComponentModel.EditorBrowsable(System.ComponentModel.EditorBrowsableState.Never)]
@@ -173,7 +173,7 @@ public sealed class ControlOffsetTopTween() : PropertyTween<Control, float>(
 /// <summary>Animates Control.AnchorRight in Godot property units.</summary>
 [System.ComponentModel.EditorBrowsable(System.ComponentModel.EditorBrowsableState.Never)]
 public sealed class ControlAnchorRightTween() : PropertyTween<Control, float>(
-    static n => n.AnchorRight, static (n, value) => n.SetAnchor(Side.Right, value, false, true), Interpolators.Float);
+    static n => n.AnchorRight, static (n, value) => n.SetAnchor(Side.Right, value), Interpolators.Float);
 
 /// <summary>Animates Control.OffsetRight in Godot property units.</summary>
 [System.ComponentModel.EditorBrowsable(System.ComponentModel.EditorBrowsableState.Never)]
@@ -183,7 +183,7 @@ public sealed class ControlOffsetRightTween() : PropertyTween<Control, float>(
 /// <summary>Animates Control.AnchorBottom in Godot property units.</summary>
 [System.ComponentModel.EditorBrowsable(System.ComponentModel.EditorBrowsableState.Never)]
 public sealed class ControlAnchorBottomTween() : PropertyTween<Control, float>(
-    static n => n.AnchorBottom, static (n, value) => n.SetAnchor(Side.Bottom, value, false, true), Interpolators.Float);
+    static n => n.AnchorBottom, static (n, value) => n.SetAnchor(Side.Bottom, value), Interpolators.Float);
 
 /// <summary>Animates Control.OffsetBottom in Godot property units.</summary>
 [System.ComponentModel.EditorBrowsable(System.ComponentModel.EditorBrowsableState.Never)]

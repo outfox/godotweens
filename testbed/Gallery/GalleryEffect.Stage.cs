@@ -81,7 +81,7 @@ public abstract partial class GalleryEffect
     protected MeshInstance3D Mesh(Node parent, Mesh mesh, Material material, Vector3 position = default)
         => parent.Add(new MeshInstance3D { Mesh = Own(mesh), MaterialOverride = material, Position = position });
 
-    protected ShaderMaterial Shader(string code) => Own(new ShaderMaterial { Shader = Own(new Godot.Shader { Code = code }) });
+    protected ShaderMaterial Shader(string code) => Own(new ShaderMaterial { Shader = Own(new Shader { Code = code }) });
 
     protected ImageTexture Checker(int size, int cell, Color light, Color dark)
     {

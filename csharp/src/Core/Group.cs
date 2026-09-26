@@ -82,14 +82,17 @@ public sealed class Group
         if (member.Error is not null || member.CompletionReason != Reason.Completed)
         {
             firstStop ??= member.CompletionReason;
-            if (!stopping)
-            {
-                stopping = true;
-                foreach (var sibling in members)
-                    if (!sibling.IsTerminal) sibling.Cancel();
-            }
+            CancelSiblings();
         }
         if (unsettled == 0) Settle();
+    }
+
+    private void CancelSiblings()
+    {
+        if (stopping) return;
+        stopping = true;
+        foreach (var sibling in members)
+            if (!sibling.IsTerminal) sibling.Cancel();
     }
 
     private void Settle()

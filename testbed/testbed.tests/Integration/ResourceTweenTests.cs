@@ -16,7 +16,8 @@ public class ResourceTweenTests(HeadlessFixture godot)
     [Fact]
     public void SharedMaterialIsUpdatedWithoutCloningAndSurvivesMeshRemoval()
     {
-        using var material = new StandardMaterial3D { Roughness = 0 };
+        using var material = new StandardMaterial3D();
+        material.Roughness = 0;
         using var replacement = new StandardMaterial3D();
         var first = Attach(new MeshInstance3D { MaterialOverride = material });
         var second = Attach(new MeshInstance3D { MaterialOverride = material });
@@ -62,7 +63,10 @@ public class ResourceTweenTests(HeadlessFixture godot)
     [Fact]
     public void TreeScopeAndOwnerScopeHaveIndependentPauseRules()
     {
-        using var material = new StandardMaterial3D { Roughness = 0, Metallic = 0, MetallicSpecular = 0 };
+        using var material = new StandardMaterial3D();
+        material.Roughness = 0;
+        material.Metallic = 0;
+        material.MetallicSpecular = 0;
         var owner = Attach(new Node { ProcessMode = Node.ProcessModeEnum.Always });
         try
         {
@@ -132,7 +136,9 @@ public class ResourceTweenTests(HeadlessFixture godot)
     [Fact]
     public void MaterialComponentsPreserveConcurrentEditsAndDefinitionsAreReusable()
     {
-        using var material = new StandardMaterial3D { AlbedoColor = Colors.White, Uv1Offset = Vector3.Zero };
+        using var material = new StandardMaterial3D();
+        material.AlbedoColor = Colors.White;
+        material.Uv1Offset = Vector3.Zero;
         using var duplicate = (StandardMaterial3D)material.Duplicate();
         using var scheduler = new TweenScheduler();
         var definition = new MaterialAlbedoAlphaTween { To = 0, Duration = 1 };
@@ -152,7 +158,8 @@ public class ResourceTweenTests(HeadlessFixture godot)
     [Fact]
     public void InvalidOwnerIsRejectedBeforeMaterialOrCallbacksAreTouched()
     {
-        using var material = new StandardMaterial3D { Roughness = 0.75f };
+        using var material = new StandardMaterial3D();
+        material.Roughness = 0.75f;
         var detached = new Node(); var calls = 0;
         try
         {

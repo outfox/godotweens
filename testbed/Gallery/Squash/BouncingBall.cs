@@ -1,10 +1,8 @@
 // SPDX-License-Identifier: MIT
 // SPDX-FileCopyrightText: 2026 Moritz Voss
 
-using System;
 using System.Linq;
 using Godot;
-using tweens.gd;
 namespace testbed;
 
 public sealed partial class BouncingBall : GalleryEffect
@@ -23,7 +21,7 @@ public sealed partial class BouncingBall : GalleryEffect
     {
         var view = View();
         var start = new Vector2(-150, Ground);
-        Line(view, [new(-210, Ground), new(210, Ground)], Palette.Outline, 2);
+        Line(view, [new(-210, Ground), new(210, Ground)], Palette.Outline);
         shadow = Blob(view, 22, 5, new Color(0, 0, 0, 0.45f), start + new Vector2(0, 2));
 
         ring = view.Add(new Line2D

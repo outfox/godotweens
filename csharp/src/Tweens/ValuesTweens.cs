@@ -8,39 +8,39 @@ namespace tweens.gd;
 /// <summary>Animates Node Float; values use Godot property units.</summary>
 [System.ComponentModel.EditorBrowsable(System.ComponentModel.EditorBrowsableState.Never)]
 public sealed class FloatTween() : PropertyTween<Node, float>(
-    static n => 0, static (n, value) => {}, Interpolators.Float);
+    static _ => 0, static (_, _) => {}, Interpolators.Float);
 
 /// <summary>Animates Node Double; values use Godot property units.</summary>
 [System.ComponentModel.EditorBrowsable(System.ComponentModel.EditorBrowsableState.Never)]
 public sealed class DoubleTween() : PropertyTween<Node, double>(
-    static n => 0, static (n, value) => {}, Interpolators.Double);
+    static _ => 0, static (_, _) => {}, Interpolators.Double);
 
 /// <summary>Animates Node Vector2; values use Godot property units.</summary>
 [System.ComponentModel.EditorBrowsable(System.ComponentModel.EditorBrowsableState.Never)]
 public sealed class Vector2Tween() : PropertyTween<Node, Vector2>(
-    static n => Vector2.Zero, static (n, value) => {}, Interpolators.Vector2);
+    static _ => Vector2.Zero, static (_, _) => {}, Interpolators.Vector2);
 
 /// <summary>Animates Node Vector3; values use Godot property units.</summary>
 [System.ComponentModel.EditorBrowsable(System.ComponentModel.EditorBrowsableState.Never)]
 public sealed class Vector3Tween() : PropertyTween<Node, Vector3>(
-    static n => Vector3.Zero, static (n, value) => {}, Interpolators.Vector3);
+    static _ => Vector3.Zero, static (_, _) => {}, Interpolators.Vector3);
 
 /// <summary>Animates Node Vector4; values use Godot property units.</summary>
 [System.ComponentModel.EditorBrowsable(System.ComponentModel.EditorBrowsableState.Never)]
 public sealed class Vector4Tween() : PropertyTween<Node, Vector4>(
-    static n => Vector4.Zero, static (n, value) => {}, Interpolators.Vector4);
+    static _ => Vector4.Zero, static (_, _) => {}, Interpolators.Vector4);
 
 /// <summary>Animates Node Color; values use Godot property units.</summary>
 [System.ComponentModel.EditorBrowsable(System.ComponentModel.EditorBrowsableState.Never)]
 public sealed class ColorTween() : PropertyTween<Node, Color>(
-    static n => new Color(0, 0, 0, 0), static (n, value) => {}, Interpolators.Color);
+    static _ => new Color(0, 0, 0, 0), static (_, _) => {}, Interpolators.Color);
 
 /// <summary>Animates Node Quaternion; values use Godot property units.</summary>
 [System.ComponentModel.EditorBrowsable(System.ComponentModel.EditorBrowsableState.Never)]
 public sealed class QuaternionTween() : PropertyTween<Node, Quaternion>(
-    static n => Quaternion.Identity, static (n, value) => {}, Interpolators.Quaternion);
+    static _ => Quaternion.Identity, static (_, _) => {}, Interpolators.Quaternion);
 
 /// <summary>Animates Node Rect2; values use Godot property units.</summary>
 [System.ComponentModel.EditorBrowsable(System.ComponentModel.EditorBrowsableState.Never)]
 public sealed class Rect2Tween() : PropertyTween<Node, Rect2>(
-    static n => default(Rect2), static (n, value) => {}, Interpolators.Rect2);
+    static _ => default(Rect2), static (_, _) => {}, Interpolators.Rect2);

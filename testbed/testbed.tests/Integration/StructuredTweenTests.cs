@@ -46,7 +46,8 @@ public class StructuredTweenTests(HeadlessFixture godot)
     [Fact]
     public async Task ResourceEntryPointsPreserveTreeAndOwnerLifetimes()
     {
-        using var material = new StandardMaterial3D { Roughness = 0 };
+        using var material = new StandardMaterial3D();
+        material.Roughness = 0;
         var owner = new Node();
         godot.Tree.Root.AddChild(owner);
         try

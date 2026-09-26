@@ -82,20 +82,8 @@ public sealed class StructuredDefinitionGenerator : IIncrementalGenerator
         var symbol = ReadType(context, token);
         if (symbol is null || symbol.IsAbstract || symbol.DeclaredAccessibility != Accessibility.Public) return null;
 
-        DefinitionKind kind;
-        if (symbol.Name == "PropertyTween" && symbol.Arity == 2)
-            kind = DefinitionKind.CustomProperty;
-        else if (symbol.IsSealed && symbol.Arity == 1 && symbol.Name is
-            "ShaderParameterTween" or "CanvasItemInstanceShaderParameterTween" or "GeometryInstanceShaderParameterTween")
-            kind = DefinitionKind.ShaderParameter;
-        else if (symbol.IsSealed && symbol.Arity == 0
-            && symbol.BaseType is { Name: "PropertyTween", Arity: 2 } parent
-            && parent.ContainingNamespace.ToDisplayString() == "tweens.gd"
-            && symbol.InstanceConstructors.Any(constructor => constructor.Parameters.Length == 0
-                && constructor.DeclaredAccessibility == Accessibility.Public))
-            kind = DefinitionKind.BuiltIn;
-        else
-            return null;
+        var kind = GetDefinitionKind(symbol);
+        if (kind is null) return null;
 
         for (var parent = symbol.BaseType; parent is not null; parent = parent.BaseType)
         {
@@ -103,8 +91,24 @@ public sealed class StructuredDefinitionGenerator : IIncrementalGenerator
                 || parent.ContainingNamespace.ToDisplayString() != "tweens.gd") continue;
             return (symbol.Name.Substring(0, symbol.Name.Length - "Tween".Length),
                 symbol.ToDisplayString(TypeFormat), parent.TypeArguments[0].ToDisplayString(TypeFormat),
-                parent.TypeArguments[1].ToDisplayString(TypeFormat), kind);
+                parent.TypeArguments[1].ToDisplayString(TypeFormat), kind.Value);
         }
+        return null;
+    }
+
+    private static DefinitionKind? GetDefinitionKind(INamedTypeSymbol symbol)
+    {
+        if (symbol.Name == "PropertyTween" && symbol.Arity == 2)
+            return DefinitionKind.CustomProperty;
+        if (symbol.IsSealed && symbol.Arity == 1 && symbol.Name is
+            "ShaderParameterTween" or "CanvasItemInstanceShaderParameterTween" or "GeometryInstanceShaderParameterTween")
+            return DefinitionKind.ShaderParameter;
+        if (symbol.IsSealed && symbol.Arity == 0
+            && symbol.BaseType is { Name: "PropertyTween", Arity: 2 } parent
+            && parent.ContainingNamespace.ToDisplayString() == "tweens.gd"
+            && symbol.InstanceConstructors.Any(constructor => constructor.Parameters.Length == 0
+                && constructor.DeclaredAccessibility == Accessibility.Public))
+            return DefinitionKind.BuiltIn;
         return null;
     }
 

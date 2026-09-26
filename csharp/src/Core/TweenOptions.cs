@@ -105,7 +105,7 @@ public class TweenOptionsBuilder
 
 internal sealed class Playback
 {
-    private readonly double duration, delay, turn, repeat, offset, span, total;
+    private readonly double duration, delay, turn, offset, span, total;
     private readonly bool pingPong;
     private double elapsed;
     internal float Progress { get; private set; }
@@ -120,7 +120,7 @@ internal sealed class Playback
         duration = Nonnegative(options.Duration, nameof(options.Duration));
         delay = Nonnegative(options.Delay, nameof(options.Delay));
         turn = Nonnegative(options.PingPongInterval, nameof(options.PingPongInterval));
-        repeat = Nonnegative(options.RepeatInterval, nameof(options.RepeatInterval));
+        var repeat = Nonnegative(options.RepeatInterval, nameof(options.RepeatInterval));
         offset = Nonnegative(options.Offset, nameof(options.Offset));
         if (offset > duration) throw new ArgumentOutOfRangeException(nameof(options.Offset));
         if (options.Repeats < TweenOptions.Infinite) throw new ArgumentOutOfRangeException(nameof(options.Repeats));

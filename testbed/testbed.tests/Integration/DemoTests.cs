@@ -162,7 +162,7 @@ public class DemoTests
     [Fact]
     public void FreeingBeforeThePageStartsDropsTheDeferredStart()
     {
-        var demo = new testbed.TweenDemo(); godot.Tree.Root.AddChild(demo);
+        var demo = new TweenDemo(); godot.Tree.Root.AddChild(demo);
         demo.Free();
         Pump();
         Assert.Empty(godot.Errors.Drain());
@@ -170,7 +170,7 @@ public class DemoTests
     [Fact]
     public void LeavingDuringAnAwaitedSequenceSettlesItAndDisposesThePage()
     {
-        var demo = new testbed.TweenDemo(); godot.Tree.Root.AddChild(demo); Pump();
+        var demo = new TweenDemo(); godot.Tree.Root.AddChild(demo); Pump();
         var page = demo.CurrentPage!; var sequence = page.SequenceTask!;
         demo.Free();
         Assert.True(sequence.IsCompletedSuccessfully);

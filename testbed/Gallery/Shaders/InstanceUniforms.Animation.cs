@@ -2,7 +2,6 @@
 // SPDX-FileCopyrightText: 2026 Moritz Voss
 
 using System.Threading.Tasks;
-using Godot;
 using tweens.gd;
 namespace testbed;
 
@@ -20,10 +19,10 @@ public sealed partial class InstanceUniforms
 
     private async Task AnimateAsync()
     {
-        var amount = this.amount with { Duration = Seconds };
+        var amountDefinition = amount with { Duration = Seconds };
         await Group.Of([
-            first.Tween(amount with { To = 0.85f }),
-            second.Tween(amount with { To = 0.15f }),
+            first.Tween(amountDefinition with { To = 0.85f }),
+            second.Tween(amountDefinition with { To = 0.15f }),
         ]).End;
     }
 }

@@ -211,6 +211,8 @@ public class SequenceTimingTests
         var stopped = scheduler.Add(new Box(), Leg(1));
         var sibling = scheduler.Add(new Box(), Leg(1));
         var group = Group.Of(stopped, sibling);
+        // Disposing early is the behavior under test; using also cleans up if setup fails.
+        // ReSharper disable once DisposeOnUsingVariable
         scheduler.Dispose();
         Assert.Equal(Reason.RunnerDisposed, await group.End);
         Assert.True(sibling.IsTerminal);

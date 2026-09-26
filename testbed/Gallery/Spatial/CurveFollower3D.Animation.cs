@@ -31,21 +31,21 @@ public sealed partial class CurveFollower3D
 
     private async Task AnimateAsync()
     {
-        var progress = this.progress with { Duration = Seconds * 1.5 };
-        var offset = this.offset with { Duration = Seconds };
+        var progressDefinition = progress with { Duration = Seconds * 1.5 };
+        var offsetDefinition = offset with { Duration = Seconds };
 
         var tweens = new List<TweenInstance>();
         for (var e = 0; e < echoes.Length; e++)
         {
             var delay = (e + 1) * 0.08;
             tweens.AddRange([
-                echoes[e].Tween(progress with { Delay = delay }),
-                echoes[e].Tween(offset with { Delay = delay }),
+                echoes[e].Tween(progressDefinition with { Delay = delay }),
+                echoes[e].Tween(offsetDefinition with { Delay = delay }),
             ]);
         }
         tweens.AddRange([
-            leader.Tween(progress),
-            leader.Tween(offset),
+            leader.Tween(progressDefinition),
+            leader.Tween(offsetDefinition),
         ]);
         await Group.Of([.. tweens]).End;
     }
