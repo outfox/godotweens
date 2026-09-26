@@ -2,10 +2,11 @@
 // SPDX-FileCopyrightText: 2026 Moritz Voss
 
 using Godot;
-using FileAccess = Godot.FileAccess;
 using twodog.Testing;
 using twodog.Testing.Xunit;
-namespace testbed.Tests;
+using FileAccess = Godot.FileAccess;
+
+namespace testbed.Tests.Integration;
 
 [Collection<HeadlessCollection>]
 public class GallerySourceTests(HeadlessFixture godot)
@@ -29,7 +30,6 @@ public class GallerySourceTests(HeadlessFixture godot)
             Assert.Contains("public sealed partial class " + type.Name, setup.Text);
             Assert.Contains(".Tween", animation.Text);
             Assert.Contains("async Task", animation.Text);
-            Assert.Contains("Group.Of(", animation.Text);
             foreach (var hidden in new[] { "Play(", "Keep(", "TrackTweens(", "Generation", "protected override void Build(", "IEnumerable<TweenInstance>", "yield return" })
                 Assert.DoesNotContain(hidden, animation.Text);
             foreach (var source in new[] { animation, setup })

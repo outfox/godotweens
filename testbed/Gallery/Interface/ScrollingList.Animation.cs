@@ -11,9 +11,7 @@ public sealed partial class ScrollingList
 {
     private async Task AnimateAsync()
     {
-        await Group.Of([
-            scroll.TweenScrollVertical(200, Seconds * 2, Cycle),
-        ]).End;
+        await scroll.TweenScrollVertical(200, Seconds * 2, Cycle).End;
     }
 
     private void Cycle(TweenOptionsBuilder options)

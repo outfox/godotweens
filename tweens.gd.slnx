@@ -5,6 +5,7 @@
     <BuildType Name="Release" />
   </Configurations>
   <Project Path="csharp/tweens.gd.csproj" />
+  <Project Path="csharp.generators/tweens.gd.Generators.csproj" />
   <Project Path="testbed/testbed.csproj" />
   <Project Path="testbed/testbed.2dog/testbed.2dog.csproj" />
   <Project Path="testbed/testbed.tests/testbed.tests.csproj" />
