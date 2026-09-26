@@ -1,8 +1,9 @@
 ---
-import { curvePath, type EaseName } from '../scripts/motion';
+import { EASES, curvePath, type EaseName } from '../scripts/motion';
 
 const families = ['Sine', 'Quad', 'Cubic', 'Quart', 'Quint', 'Expo', 'Circ', 'Back', 'Elastic', 'Bounce'];
 const variants = ['In', 'Out', 'InOut'] as const;
+const standalone = ['Linear', 'SmoothStep', 'SmootherStep'] as const;
 const TILE_W = 100;
 const TILE_H = 64;
 const TILE_PAD = 14;
@@ -42,22 +43,26 @@ const ghosts = Array.from({ length: 11 }, (_, i) => i);
 					<svg viewBox="0 0 16 16" fill="currentColor"><path d="M5 3l8 5-8 5z"></path></svg>
 					Play
 				</button>
-				<button type="button" class="tw-btn" data-race>Race all 31</button>
+				<button type="button" class="tw-btn" data-race>Race all {Object.keys(EASES).length}</button>
 			</div>
 		</div>
 	</div>
 
 	<div class="families" role="group" aria-label="Easing functions">
-		<div class="family linear">
-			<span class="fam">Linear</span>
-			<button type="button" class="tile" data-ease="Linear" aria-pressed="false">
-				<svg viewBox={`0 0 ${TILE_W} ${TILE_H}`} aria-hidden="true">
-					<path d={curvePath('Linear', TILE_W, TILE_H, TILE_PAD)}></path>
-					<circle r="4" cx="0" cy={TILE_H - TILE_PAD}></circle>
-				</svg>
-				<span class="v">Linear</span>
-			</button>
-		</div>
+		{
+			standalone.map((name) => (
+				<div class="family standalone">
+					<span class="fam">{name}</span>
+					<button type="button" class="tile" data-ease={name} aria-pressed="false" aria-label={name}>
+						<svg viewBox={`0 0 ${TILE_W} ${TILE_H}`} aria-hidden="true">
+							<path d={curvePath(name, TILE_W, TILE_H, TILE_PAD)} />
+							<circle r="4" cx="0" cy={TILE_H - TILE_PAD} />
+						</svg>
+						<span class="v">{name}</span>
+					</button>
+				</div>
+			))
+		}
 		{
 			families.map((f) => (
 				<div class="family">
@@ -344,8 +349,8 @@ const ghosts = Array.from({ length: 11 }, (_, i) => i);
 		font-size: 0.66rem;
 		color: var(--tw-muted);
 	}
-	.linear .tile {
-		grid-column: 2 / span 1;
+	.standalone {
+		grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
 	}
 	.is-racing .tile {
 		background: color-mix(in oklab, var(--tw-mint) calc(var(--w, 0) * 22%), var(--tw-stage));

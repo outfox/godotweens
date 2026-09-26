@@ -9,10 +9,10 @@ namespace testbed.Tests.Core;
 public class EasingTests
 {
     [Fact]
-    public void All31EasesHaveCorrectEndpointsAndFiniteSamples()
+    public void AllEasesHaveCorrectEndpointsAndFiniteSamples()
     {
         var types = Enum.GetValues<EaseType>();
-        Assert.Equal(31, types.Length);
+        Assert.Equal(33, types.Length);
         foreach (var ease in types)
         {
             Assert.InRange(Math.Abs(Easing.Evaluate(ease, 0)), 0, 0.00001f);

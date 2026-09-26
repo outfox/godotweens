@@ -7,18 +7,21 @@ import EasingPlayground from '../../../components/EasingPlayground.astro';
 
 Easing maps normalized leg progress to an interpolation weight. It changes how
 motion accelerates and decelerates while keeping the same timing. The C# library
-provides 31 easing functions; GDScript equivalents are planned.
+provides 33 easing functions; GDScript equivalents are planned.
 
 ## Built-in functions
 
-`EaseType.Linear` is the default. Each other family has `In`, `Out`, and `InOut`
-variants, for example `EaseType.CubicOut`.
+`EaseType.Linear` is the default. `EaseType.SmoothStep` and
+`EaseType.SmootherStep` are symmetric ease-in-out curves with no separate variants.
+Each other family has `In`, `Out`, and `InOut` variants, for example `EaseType.CubicOut`.
 
 <EasingPlayground />
 
 
 | Family | Character |
 | --- | --- |
+| `SmoothStep` | Cubic curve with zero velocity at both endpoints |
+| `SmootherStep` | Quintic curve with zero velocity and acceleration at both endpoints |
 | `Sine` | Gentle acceleration/deceleration |
 | `Quad`, `Cubic`, `Quart`, `Quint` | Increasingly pronounced polynomial curves |
 | `Expo` | Strong exponential acceleration/deceleration |
@@ -30,6 +33,11 @@ variants, for example `EaseType.CubicOut`.
 Back and elastic weights remain unclamped. Overshoot is useful for motion, but
 native property limits still apply to constrained values such as alpha or ranges.
 Try the easing selector in the [gallery](/csharp/gallery/).
+
+Use `Ease = EaseType.SmoothStep` or `Ease = EaseType.SmootherStep` to move
+between resting positions without overshoot. Smoothstep uses
+`t * t * (3 - 2 * t)`; smootherstep uses
+`t * t * t * (t * (6 * t - 15) + 10)`, with normalized progress `t`.
 
 ## Custom functions
 
