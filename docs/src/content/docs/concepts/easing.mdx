@@ -1,47 +1,55 @@
 ---
 title: Easing
-description: Built-in easing families, overshoot, custom functions, and Godot curves.
+description: Pick an ease for each kind of motion, from the 31 built-in functions to custom functions and Godot curves.
 ---
 
 import EasingPlayground from '../../../components/EasingPlayground.astro';
 
-Easing maps normalized leg progress to an interpolation weight. It changes how
-motion accelerates and decelerates while keeping the same timing. The C# library
-provides 31 easing functions; GDScript equivalents are planned.
+Easing decides how motion speeds up and slows down; the duration stays the same.
+The default, `EaseType.Linear`, moves at constant speed, which rarely suits
+characters or UI. Pick an ease for every definition.
 
-## Built-in functions
+## Choose an ease
 
-`EaseType.Linear` is the default. Each other family has `In`, `Out`, and `InOut`
-variants, for example `EaseType.CubicOut`.
+| Motion | Try | Why |
+| --- | --- | --- |
+| Arriving, settling into place | `CubicOut`, `QuartOut` | Starts fast, lands gently |
+| Leaving the screen | `CubicIn`, `QuadIn` | Gathers speed on the way out |
+| Moving between two resting spots | `SineInOut`, `CubicInOut` | Eases out of rest and into rest |
+| A playful pop or emphasis | `BackOut`, `ElasticOut` | Overshoots, then settles |
+| Dropping onto a surface | `BounceOut` | Lands with bounces |
+| Constant motion, such as spinners or progress | `Linear` | No acceleration |
+
+`Out` eases decelerate, `In` eases accelerate, and `InOut` does both. Every family
+below has all three variants, such as `EaseType.CubicOut`.
+
+## Compare the curves
 
 <EasingPlayground />
 
-
 | Family | Character |
 | --- | --- |
-| `Sine` | Gentle acceleration/deceleration |
+| `Sine` | Gentle acceleration and deceleration |
 | `Quad`, `Cubic`, `Quart`, `Quint` | Increasingly pronounced polynomial curves |
-| `Expo` | Strong exponential acceleration/deceleration |
+| `Expo` | Strong exponential acceleration and deceleration |
 | `Circ` | Circular curve |
 | `Back` | Overshoots an endpoint |
 | `Elastic` | Oscillates around an endpoint |
 | `Bounce` | Repeated bounces |
 
-Back and elastic weights remain unclamped. Overshoot is useful for motion, but
-native property limits still apply to constrained values such as alpha or ranges.
-Try the easing selector in the [gallery](/csharp/gallery/).
+Back and elastic weights are not clamped. Overshoot suits motion, but native
+property limits still apply to constrained values such as alpha or ranges.
 
-## Custom functions
+## Custom functions and curves
 
-Supply a function from normalized progress to weight. Here `sprite` is an in-tree
-`Sprite2D`; import `Godot` and `tweens.gd` and run on Godot's main thread:
+Supply a function from normalized progress to weight:
 
 ```csharp
 var eased = sprite.TweenPosition(new Vector2(300, 120), 0.5,
     options => options.EaseFunction = t => t * t);
 ```
 
-`EaseFunction` overrides `Ease`. A Godot `Curve` can also override `Ease`; its
-samples use normalized time from 0 to 1 and the curve is duplicated for each
-instance. Specify only one of `EaseFunction` and `Curve`; supplying both is
-rejected. Exceptions in easing fault playback and its completion task.
+`EaseFunction` overrides `Ease`. A Godot `Curve` can override `Ease` instead: its
+samples use normalized time from 0 to 1, and each playback gets its own
+duplicate. Set only one of `EaseFunction` and `Curve`; setting both is rejected.
+An exception inside an easing function faults the tween.

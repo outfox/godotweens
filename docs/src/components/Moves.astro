@@ -1,0 +1,72 @@
+---
+// Code with numbered notes. The note numbers match the code's line-marker labels, e.g. {"1":1-6}.
+// Side by side when the column is wide enough, stacked on narrow screens.
+---
+
+<div class="moves tw-wide"><div class="grid"><slot /></div></div>
+
+<style>
+	.moves {
+		container-type: inline-size;
+		margin-top: 1.75rem;
+	}
+	/* minmax(0, …) keeps a wide code block scrolling inside its column instead of widening the notes. */
+	.grid {
+		display: grid;
+		grid-template-columns: minmax(0, 1fr);
+		gap: 1.5rem;
+	}
+	/* The code takes the width its longest line needs, up to the prose measure; the notes take the rest. */
+	@container (min-width: 56rem) {
+		.grid {
+			grid-template-columns: fit-content(var(--tw-measure)) minmax(18rem, 36rem);
+			gap: 3rem;
+			align-items: start;
+		}
+		/* Beside a long listing, the notes stay in view while the code scrolls past. */
+		.grid > :global(ol) {
+			position: sticky;
+			top: calc(var(--sl-nav-height) + 2rem);
+		}
+	}
+	.grid > :global(*) {
+		margin: 0;
+	}
+	.grid :global(ol) {
+		list-style: none;
+		counter-reset: move;
+		padding: 0;
+		display: grid;
+		gap: 1.25rem;
+	}
+	.grid :global(ol > li) {
+		counter-increment: move;
+		position: relative;
+		margin: 0;
+		padding-inline-start: 2.75rem;
+		color: var(--tw-soft);
+	}
+	.grid :global(ol > li strong:first-child) {
+		color: var(--sl-color-white);
+		font-family: var(--tw-font-display);
+		font-size: 1.15em;
+		font-weight: 720;
+	}
+	.grid :global(ol > li::before) {
+		content: counter(move);
+		position: absolute;
+		inset-inline-start: 0;
+		top: 0.1rem;
+		display: grid;
+		place-items: center;
+		width: 1.9rem;
+		height: 1.9rem;
+		border-radius: 999px;
+		background: var(--tw-mint);
+		color: var(--tw-on-accent);
+		font: 700 0.85rem var(--sl-font-mono);
+	}
+	:global(:root[data-theme='light']) .grid :global(ol > li::before) {
+		background: var(--tw-mint-ink);
+	}
+</style>

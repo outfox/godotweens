@@ -28,7 +28,14 @@ starter-template text. Preview the production build when checking search.
 
 ## Content conventions
 
-- Shared concepts describe current C# behavior and identify the addon as planned.
+- The sidebar in `astro.config.mjs` is a learning path: start here, write reusable tweens,
+  shape the motion, beyond nodes, then reference. Prev/next links follow it.
+- Each page opens with a one-paragraph lede stating its key idea; the theme sets it apart.
+  Pitfalls go in `:::caution` asides so they stand out from the main flow.
+- Annotated examples use Expressive Code line-marker labels (`{"1":3-7}`) inside `<Moves>`,
+  whose numbered notes match the labels.
+- Shared concepts live in `concepts/` and describe current C# behavior; the landing page and
+  `gdscript/` identify the addon as planned.
 - C# guides and reference live in `csharp/`, with explicit prerequisites for snippets.
 - GDScript installation and code examples wait for a tested public API.
 - Keep release procedures, coverage reports, and implementation notes private.

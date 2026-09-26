@@ -39,7 +39,7 @@
 </div>
 
 <script>
-	import { EASES, loop, lerp, reducedMotion } from '../scripts/motion';
+	import { EASES, animate, loop, lerp, reducedMotion } from '../scripts/motion';
 
 	interface Playback {
 		from: number;
@@ -63,7 +63,7 @@
 
 		toIn.addEventListener('input', () => {
 			toOut.textContent = Number(toIn.value).toFixed(1);
-			toOut.animate([{ color: 'var(--tw-amber)', scale: 1.3 }, { scale: 1 }], { duration: 400, easing: 'ease-out' });
+			animate(toOut, [{ color: 'var(--tw-amber)', scale: 1.3 }, { scale: 1 }], { duration: 400, easing: 'ease-out' });
 		});
 
 		// A small token carries the snapshotted value from the definition to the playback's chip.

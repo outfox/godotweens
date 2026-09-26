@@ -1,63 +1,66 @@
 ---
 title: Lifetime and ownership
-description: Targets, owners, scene trees, pause policies, and completion.
+description: Who a tween belongs to, when it stops by itself, how pausing works, and how resource tweens are scoped.
 ---
 
 import OwnershipDemo from '../../../components/OwnershipDemo.astro';
 
-The **target** receives values. The **owner** determines when playback should
-stop. For a node tween, the node is normally both target and owner. Resource
-tweens can bind to a separate owner or to the scene tree.
+A node owns the tweens started on it. When the node leaves the scene tree, its
+tweens stop by themselves, so you rarely need cleanup code.
 
-These are the current C# semantics. The GDScript addon is not implemented yet.
+## Target and owner
+
+The **target** receives values; the **owner** decides when playback stops. For a
+node tween, the node is both. Resource tweens, such as material tweens, bind to a
+separate owner or to the scene tree.
 
 ## Nodes
 
 Start node tweens from `_Ready` or later, while the node is inside the tree.
-Owner tree exit cancels immediately, including removal and reparenting that
-causes tree exit. A freed or queued-for-deletion target is never written again.
-Destroying an owner still settles completion while its tween is paused.
 
-`node.CancelTweens()` cancels that owner's automatic tweens. Pass
-`includeChildren: true` to include descendant owners. This does not cancel work
-in independently created manual schedulers.
+- Leaving the tree cancels the node's tweens at once, including removal and
+  reparenting that exits the tree.
+- A freed or queued-for-deletion target is never written again.
+- Freeing an owner still finishes `End`, even while its tween is paused.
 
-## Resources
+`node.CancelTweens()` cancels the tweens a node owns. Pass
+`includeChildren: true` to include its descendants. It does not reach manual
+schedulers you created yourself.
 
-Animating a material changes the supplied resource. Every node sharing it sees
-the change. Tween playback never duplicates, reassigns, or disposes your resource.
+## Pausing
 
-Give a resource tween an owner to stop it when that node leaves the tree. A
-tree-scoped tween without an owner continues if a mesh is removed or gets a new
-material: the tween still targets the original resource. Tree teardown stops
-pending work. See [C# material lifetimes](/csharp/materials/#choose-the-playback-lifetime).
-
-Handles retain their target for inspection. Release handles you no longer need.
-
-## Pause policy
+With the default pause mode, a tween pauses when its owner stops processing:
 
 | `TweenPauseMode` | With an owner | Without an owner, bound to a tree |
 | --- | --- | --- |
 | `Bound` (default) | Follow `owner.CanProcess()` | Follow tree pause |
 | `SceneTree` | Follow tree pause only | Follow tree pause |
-| `Always` | Ignore owner/tree pause | Ignore tree pause |
+| `Always` | Ignore owner and tree pause | Ignore tree pause |
 
-Pausing the handle always stops advancement, even with `Always`. A node's
-`SetProcess(false)` does not disable bound tweens; its `ProcessMode` and the tree
-pause state determine `CanProcess()`.
+Pausing the handle always stops it, even with `Always`. A node's
+`SetProcess(false)` does not pause its tweens; its `ProcessMode` and the tree's
+pause state decide `CanProcess()`.
 
 <OwnershipDemo />
 
+## Resources
 
-## Completion and cleanup
+Animating a material changes the resource itself, so every node sharing it sees
+the change. Playback never duplicates, reassigns, or disposes your resource.
 
-Natural completion, cancellation, owner exit, target destruction, and runner
-teardown all settle the completion wait. Cancellation is a result, not a fault.
-Interpolation, easing, setter, or callback failures fault C# completion instead.
-`SuppressCallbacksWhenTargetInvalid` can suppress callbacks while still settling
-completion and releasing bindings.
+Give a resource tween an owner to stop it when that node leaves the tree. A tween
+scoped only to the tree keeps running when a mesh is removed or gets a new
+material, because it still targets the original resource. Tree teardown stops
+it. See [material lifetimes](/csharp/materials/#choose-the-playback-lifetime).
 
-All native access belongs on Godot's main thread. Create and control automatic
-tweens there, including access to `End`. A manual scheduler belongs to
-the thread that created it, and native targets still require Godot's main thread.
-See [sequences](/csharp/sequences/#stop-a-sequence) for cancellation-aware sequences.
+## How playback ends
+
+Completion, cancellation, owner exit, target destruction, and runner teardown all
+finish `End` with a [reason](/csharp/playback/#why-it-ended). Cancellation is a
+result, not an error. Failures in interpolation, easing, setters, or callbacks
+fault the tween instead. `SuppressCallbacksWhenTargetInvalid` skips callbacks for
+an invalid target while still finishing `End` and releasing bindings.
+
+Handles keep their `Target` for inspection; drop handles you no longer need.
+Create and control tweens on Godot's main thread. A manual scheduler belongs to
+the thread that created it, and native targets still need the main thread.

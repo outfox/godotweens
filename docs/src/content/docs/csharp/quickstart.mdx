@@ -1,0 +1,86 @@
+---
+title: Your first tween
+description: Move a sprite, then fade it out. Meet the three moves every tween uses - define, start, await.
+---
+
+import { Steps } from '@astrojs/starlight/components';
+import Moves from '../../../components/Moves.astro';
+
+Move a sprite, then fade it out once it arrives. Along the way you meet the
+three moves every tween uses: define, start, and await.
+
+<Steps>
+
+1. [Install the library](/csharp/installation/) in your Godot C# project.
+
+2. Create a scene with a `Sprite2D` and give it a texture.
+
+3. Attach this script as `MoveAndFade.cs`, then play the scene. The sprite glides
+   240 pixels to the right, settles, and fades out.
+
+</Steps>
+
+## The script, line by line
+
+<Moves>
+
+```csharp title="MoveAndFade.cs" {"1":8-13} {"2":15} {"3":16} {"4":18}
+using Godot;
+using tweens.gd;
+
+public partial class MoveAndFade : Sprite2D
+{
+    public override async void _Ready()
+    {
+        var arrive = new Tweens.Position2D
+        {
+            To = Position + new Vector2(240, 0),
+            Duration = 0.6,
+            Ease = EaseType.CubicOut,
+        };
+
+        var movement = this.Tween(arrive);
+        if (await movement.End != Reason.Completed) return;
+
+        this.TweenModulateAlpha(0, 0.3);
+    }
+}
+```
+
+1. **Define.** `Tweens.Position2D` names the property; the initializer holds the
+   endpoint, duration, and easing. `From` is left out, so the tween starts
+   wherever the sprite is. Keep the `Tweens.` prefix: it keeps definitions apart
+   from Godot types such as `Vector2`.
+2. **Start.** `this.Tween(arrive)` starts playback and returns a handle. The
+   first tween sets up its own runner, so there is no autoload to add.
+3. **Await.** `End` finishes when playback ends and says why. If the sprite was
+   freed, removed, or cancelled, the reason is not `Completed` and the script
+   stops, so the fade never runs on a node that is gone.
+4. **Shorthand.** `TweenModulateAlpha(0, 0.3)` builds and starts a definition in
+   one call. It suits one-off motion. Anything you reuse or tune deserves a
+   definition.
+
+</Moves>
+
+Start tweens from `_Ready` or later, on Godot's main thread.
+
+## Control it while it plays
+
+Keep the handle to pause, resume, or cancel:
+
+```csharp
+var movement = sprite.TweenPosition(new Vector2(400, 180), 0.6);
+movement.Pause();
+movement.Resume();
+movement.Cancel();
+```
+
+Cancelling keeps the latest value. To stop everything a node owns, call
+`sprite.CancelTweens(includeChildren: true)`.
+
+## Make it reusable
+
+`arrive` lives inside `_Ready`, so nothing else can use it. Move it to a field,
+compute the endpoint per start with `with`, and every sprite, button, or enemy
+can share the motion. The next page, [definitions](/concepts/definitions/),
+shows how.

@@ -1,12 +1,12 @@
 ---
-// Small looping illustration that marks which part of the docs a page belongs to.
+// Small illustration that marks which part of the docs a page belongs to. It plays once, then rests.
 export type Section = 'curve' | 'hop' | 'catalog' | 'sketch' | 'dock';
 interface Props {
 	kind: Section;
 }
 const { kind } = Astro.props;
-// SMIL time (s) shown when motion is reduced: the most telling resting frame.
-const still: Record<Section, number> = { curve: 0, hop: 0, catalog: 0, sketch: 2.4, dock: 1.6 };
+// Time (s) of each drawing's resting frame: the first moment its motion has settled.
+const still: Record<Section, number> = { curve: 2, hop: 1.2, catalog: 1.6, sketch: 2.4, dock: 1.6 };
 ---
 
 <svg class:list={['art', `art-${kind}`]} data-still={still[kind]} viewBox="0 0 160 100" aria-hidden="true" focusable="false">
@@ -123,12 +123,34 @@ const still: Record<Section, number> = { curve: 0, hop: 0, catalog: 0, sketch: 2
 </svg>
 
 <script>
-	// SMIL ignores the motion preference; hold its clock on each drawing's resting frame instead.
-	if (matchMedia('(prefers-reduced-motion: reduce)').matches)
-		for (const svg of document.querySelectorAll<SVGSVGElement>('svg.art')) {
-			svg.pauseAnimations();
-			svg.setCurrentTime(Number(svg.dataset.still ?? 0));
+	import { reducedMotion } from '../scripts/motion';
+
+	// Each drawing plays up to its resting frame and holds there; pointing at it plays it again.
+	// One clock drives both kinds of motion: SMIL through the SVG, CSS animations through the Web Animations API.
+	for (const svg of document.querySelectorAll<SVGSVGElement>('svg.art')) {
+		const still = Number(svg.dataset.still ?? 0);
+		let timer = 0;
+		const seek = (seconds: number, run: boolean) => {
+			svg.setCurrentTime(seconds);
+			if (run) svg.unpauseAnimations();
+			else svg.pauseAnimations();
+			for (const a of svg.getAnimations({ subtree: true })) {
+				a.currentTime = seconds * 1000;
+				if (run) a.play();
+				else a.pause();
+			}
+		};
+		const play = () => {
+			clearTimeout(timer);
+			seek(0, true);
+			timer = window.setTimeout(() => seek(still, false), still * 1000);
+		};
+		if (reducedMotion()) seek(still, false);
+		else {
+			play();
+			svg.addEventListener('pointerenter', play);
 		}
+	}
 </script>
 
 <style>
@@ -271,10 +293,10 @@ const still: Record<Section, number> = { curve: 0, hop: 0, catalog: 0, sketch: 2
 	}
 	@keyframes c-fade {
 		from {
-			opacity: 1;
+			opacity: 0.12;
 		}
 		to {
-			opacity: 0.12;
+			opacity: 1;
 		}
 	}
 	@keyframes c-skew {

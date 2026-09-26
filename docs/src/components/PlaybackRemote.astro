@@ -37,7 +37,7 @@
 </div>
 
 <script>
-	import { EASES, loop, reducedMotion } from '../scripts/motion';
+	import { EASES, animate, loop, reducedMotion } from '../scripts/motion';
 
 	const DURATION = 2.4;
 	type State = 'Ready' | 'Playing' | 'Paused' | 'Completed' | 'Cancelled';
@@ -74,7 +74,7 @@
 			state = next;
 			stateOut.textContent = next;
 			stateOut.dataset.state = next;
-			stateOut.animate([{ scale: 0.75 }, { scale: 1 }], { duration: 420, easing: 'cubic-bezier(0.34, 1.56, 0.64, 1)' });
+			animate(stateOut, [{ scale: 0.75 }, { scale: 1 }], { duration: 420, easing: 'cubic-bezier(0.34, 1.56, 0.64, 1)' });
 			btn('pause').disabled = next !== 'Playing';
 			btn('resume').disabled = next !== 'Paused';
 			btn('cancel').disabled = next !== 'Playing' && next !== 'Paused';

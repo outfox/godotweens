@@ -41,7 +41,7 @@
 </div>
 
 <script>
-	import { loop } from '../scripts/motion';
+	import { animate, loop } from '../scripts/motion';
 
 	for (const root of document.querySelectorAll<HTMLElement>('[data-ownership]')) {
 		const $ = <T extends Element>(s: string) => root.querySelector<T>(s)!;
@@ -65,7 +65,7 @@
 			if (stateOut.textContent !== label) {
 				stateOut.textContent = label;
 				stateOut.dataset.state = exited ? 'done' : running() ? 'play' : 'paused';
-				stateOut.animate([{ scale: 0.75 }, { scale: 1 }], { duration: 420, easing: 'cubic-bezier(0.34, 1.56, 0.64, 1)' });
+				animate(stateOut, [{ scale: 0.75 }, { scale: 1 }], { duration: 420, easing: 'cubic-bezier(0.34, 1.56, 0.64, 1)' });
 			}
 			root.classList.toggle('tree-paused', treePaused);
 			pauseBtn.setAttribute('aria-pressed', String(treePaused));

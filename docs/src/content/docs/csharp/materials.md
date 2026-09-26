@@ -1,5 +1,5 @@
 ---
-title: C# material tweens
+title: Material tweens
 description: Animate shared material properties with explicit ownership and rendering prerequisites.
 ---
 

@@ -1,0 +1,69 @@
+---
+title: Install
+description: Add tweens.gd to a Godot C# project with a project reference or a locally built NuGet package.
+---
+
+import { Steps, Tabs, TabItem } from '@astrojs/starlight/components';
+
+tweens.gd is a C# library for Godot .NET projects. Until its first NuGet release,
+add it from a clone of the repository.
+
+You need .NET 10 and a Godot .NET engine that matches GodotSharp 4.7.2; your game
+supplies the engine. [Compatibility](/compatibility/) lists what has been
+validated. The package ID and the namespace are both lowercase `tweens.gd`.
+
+## Add the library
+
+Pick one route. Use a project reference or a package reference, not both.
+
+<Tabs>
+<TabItem label="Project reference">
+
+The quickest route. Clone the repository and reference its project from your
+game's project, adjusting both paths:
+
+```powershell
+dotnet add path/to/YourGame.csproj reference path/to/tweens.gd/csharp/tweens.gd.csproj
+```
+
+Godot then builds the library together with your game.
+
+</TabItem>
+<TabItem label="Local NuGet package">
+
+<Steps>
+
+1. From the repository root, pack the library. This writes
+   `tweens.gd.0.1.0.nupkg` and a symbol package:
+
+   ```powershell
+   dotnet pack csharp/tweens.gd.csproj -c Release -o artifacts/packages
+   ```
+
+2. In your game's `NuGet.config`, add the absolute path of that directory next to
+   nuget.org, which supplies GodotSharp:
+
+   ```xml
+   <configuration>
+     <packageSources>
+       <clear />
+       <add key="local-tweens" value="C:/path/to/tweens.gd/artifacts/packages" />
+       <add key="nuget.org" value="https://api.nuget.org/v3/index.json" />
+     </packageSources>
+   </configuration>
+   ```
+
+3. Reference the package in your game's project file, then run `dotnet restore`:
+
+   ```xml
+   <ItemGroup>
+     <PackageReference Include="tweens.gd" Version="0.1.0" />
+   </ItemGroup>
+   ```
+
+</Steps>
+
+</TabItem>
+</Tabs>
+
+Then write [your first tween](/csharp/quickstart/).

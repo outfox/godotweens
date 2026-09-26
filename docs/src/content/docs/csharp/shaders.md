@@ -1,7 +1,10 @@
 ---
-title: C# shader uniforms
+title: Shader uniforms
 description: Typed material and per-instance uniforms, binding validation, defaults, and restoration.
 ---
+
+Animate shader uniforms by name: on a shared `ShaderMaterial`, or per node with
+instance uniforms. Names and types are checked before playback starts.
 
 Import `Godot` and `tweens.gd`. These examples run in a Node method on the main
 thread. `shaderMaterial` is a configured ShaderMaterial; `mesh` and `sprite`

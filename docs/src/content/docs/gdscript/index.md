@@ -26,8 +26,8 @@ adapters.
 | Minimum Godot version and export platforms | Not yet validated |
 | Package/download | Not available |
 
-The [shared concepts](/concepts/definitions/) describe the model the addon is
-intended to follow. Exact parity will be documented as implementations are tested.
+The [definitions](/concepts/definitions/), [timing](/concepts/timing/), and
+[lifetime](/concepts/lifetime/) pages describe the model the addon is intended to follow. Exact parity will be documented as implementations are tested.
 The choice of a native backend depends on measurements, not an assumption that
 every workload requires it.
 
@@ -35,5 +35,5 @@ every workload requires it.
 
 Once an implementation is ready, this section will include installation, a
 GDScript quickstart, signal/await completion behavior, API reference, and examples
-alongside their C# equivalents. Until then, use the [C# gallery](/csharp/gallery/)
-to explore the current behavior; running it requires the C# toolchain.
+alongside their C# equivalents. Until then, the [C# guides](/csharp/quickstart/)
+show the behavior the addon is meant to match.

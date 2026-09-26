@@ -25,15 +25,18 @@ foreach ($page in Get-ChildItem (Join-Path $docsRoot 'src/content/docs') -Recurs
         $code = $fence.Groups['code'].Value
         $line = ($body.Substring(0, $fence.Groups['code'].Index) -split "`n").Count
         $source = $page.FullName.Replace('\', '/')
-        if ($code -match '(?m)^public (?:partial |sealed |static )?class ') {
-            $compilation = "#line $line `"$source`"`n$code"
+        # Pages state that examples import Godot and tweens.gd. Hoisted usings leave blank lines behind,
+        # so compiler line numbers still match the page.
+        $imports = @('using Godot;', 'using tweens.gd;') + @([regex]::Matches($code, '(?m)^using [\w.]+;') | ForEach-Object { $_.Value })
+        $imports = ($imports | Select-Object -Unique) -join "`n"
+        $code = [regex]::Replace($code, '(?m)^using [\w.]+;', '')
+        if ($code -match '(?m)^public (?:partial |sealed |static )*class ') {
+            $compilation = "$imports`n#line $line `"$source`"`n$code"
         } else {
             # Context is documented on each page. These are compile-only parameters,
             # not engine objects created or exercised by this check.
-            $imports = @('using Godot;', 'using tweens.gd;') + @([regex]::Matches($code, '(?m)^using [\w.]+;') | ForEach-Object { $_.Value })
-            $code = [regex]::Replace($code, '(?m)^using [\w.]+;', '')
             $compilation = @"
-$(($imports | Select-Object -Unique) -join "`n")
+$imports
 public partial class DocumentationExample$exampleCount : Node
 {
     public async Task Run(Sprite2D sprite, Label label, Camera2D camera,

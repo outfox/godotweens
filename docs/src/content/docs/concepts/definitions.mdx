@@ -1,71 +1,184 @@
 ---
-title: Definitions and playback
-description: Reusable configurations, independent handles, value copies, and competing property writes.
+title: Reusable definitions
+description: Name motion in fields, share its feel with TweenOptions, vary single starts with `with`, and build steps from methods.
 ---
 
 import DefinitionStamp from '../../../components/DefinitionStamp.astro';
+import Moves from '../../../components/Moves.astro';
 
-A **definition** describes endpoints, timing, easing, and callbacks. A **playback
-instance** is one running use of that definition on a target. The behavior below
-is implemented in C# and is the intended model for the planned GDScript addon.
+A definition is a value that describes one motion. Name it once, start it on any
+number of nodes, and tune it in one place: every start takes its own copy.
 
-Definitions are the heart of tweens.gd's design. Motion becomes structured data
-you can read at a glance, reuse across targets, and reauthor in one place.
+Examples assume `using Godot;` and `using tweens.gd;`, plus
+`System.Threading.Tasks` if implicit usings are off, and run on Godot's main thread.
 
-## Reuse a definition
+## A complete example
 
-In this C# example, `sprite` is an in-tree `Sprite2D` and `label` an in-tree
-`Label`. Import `Godot` and `tweens.gd` and run on Godot's main thread.
+A coin pops in, then rises and fades when collected:
 
-```csharp
-var fade = new Tweens.ModulateAlpha { To = 0, Duration = 0.3 };
-var first = sprite.Tween(fade);
-var second = label.Tween(fade with { Delay = 0.15 });
-first.Pause();
-first.Resume();
-second.Cancel();
-sprite.CancelTweens(includeChildren: true);
-```
+<Moves>
 
-Built-in definitions are readonly record structs in the root `Tweens` namespace. A `with` expression copies the configuration and changes only the listed properties; the original remains available for reuse. Each start captures its own initial property value and owns its playback state. Omitted `From`/`To` use that captured value. Delegates and the objects they capture remain shared references. Godot Curves are duplicated for each playback.
-
-Store reusable definitions directly on your class:
-
-```csharp
-private readonly Tweens.PathFollow2DVOffset offset = new()
+```csharp title="Coin.cs" {"1":3-7} {"2":9-20} {"3":22} {"4":24-28}
+public partial class Coin : Sprite2D
 {
-    To = 20,
-    Duration = 1.5,
-    Ease = EaseType.SineInOut,
-};
+    static readonly TweenOptions Snappy = new()
+    {
+        Duration = 0.25,
+        Ease = EaseType.BackOut,
+    };
 
-// Inside an animation method:
-var trailing = follower.Tween(offset with { Duration = seconds, Delay = delay });
+    static readonly Tweens.Scale2D Pop = new()
+    {
+        Options = Snappy,
+        From = Vector2.Zero,
+        Fill = FillMode.Both,
+    };
+    static readonly Tweens.ModulateAlpha Fade = new()
+    {
+        Options = Snappy,
+        To = 0,
+    };
+    static readonly Tweens.Position2DY Lift = new() { Options = Snappy };
+
+    public void Appear(double delay) => this.Tween(Pop with { Delay = delay });
+
+    public async Task<bool> Collect()
+    {
+        var step = this.Tween(Lift with { To = Position.Y - 40 }, Fade);
+        return await step.End == Reason.Completed;
+    }
+}
 ```
 
-`TweenOptions` is a readonly record struct too. Share it between different
-definition types with `Options = timing`, then override individual properties:
-`offset with { Options = timing, Delay = 0.2 }`. Put `Options` first because
-it replaces the complete timing configuration.
+1. **Share the feel.** One `TweenOptions` value sets the timing and easing of
+   every coin motion.
+2. **Name the motion.** Each definition is a field with a name that says what
+   it is for. `Pop` and `Lift` leave an endpoint open.
+3. **Vary with `with`.** Each start picks its own delay; `Pop` itself never
+   changes.
+4. **Build steps from methods.** `Collect` plays two tweens as one step and
+   reports whether it completed.
 
-The copies contain values and managed references; they are not restricted to
-the stack. A `with` copy itself needs no new object. The current typed interface
-entry point boxes a struct when starting it, and playback allocates its own
-mutable state. There is no definition copying or boxing per animation tick.
+</Moves>
+
+## Share the feel
+
+`TweenOptions` holds timing and easing without a property or endpoints. Assign
+it with `Options = Snappy` and different properties move with one rhythm. Change
+`Snappy` and the whole coin feels different.
+
+List single overrides after `Options`. Shorthand methods accept options too:
+
+```csharp
+var snappy = new TweenOptions { Duration = 0.25, Ease = EaseType.BackOut };
+var slowPop = new Tweens.Scale2D { Options = snappy, Duration = 0.6 };
+sprite.TweenPosition(new Vector2(400, 180), 0.5, snappy);
+```
+
+:::caution[Order matters]
+- Put `Options` first in an initializer. Assigning it replaces every timing
+  setting listed before it.
+- Declare shared options above the static definitions that use them. Static
+  fields initialize top to bottom, so a definition declared first copies empty
+  options.
+:::
+
+## Name the motion
+
+Keep definitions in `static readonly` fields. The name says what a motion is
+for, the initializer says how it moves, and there is one place to tune it.
+
+Built-in definitions are immutable `readonly record struct` values in the root
+`Tweens` namespace. One field can serve every coin in the level, because each
+start takes its own copy.
+
+## Leave endpoints open
+
+An omitted `From` or `To` is read from the property when the tween starts.
+
+- Omit `From` to start wherever the node is. `Lift` rises from the coin's
+  current height.
+- Omit `To` to animate into the current value. `Pop` grows from zero to whatever
+  scale the coin has in the scene.
+
+Set both only when the motion must span fixed values. Callback value tweens such
+as `Tweens.Float` have no property to read; their omitted endpoints fall back to
+zero, transparent black, or identity.
+
+## Vary a start with `with`
+
+`with` copies a definition and changes only the listed properties. The field
+stays untouched, so per-start details never leak into the shared motion:
+
+- `Pop with { Delay = delay }` staggers coins that share one definition. Its
+  `Fill = FillMode.Both` applies `From` during the delay, so waiting coins stay
+  hidden instead of flashing at full size.
+- `Lift with { To = Position.Y - 40 }` computes a target from this coin's position.
+
+`with` works on `TweenOptions` too, as in `Snappy with { Ease = EaseType.CubicOut }`.
+
+Try it below: start the sprite, change `To`, then start the label. The sprite's
+playback keeps the value it started with.
 
 <DefinitionStamp />
 
+## Build steps from methods
 
-Multiple tweens on the same property are allowed: the last application in insertion order wins. Axis and alpha adapters read the other components at application time so independent component tweens compose correctly.
-## Choose a C# entry point
+Wrap each step in a method that returns whether it completed. Callers chain steps
+with `&&`, which stops at the first step that did not complete:
 
-Use `target.Tween(new Tweens.Position2D { ... })` for reusable definitions, or a typed
-convenience method such as `sprite.TweenPosition(destination, 0.5)`. Both return
-independent handles. The configure callback in a convenience method runs before
-snapshotting and may override any option. Shared configure methods accept
-`TweenOptionsBuilder`, the mutable builder base. Alternatively, pass a shared
-`TweenOptions` value; its options are copied, but the explicit duration argument wins.
+```csharp title="Chest.cs"
+public partial class Chest : Node2D
+{
+    static readonly Tweens.Rotation2D Wobble = new()
+    {
+        To = 0.15f,
+        Duration = 0.08,
+        UsePingPong = true,
+        Repeats = 2,
+    };
+    static readonly Tweens.Scale2D Burst = new()
+    {
+        To = new Vector2(1.3f, 1.3f),
+        Duration = 0.2,
+        Ease = EaseType.BackOut,
+    };
 
-Callback value tweens have no property to read; omitted endpoints use the type's
-default (zero, transparent black, or identity as applicable). Supply explicit
-endpoints for a particular range. See [custom tweens](/csharp/custom-tweens/).
+    public async Task<bool> Open() =>
+        await this.Tween(Wobble).End == Reason.Completed
+        && await this.Tween(Burst).End == Reason.Completed;
+}
+```
+
+`node.Tween(first, second)` plays several definitions as one step, as `Collect`
+does above. [Sequences](/csharp/sequences/) covers chaining, staggering, waits,
+and stopping.
+
+## Definition or shorthand?
+
+Every built-in definition also has a typed shorthand method. Both return the same
+kind of handle.
+
+| | Definition | Shorthand |
+| --- | --- | --- |
+| Call | `sprite.Tween(new Tweens.Position2D { ... })` | `sprite.TweenPosition(to, 0.5)` |
+| Best for | Motion you name, reuse, or tune | One-off motion next to game logic |
+| Configure with | An initializer and `with` | A callback such as `o => o.Ease = ...`, or a `TweenOptions` value |
+
+A shorthand call's duration argument wins over the duration in a `TweenOptions`
+value. Reusable configure callbacks take a `TweenOptionsBuilder`.
+
+## What each start copies
+
+Starting a definition snapshots it and captures the property's current value.
+Later `with` copies never reach running playback. Delegates, and the objects they
+capture, stay shared; Godot `Curve` resources are duplicated for each playback.
+
+A `with` copy allocates nothing. Starting boxes the definition once and allocates
+its playback state; nothing is copied per frame.
+
+## When tweens compete
+
+Two tweens may animate the same property. Each frame, the one started last wins.
+Axis and alpha adapters, such as `Tweens.Position2DX` and `Tweens.ModulateAlpha`,
+read the other components on every write, so an X tween and a Y tween combine.

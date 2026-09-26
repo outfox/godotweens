@@ -1,5 +1,5 @@
 ---
-title: Custom C# tweens
+title: Custom tweens
 description: Animate callback values and custom properties, or drive a scheduler yourself.
 ---
 

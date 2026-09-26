@@ -22,7 +22,7 @@ dotnet test testbed/testbed.tests/testbed.tests.csproj
 dotnet run --project testbed/testbed.2dog
 ```
 
-The testbed is an eight-page gallery with 32 examples: squash and stretch, choreography, motion and paths, interface, drawing and particles, a 3D stage, materials, and shaders. Change the duration, restart the current page, or read the animation tasks beside each example. Examples await tweens and groups directly; leaving a page ends its tweens through their node lifetimes. See the [gallery guide](docs/src/content/docs/csharp/gallery.mdx). From `testbed/`, `dotnet test` and `dotnet run --project testbed.2dog` also work.
+The testbed is an eight-page gallery with 32 examples: squash and stretch, choreography, motion and paths, interface, drawing and particles, a 3D stage, materials, and shaders. Change the duration, restart the current page, or read the animation tasks beside each example. Examples await tweens and groups directly; leaving a page ends its tweens through their node lifetimes. From `testbed/`, `dotnet test` and `dotnet run --project testbed.2dog` also work.
 
 ## Run the library tests
 

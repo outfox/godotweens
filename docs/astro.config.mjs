@@ -1,14 +1,36 @@
 // @ts-check
 import { defineConfig } from 'astro/config';
 import starlight from '@astrojs/starlight';
+import { tweensDark, tweensLight } from './src/styles/code-themes.mjs';
+
+// Wraps Markdown tables in a scroll container, so a wide table scrolls inside the content lane instead of spilling past it.
+// Registered on the Sätteri processor's hast pipeline, the same way Starlight adds its own transforms.
+const tableScroll = {
+	name: 'tweens-table-scroll',
+	hooks: {
+		'astro:config:setup': ({ config }) =>
+			config.markdown.processor.options.hastPlugins.push({
+				name: 'tweens-table-wrap',
+				element: [
+					{
+						filter: ['table'],
+						visit: (node, ctx) =>
+							ctx.wrapNode(node, { type: 'element', tagName: 'div', properties: { className: ['table-wrap'] }, children: [] }),
+					},
+				],
+			}),
+	},
+};
 
 // https://astro.build/config
 export default defineConfig({
 	site: 'https://tweens.gd',
 	integrations: [
+		tableScroll,
 		starlight({
 			title: 'tweens.gd',
-			description: 'Reusable tweens for Godot. C# guides, playback concepts, and API reference.',
+			description: 'An alternative tweening library for Godot. C# guides, playback concepts, and API reference.',
+			tableOfContents: false,
 			customCss: [
 				'@fontsource-variable/bricolage-grotesque/standard.css',
 				'@fontsource-variable/figtree',
@@ -23,7 +45,7 @@ export default defineConfig({
 				MarkdownContent: './src/components/overrides/MarkdownContent.astro',
 			},
 			expressiveCode: {
-				themes: ['github-dark-default', 'github-light'],
+				themes: [tweensDark, tweensLight],
 				styleOverrides: {
 					borderRadius: '0.9rem',
 					borderColor: 'var(--tw-outline)',
@@ -40,37 +62,50 @@ export default defineConfig({
 					},
 				},
 			},
-			social: [{ icon: 'github', label: 'GitHub', href: 'https://github.com/outfox/tweens.gd' }],
+			social: [
+				{ icon: 'discord', label: 'Discord', href: 'https://discord.gg/3UXVHnmEwd' },
+				{ icon: 'github', label: 'GitHub', href: 'https://github.com/outfox/tweens.gd' },
+			],
+			// Ordered as a learning path; Starlight's prev/next links follow it page by page.
 			sidebar: [
-				{ label: 'Overview', slug: '' },
-				{ label: 'Compatibility & availability', slug: 'compatibility' },
 				{
-					label: 'Concepts',
+					label: 'Start here',
 					items: [
-						{ label: 'Definitions & playback', slug: 'concepts/definitions' },
+						{ label: 'Overview', slug: '' },
+						{ label: 'Install', slug: 'csharp/installation' },
+						{ label: 'Your first tween', slug: 'csharp/quickstart' },
+					],
+				},
+				{
+					label: 'Write reusable tweens',
+					items: [
+						{ label: 'Definitions', slug: 'concepts/definitions' },
+						{ label: 'Sequences', slug: 'csharp/sequences' },
+						{ label: 'Control & completion', slug: 'csharp/playback' },
+					],
+				},
+				{
+					label: 'Shape the motion',
+					items: [
+						{ label: 'Easing', slug: 'concepts/easing' },
 						{ label: 'Timing & loops', slug: 'concepts/timing' },
 						{ label: 'Lifetime & ownership', slug: 'concepts/lifetime' },
-						{ label: 'Easing', slug: 'concepts/easing' },
 					],
 				},
 				{
-					label: 'C#',
+					label: 'Beyond nodes',
 					items: [
-						{ label: 'Installation', slug: 'csharp/installation' },
-						{ label: 'Quickstart', slug: 'csharp/quickstart' },
-						{ label: 'Playback & async', slug: 'csharp/playback' },
-						{ label: 'Sequences', slug: 'csharp/sequences' },
+						{ label: 'Materials', slug: 'csharp/materials' },
+						{ label: 'Shader uniforms', slug: 'csharp/shaders' },
 						{ label: 'Custom tweens', slug: 'csharp/custom-tweens' },
-						{ label: 'Gallery', slug: 'csharp/gallery' },
 					],
 				},
 				{
-					label: 'C# reference',
+					label: 'Reference',
 					items: [
 						{ label: 'Core API', slug: 'csharp/api' },
 						{ label: 'Node & value catalog', slug: 'csharp/nodes' },
-						{ label: 'Materials', slug: 'csharp/materials' },
-						{ label: 'Shader uniforms', slug: 'csharp/shaders' },
+						{ label: 'Compatibility', slug: 'compatibility' },
 					],
 				},
 				{

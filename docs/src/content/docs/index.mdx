@@ -1,45 +1,39 @@
 ---
 title: Reusable tweens for Godot
 template: splash
-description: Animate nodes, values, materials, and shader uniforms with reusable definitions and independent playback.
+description: An alternative tweening library for Godot. Use it from C# today; a GDScript addon is planned.
+facts:
+  - text: C# · .NET 10 · Godot 4.7.2
+  - text: GDScript addon planned
+    link: /gdscript/
 hero:
   title: tweens.gd
   tagline: What if writing tweens didn't suck?
   actions:
-    - text: Start with C#
-      link: /csharp/quickstart/
+    - text: Get started
+      link: /csharp/installation/
       icon: right-arrow
-    - text: Explore the gallery
-      link: /csharp/gallery/
+    - text: Join our Discord
+      link: https://discord.gg/3UXVHnmEwd
+      icon: discord
       variant: secondary
+      attrs:
+        iconPlacement: start
 ---
 
-import { Tabs, TabItem } from '@astrojs/starlight/components';
+import Compare from '../../components/Compare.astro';
+import Moves from '../../components/Moves.astro';
+import Path from '../../components/Path.astro';
 import ReauthorDemo from '../../components/ReauthorDemo.astro';
 
-## Structured, readable, reusable
+## Define, start, await
 
-A tween in tweens.gd is a definition: one object that names the property,
-endpoints, timing, and easing together. It reads top to bottom, you can name it
-and start it from any number of places, and you change it in one spot when the
-motion should feel different. Refactoring and reauthoring motion become ordinary
-code edits instead of a hunt through scattered call chains.
+A tween is a value you define once. Starting it on a node returns a handle, and
+awaiting the handle tells you how the tween ended.
 
-<ReauthorDemo />
+<Moves>
 
-## Choose your language
-
-<Tabs>
-  <TabItem label="C#">
-
-The C# implementation is available in this repository. Start with a project
-reference or a locally built `tweens.gd` package while its first public release
-is pending.
-
-```csharp
-using Godot;
-using tweens.gd;
-
+```csharp {"1":1-6} {"2":8} {"3":9-10}
 var arrive = new Tweens.Position2D
 {
     To = new Vector2(400, 180),
@@ -52,16 +46,67 @@ if (await movement.End == Reason.Completed)
     GD.Print("Arrived");
 ```
 
-[Install the C# library](/csharp/installation/).
+1. **Define** the motion. Property, endpoint, duration, and easing sit together
+   and read top to bottom.
+2. **Start** it on a node. It begins wherever the node is and returns a handle.
+3. **Await** `End` to learn how it ended: completed, cancelled, or cut short
+   because the node left the tree.
 
-  </TabItem>
-  <TabItem label="GDScript — planned">
+</Moves>
 
-A Godot addon with equivalent tween functionality is planned. It is not available
-to install yet. Its public API, completion signals, minimum engine version, and
-supported exports will be documented once implemented and tested.
+## Reuse a definition
 
-[Read the addon status](/gdscript/).
+The coin, gem, and sprite below all start the same `Pop` definition. Change its
+ease or duration, and each of them uses the new values the next time it starts.
 
-  </TabItem>
-</Tabs>
+<ReauthorDemo />
+
+## Compared with Godot's Tween
+
+The same move, written with Godot's built-in `Tween` and with tweens.gd:
+
+<Compare>
+
+```csharp title="Godot's Tween"
+var target = new Vector2(400, 180);
+var tween = sprite.CreateTween();
+tween.TweenProperty(sprite, "position", target, 0.6)
+    .SetTrans(Tween.TransitionType.Cubic)
+    .SetEase(Tween.EaseType.Out);
+await ToSignal(tween, Tween.SignalName.Finished);
+GD.Print("Arrived");
+```
+
+```csharp title="tweens.gd"
+var target = new Vector2(400, 180);
+var movement = sprite.TweenPosition(target, 0.6,
+    options => options.Ease = EaseType.CubicOut);
+if (await movement.End == Reason.Completed)
+    GD.Print("Arrived");
+```
+
+</Compare>
+
+|  | Godot's Tween | tweens.gd |
+| --- | --- | --- |
+| Property | A string path and a `Variant`; mistakes surface at runtime | A typed method; the compiler checks the property and value |
+| Easing | A `TransitionType` plus an `EaseType` | One `EaseType`, such as `CubicOut` |
+| Reuse | Build a new `Tween` for each animation | [Store a definition](/concepts/definitions/) and start it on any node |
+| Ending | `Finished` fires on completion only | `End` settles with a `Reason`: completed, cancelled, owner left the tree |
+
+## Learn it in five steps
+
+<Path>
+
+1. [Install](/csharp/installation/)
+   Add the C# library to your Godot project.
+2. [Your first tween](/csharp/quickstart/)
+   Move a sprite, then fade it out.
+3. [Definitions](/concepts/definitions/)
+   Name motion once and reuse it everywhere.
+4. [Sequences](/csharp/sequences/)
+   Chain, group, and stagger steps.
+5. [Control & completion](/csharp/playback/)
+   Pause, cancel, and handle every ending.
+
+</Path>

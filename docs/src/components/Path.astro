@@ -1,0 +1,103 @@
+---
+// An ordered learning path drawn as one track: numbered stops, each a link followed by a short line of text.
+---
+
+<nav class="path tw-wide" aria-label="Learning path"><slot /></nav>
+
+<style>
+	.path :global(ol) {
+		--dot: 2.1rem;
+		list-style: none;
+		counter-reset: stop;
+		position: relative;
+		padding: 0;
+		margin: 1.75rem 0 0;
+		display: grid;
+		gap: 1.5rem;
+	}
+	/* The track runs through the stops: down the side when stacked, across when they sit in a row. */
+	.path :global(ol::before) {
+		content: '';
+		position: absolute;
+		inset-block: calc(var(--dot) / 2);
+		inset-inline-start: calc(var(--dot) / 2 - 1px);
+		width: 2px;
+		background: var(--tw-outline);
+	}
+	.path :global(li) {
+		counter-increment: stop;
+		position: relative;
+		margin: 0;
+		padding-inline-start: calc(var(--dot) + 1rem);
+		min-height: var(--dot);
+		color: var(--tw-muted);
+		font-size: var(--sl-text-sm);
+	}
+	.path :global(li::before) {
+		content: counter(stop);
+		position: absolute;
+		inset-inline-start: 0;
+		top: 0;
+		display: grid;
+		place-items: center;
+		width: var(--dot);
+		height: var(--dot);
+		border-radius: 50%;
+		background: var(--tw-stage);
+		border: 2px solid var(--tw-outline);
+		color: var(--sl-color-white);
+		font: 700 0.85rem var(--sl-font-mono);
+		transition:
+			scale 0.45s var(--ease-back-out),
+			background-color 0.2s,
+			border-color 0.2s,
+			color 0.2s;
+	}
+	.path :global(li:first-child::before) {
+		background: var(--tw-mint);
+		border-color: var(--tw-mint);
+		color: var(--tw-on-accent);
+	}
+	:global(:root[data-theme='light']) .path :global(li:first-child::before) {
+		background: var(--tw-mint-ink);
+		border-color: var(--tw-mint-ink);
+	}
+	.path :global(li:has(a:is(:hover, :focus-visible))::before) {
+		scale: 1.15;
+		border-color: var(--tw-mint);
+	}
+	.path :global(li > a:first-child) {
+		display: block;
+		margin-bottom: 0.15rem;
+		color: var(--sl-color-white);
+		text-decoration: none;
+		font-family: var(--tw-font-display);
+		font-size: 1.1rem;
+		font-weight: 700;
+		line-height: var(--dot);
+	}
+	.path :global(li > a:first-child:hover) {
+		color: var(--tw-mint-ink);
+	}
+	@media (min-width: 62rem) {
+		.path :global(ol) {
+			grid-template-columns: repeat(auto-fit, minmax(0, 1fr));
+			grid-auto-flow: column;
+			gap: 1.25rem;
+		}
+		.path :global(ol::before) {
+			inset-block: calc(var(--dot) / 2 - 1px) auto;
+			inset-inline: calc(var(--dot) / 2) 0;
+			width: auto;
+			height: 2px;
+			background: linear-gradient(90deg, var(--tw-outline) 82%, transparent);
+		}
+		.path :global(li) {
+			padding-inline-start: 0;
+			padding-top: calc(var(--dot) + 0.75rem);
+		}
+		.path :global(li > a:first-child) {
+			line-height: 1.3;
+		}
+	}
+</style>

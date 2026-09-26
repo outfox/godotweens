@@ -12,7 +12,9 @@
 	--sl-font-mono: 'JetBrains Mono Variable', ui-monospace, monospace;
 	--tw-font-display: 'Bricolage Grotesque Variable', 'Figtree Variable', system-ui, sans-serif;
 
-	--sl-content-width: 48rem;
+	/* The lane runs as wide as code, tables, and demos need; prose inside it keeps a readable measure. */
+	--sl-content-width: 68rem;
+	--tw-measure: 46rem;
 	--sl-line-height: 1.7;
 	--sl-text-h1: 2.5rem;
 	--sl-text-h2: 1.875rem;
@@ -200,23 +202,25 @@ h4,
 	border: 1px solid color-mix(in oklab, var(--tw-outline) 60%, transparent);
 }
 
-/* Tables read like dope sheets: tinted header, rows light up on hover. */
-.sl-markdown-content table {
-	border-collapse: separate;
-	border-spacing: 0;
+/* Tables read like dope sheets: tinted header, rows light up on hover. The frame belongs to the scroll
+   container (astro.config.mjs wraps each table), so a wide table scrolls inside it at any width. */
+.sl-markdown-content .table-wrap {
+	/* As wide as the table needs: at least the prose measure, at most the lane. */
+	width: fit-content;
+	min-width: min(100%, var(--tw-measure));
+	max-width: 100%;
+	overflow-x: auto;
 	border: 1px solid var(--tw-outline);
 	border-radius: 0.75rem;
-	display: block;
-	overflow-x: auto;
-	max-width: 100%;
-	font-size: var(--sl-text-sm);
 }
-@media (min-width: 50em) {
-	.sl-markdown-content table {
-		display: table;
-		width: 100%;
-		overflow: hidden;
-	}
+.sl-markdown-content table {
+	display: table;
+	width: 100%;
+	margin: 0;
+	border: 0;
+	border-collapse: separate;
+	border-spacing: 0;
+	font-size: var(--sl-text-sm);
 }
 .sl-markdown-content :is(th, td) {
 	border: 0;
@@ -240,6 +244,17 @@ h4,
 }
 .sl-markdown-content tbody tr:hover {
 	background-size: 100% 100%;
+}
+
+/* Pages without a sidebar have no mobile menu, so their header keeps the social links at every width. */
+@media (max-width: 50rem) {
+	:root:not([data-has-sidebar]) .header .right-group {
+		display: flex;
+	}
+	:root:not([data-has-sidebar]) .header :is(starlight-theme-select, starlight-lang-select),
+	:root:not([data-has-sidebar]) .header .social-icons::after {
+		display: none;
+	}
 }
 
 /* Header: scroll position drawn as a playhead running along the nav's bottom edge. */
@@ -341,10 +356,10 @@ h4,
 	translate: 0 -3px;
 	box-shadow: 0 10px 22px -10px color-mix(in oklab, var(--tw-mint) 70%, transparent);
 }
-.sl-link-button svg {
+.sl-link-button svg:last-child {
 	transition: translate 0.45s var(--ease-elastic-out);
 }
-.sl-link-button:hover svg {
+.sl-link-button:hover svg:last-child {
 	translate: 5px 0;
 }
 
@@ -428,6 +443,11 @@ h4,
 	width: 1em;
 	height: 1em;
 }
+@media (pointer: coarse) {
+	.tw-btn {
+		min-height: 2.75rem;
+	}
+}
 .tw-chip {
 	display: inline-flex;
 	align-items: center;
@@ -465,18 +485,50 @@ h4,
 	}
 }
 
-/* Landing page runs wider; its prose keeps a readable measure. */
+/* Prose keeps its measure; code, tables, and demos take the whole lane. The landing page runs wider still. */
+.sl-markdown-content > :not(.expressive-code, .table-wrap, .tw-widget, .tw-wide, starlight-tabs),
+.sl-markdown-content [role='tabpanel'] > :not(.expressive-code, .table-wrap) {
+	max-width: var(--tw-measure);
+}
 :root[data-has-hero] {
 	--sl-content-width: 72rem;
 }
-[data-has-hero] .sl-markdown-content > :is(p, div, .expressive-code, starlight-tabs) {
-	max-width: 46rem;
+
+/* Each page opens with its one key idea; the lede sets it apart from the detail that follows. */
+.sl-markdown-content > p:first-child {
+	font-size: var(--sl-text-lg);
+	line-height: 1.6;
+	color: var(--sl-color-white);
+	text-wrap: pretty;
 }
 
 code,
 pre,
 kbd {
 	font-variant-ligatures: none;
+}
+
+/* Marked code lines point at what the prose explains: a faint mint band, a mint edge, and a numbered tab
+   that matches the numbered notes beside the code (Moves.astro). */
+:root .expressive-code .ec-line.mark {
+	--tmLineBgCol: color-mix(in oklab, var(--tw-mint) 8%, transparent);
+}
+:root .expressive-code .ec-line.mark .code {
+	--ecLineBrdCol: color-mix(in oklab, var(--tw-mint) 70%, transparent);
+}
+:root .expressive-code pre:has(.tm-label) {
+	--ec-codePadInl: 2.25rem;
+}
+:root .expressive-code .ec-line.mark.tm-label .code::before {
+	min-width: 1.35rem;
+	padding-inline: 0.3rem;
+	border-radius: 0 0.4rem 0.4rem 0;
+	background: var(--tw-mint);
+	color: var(--tw-on-accent);
+	font-weight: 700;
+}
+:root[data-theme='light'] .expressive-code .ec-line.mark.tm-label .code::before {
+	background: var(--tw-mint-ink);
 }
 
 .sl-badge {

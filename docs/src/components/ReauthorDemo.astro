@@ -1,5 +1,5 @@
 ---
-// One named definition, three call sites. Reauthoring the definition changes every future start.
+// One named definition, three call sites. Editing the definition changes every future start.
 const eases = ['ElasticOut', 'BackOut', 'BounceOut', 'CubicOut'];
 const durations = ['0.3', '0.6', '1.0'];
 const sites = [
@@ -11,7 +11,7 @@ const sites = [
 
 <div class="tw-widget rd not-content" data-reauthor>
 	<div class="def">
-		<pre class="code" aria-label="Definition"><span class="kw">static readonly</span> <span class="ty">Scale2DTween</span> Pop = <span class="kw">new</span>()
+		<pre class="code" aria-label="Definition"><span class="kw">static readonly</span> <span class="ty">Tweens.Scale2D</span> Pop = <span class="kw">new</span>()
 {'{'}
     From = Vector2.Zero,
     To = Vector2.One,
@@ -19,7 +19,7 @@ const sites = [
     Ease = EaseType.<span class="val" data-ease-out>ElasticOut</span>,
 {'}'};</pre>
 		<div class="edit">
-			<p class="edit-label">Reauthor the definition</p>
+			<p class="edit-label">Edit the definition</p>
 			<div class="chips" role="group" aria-label="Ease">
 				{
 					eases.map((e, i) => (
@@ -204,6 +204,11 @@ const sites = [
 	.chip[aria-pressed='true'] {
 		background: var(--tw-amber);
 		color: #231705;
+	}
+	@media (pointer: coarse) {
+		.chip {
+			padding-block: 0.65rem;
+		}
 	}
 	.sites {
 		display: grid;

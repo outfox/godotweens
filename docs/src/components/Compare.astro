@@ -1,0 +1,26 @@
+---
+// Two code blocks side by side when the lane is wide enough, stacked otherwise.
+---
+
+<div class="compare tw-wide"><div class="grid"><slot /></div></div>
+
+<style>
+	.compare {
+		container-type: inline-size;
+		margin-top: 1.5rem;
+	}
+	.grid {
+		display: grid;
+		grid-template-columns: minmax(0, 1fr);
+		gap: 1rem;
+	}
+	@container (min-width: 50rem) {
+		.grid {
+			grid-template-columns: repeat(2, minmax(0, 1fr));
+			gap: 1.5rem;
+		}
+	}
+	.grid > :global(*) {
+		margin: 0;
+	}
+</style>

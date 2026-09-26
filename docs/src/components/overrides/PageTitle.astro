@@ -6,18 +6,15 @@ const PAGE_TITLE_ID = '_top'; // Starlight's skip-link target
 const { id, entry } = Astro.locals.starlightRoute;
 const title = entry.data.title;
 
-const reference = ['csharp/api', 'csharp/nodes', 'csharp/materials', 'csharp/shaders'];
-const section: Section | undefined = id.startsWith('concepts/')
-	? 'curve'
-	: reference.includes(id)
-		? 'catalog'
-		: id.startsWith('csharp/')
-			? 'hop'
-			: id.startsWith('gdscript')
-				? 'sketch'
-				: id === 'compatibility'
-					? 'dock'
-					: undefined;
+// One drawing per sidebar group, so the art tells readers which stretch of the path they are on.
+const groups: [Section, string[]][] = [
+	['dock', ['csharp/installation', 'csharp/quickstart']],
+	['hop', ['concepts/definitions', 'csharp/sequences', 'csharp/playback']],
+	['curve', ['concepts/easing', 'concepts/timing', 'concepts/lifetime']],
+	['catalog', ['csharp/materials', 'csharp/shaders', 'csharp/custom-tweens', 'csharp/api', 'csharp/nodes', 'compatibility']],
+	['sketch', ['gdscript']],
+];
+const section = groups.find(([, ids]) => ids.includes(id))?.[0];
 
 // Letters are split so a hover can ripple through them like a staggered tween list.
 let i = 0;

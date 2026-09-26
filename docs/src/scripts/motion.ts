@@ -69,6 +69,10 @@ export const ease = (name: EaseName, t: number) => EASES[name](Math.min(1, Math.
 
 export const reducedMotion = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
 
+/** `Element.animate` for small feedback pops, skipped under reduced motion (the CSS rule cannot reach script animations). */
+export const animate = (el: Element, keyframes: Keyframe[], options: KeyframeAnimationOptions) =>
+	reducedMotion() ? undefined : el.animate(keyframes, options);
+
 export const lerp = (a: number, b: number, w: number) => a + (b - a) * w;
 
 export interface TweenHandle {

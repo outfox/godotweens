@@ -1,53 +1,46 @@
 ---
-title: C# playback and async
-description: Control handles, compose animations, await completion, and handle cancellation and faults.
+title: Control and completion
+description: Pause, resume, and cancel playback; read why a tween ended; handle callbacks, errors, and threads.
 ---
 
 import PlaybackRemote from '../../../components/PlaybackRemote.astro';
 
-Every addition returns a `TweenInstance<TTarget, TValue>`. Keep it to pause,
-resume, cancel, inspect progress, or await completion. Instances share the
-non-generic `TweenInstance` base, useful for storing different tween types together.
+Every start returns a handle. Use it to pause, resume, or cancel playback, and
+await its `End` to learn why playback stopped.
+
+Snippets run in an async Node method with an in-tree `Sprite2D` named `sprite`,
+and assume `using Godot;`, `using tweens.gd;`, and `using System;`.
+
+## Pause, resume, cancel
 
 <PlaybackRemote />
 
+Handles are `TweenInstance<TTarget, TValue>`. Their non-generic `TweenInstance`
+base lets you keep different tween types in one collection. Cancelling keeps the
+latest value; `node.CancelTweens()` cancels every tween a node owns.
 
-The snippets below run in an async Node method with an in-tree `Sprite2D` named
-`sprite`. Import `Godot`, `tweens.gd`, and `System`; the cancellation example
-also takes a `CancellationToken cancellationToken` supplied by your caller.
+## Why it ended
 
-## Sequence animations
-
-Chain steps by awaiting `End` and checking its reason; run steps together
-as a `Group`. Awaited steps continue each other's timelines without frame drift:
-
-```csharp
-if (await sprite.TweenPosition(new Vector2(400, 180), 0.6).End != Reason.Completed)
-    return;
-await sprite.TweenModulateAlpha(0, 0.3).End;
-```
-
-[Sequences](/csharp/sequences/) covers staggering, waits, stopping, pausing,
-and the timing between steps.
-
-## Completion reasons
-
-`End` is a lazily allocated, shared `Task<Reason>`. Multiple
-callers can await it, including after playback has ended.
+`End` is a shared `Task<Reason>`. Any number of callers can await it, even after
+playback has ended.
 
 | Reason | Meaning |
 | --- | --- |
-| `Completed` | Reached natural completion |
-| `Cancelled` | Explicitly cancelled |
-| `TargetFreed` | Target was disposed, freed, or queued for deletion |
-| `OwnerExited` | Owner left the tree |
-| `RunnerDisposed` | Runner, tree, or manual scheduler shut down |
+| `Completed` | Reached its natural end |
+| `Cancelled` | `Cancel()` was called |
+| `TargetFreed` | The target was disposed, freed, or queued for deletion |
+| `OwnerExited` | The owner left the scene tree |
+| `RunnerDisposed` | The runner, tree, or manual scheduler shut down |
 
-Godot emits tree exit before invalidating a directly freed node, so `Free()` may
-be observed as `OwnerExited`. `QueueFree()` is identified as `TargetFreed` for a
-node that owns its own tween.
+Continue a sequence only on `Completed`; [sequences](/csharp/sequences/) shows
+the pattern. Godot emits tree exit before it invalidates a node freed with
+`Free()`, so that case may report `OwnerExited`. `QueueFree()` reports
+`TargetFreed` for a node that owns its own tween.
 
-## Cancel a wait or cancel playback
+## Cancel a wait, not the tween
+
+`AwaitDecommissionAsync` waits with a cancellation token. The token cancels only
+that wait: other waiters and playback continue unless you call `Cancel()`.
 
 ```csharp
 var movement = sprite.TweenPosition(new Vector2(400, 180), 0.6);
@@ -62,33 +55,45 @@ catch (OperationCanceledException)
 }
 ```
 
-The token only cancels this wait. Other waiters and playback continue unless you
-call `Cancel()`. Ordinary playback cancellation returns a reason instead of
-throwing `OperationCanceledException`.
+Cancelling playback itself never throws `OperationCanceledException`; `End`
+reports `Cancelled`.
 
-## Callbacks and errors
+## Callbacks
 
-Callback order is `OnAdd`, optional delay-fill `OnUpdate`, `OnStart` once, updates,
-then `OnEnd` and `OnFinally`. Cancellation substitutes `OnCancel` for `OnEnd`;
-faults run `OnFinally`. Terminal state is visible before terminal callbacks.
-Terminal callbacks run at most once, with cleanup and task settlement even when
-callbacks fail.
+Definitions accept typed callbacks. They run in this order:
 
-`OnUpdate` samples once per eligible tick, with extra samples for delay fill or
-restoration when applicable. New tweens created by update callbacks begin on the
-next eligible update. Tweens created by `OnEnd` start with the time by which the
-finishing tween overshot its end, so they continue its timeline exactly. A long frame does not replay every skipped cycle's callbacks.
+1. `OnAdd` when the tween is added.
+2. `OnUpdate` with `From`, only when the fill mode applies it during the delay.
+3. `OnStart` once, when playback begins.
+4. `OnUpdate` once per eligible frame with the sampled value, plus once more when
+   completion restores the initial value.
+5. `OnEnd` on natural completion, or `OnCancel` when playback stops early.
+6. `OnFinally` in every case, including faults.
 
-Failures in interpolation, easing, setters, or callbacks fault completion and
-populate `Error`. Multiple failures are retained in an `AggregateException`.
-The scheduler reports them through `UnhandledException`; the automatic runner
-uses `GD.PushError`. Other tweens continue. Catch exceptions around your async
-sequence, especially in `async void` Godot callbacks such as `_Ready`.
+The handle's terminal state is visible before terminal callbacks run, and each
+terminal callback runs at most once. A long frame does not replay the callbacks
+of skipped cycles. Tweens created in `OnUpdate` begin on the next update; tweens
+created in `OnEnd` continue the finished tween's timeline exactly.
+
+## Errors
+
+An exception in interpolation, easing, a setter, or a callback faults the tween.
+`End` throws when awaited, `Error` holds the exception, and several failures are
+kept in an `AggregateException`. Cleanup and `OnFinally` still run, and other
+tweens keep playing. Schedulers also report the error through
+`UnhandledException`; the automatic runner forwards it to `GD.PushError`.
+
+:::caution[Catch errors in `async void` callbacks]
+`_Ready` and other Godot callbacks are often `async void`. Wrap their sequences in
+`try`/`catch`, or a faulted tween's exception is lost.
+:::
 
 ## Stay on the main thread
 
-Create/control automatic tweens and access `End` on Godot's main thread.
-`End` settles there, and normal Godot async callers retain their
-synchronization context. Do not block with `.Wait()` or `.Result`, or use
-`Task.Run` / `ConfigureAwait(false)` around engine access. Use Godot's `ToSignal`
-for unrelated engine-signal waits; tweens.gd provides no coroutine API.
+Create and control tweens, and await `End`, on Godot's main thread. `End` finishes
+there, and ordinary Godot async code keeps its synchronization context.
+
+- Do not block with `.Wait()` or `.Result`.
+- Do not use `Task.Run` or `ConfigureAwait(false)` around engine access.
+- Use Godot's `ToSignal` to wait for unrelated engine signals; tweens.gd has no
+  coroutine API.
