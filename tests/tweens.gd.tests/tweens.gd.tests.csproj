@@ -1,0 +1,62 @@
+<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <TargetFramework>net10.0</TargetFramework>
+        <Configurations>Debug;Editor;Release</Configurations>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <IsPackable>false</IsPackable>
+        <RootNamespace>tweens.gd.Tests</RootNamespace>
+    </PropertyGroup>
+
+    <!-- 2dog.xunit brings 2dog.engine and compiles its xUnit collection definitions into this assembly. -->
+    <ItemGroup>
+        <PackageReference Include="2dog.xunit" Version="$(TwoDogVersion)" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <PackageReference Include="coverlet.collector" Version="10.*" />
+        <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.*" />
+        <PackageReference Include="xunit.v3" Version="3.*" />
+        <PackageReference Include="xunit.runner.visualstudio" Version="3.*" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <Using Include="Xunit" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <Content Include="xunit.runner.json" CopyToOutputDirectory="PreserveNewest" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <!-- Every suite tests the same library build. -->
+        <ProjectReference Include="../../csharp/tweens.gd.csproj" GlobalPropertiesToRemove="TestSuite" />
+    </ItemGroup>
+
+    <!-- The Godot project is the parent directory; .gdignore hides this project from Godot's importer. -->
+    <PropertyGroup>
+        <GodotProjectDir>..</GodotProjectDir>
+        <TwoDogVariant Condition="'$(Configuration)' == 'Debug'">debug</TwoDogVariant>
+        <TwoDogVariant Condition="'$(Configuration)' == 'Editor'">editor</TwoDogVariant>
+    </PropertyGroup>
+
+    <!-- One Godot engine per test process. The default Headless suite shares one fixture engine; Lifecycle starts and
+         stops engines of its own, and Rendering needs a display. Build those with -p:TestSuite=Lifecycle|Rendering. -->
+    <PropertyGroup>
+        <TestSuite Condition="'$(TestSuite)' == ''">Headless</TestSuite>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(TestSuite)' != 'Headless'">
+        <OutputPath>bin/$(TestSuite)/$(Configuration)/</OutputPath>
+        <IntermediateOutputPath>obj/$(TestSuite)/$(Configuration)/</IntermediateOutputPath>
+    </PropertyGroup>
+    <ItemGroup>
+        <Compile Remove="Lifecycle/**/*.cs;Rendering/**/*.cs" />
+        <Compile Include="Lifecycle/**/*.cs" Condition="'$(TestSuite)' == 'Lifecycle'" />
+        <Compile Include="Rendering/**/*.cs" Condition="'$(TestSuite)' == 'Rendering'" />
+        <Compile Remove="Unit/**/*.cs;Integration/**/*.cs" Condition="'$(TestSuite)' != 'Headless'" />
+    </ItemGroup>
+    <Target Name="ValidateTestSuite" BeforeTargets="Build">
+        <Error Condition="'$(TestSuite)' != 'Headless' And '$(TestSuite)' != 'Lifecycle' And '$(TestSuite)' != 'Rendering'"
+               Text="Unknown TestSuite '$(TestSuite)'. Use Headless, Lifecycle or Rendering." />
+    </Target>
+</Project>

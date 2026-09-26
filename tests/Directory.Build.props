@@ -1,0 +1,4 @@
+<Project>
+    <!-- Share the testbed's 2dog package versions, which `2dog update` maintains. -->
+    <Import Project="../testbed/Directory.Build.props" />
+</Project>

@@ -24,6 +24,15 @@ dotnet run --project testbed/testbed.2dog
 
 The testbed is an eight-page gallery with 32 examples: squash and stretch, choreography, motion and paths, interface, drawing and particles, a 3D stage, materials, and shaders. Change the duration, restart the current page, or read the animation tasks beside each example. Examples await tweens and groups directly; leaving a page ends its tweens through their node lifetimes. See the [gallery guide](docs/src/content/docs/csharp/gallery.mdx). From `testbed/`, `dotnet test` and `dotnet run --project testbed.2dog` also work.
 
+## Run the library tests
+
+```powershell
+dotnet test tests/tweens.gd.tests/tweens.gd.tests.csproj
+./tests/Measure-Coverage.ps1
+```
+
+`tests/` is a minimal Godot project whose 2dog test suite covers the library itself: timelines, easing, callbacks, faults, groups, the generated `Tweens.*` definitions, every adapter and convenience overload, lifetimes, the automatic runner, and shaders. Godot runs one engine per test process, so engine-shutdown tests (`-p:TestSuite=Lifecycle`) and shader-default tests that need a display (`-p:TestSuite=Rendering`) build and run separately. `Measure-Coverage.ps1` runs the headless suites (add `-Rendering` for the third), and reports line and branch coverage of the library.
+
 ## Use the library
 
 Add a project reference to `csharp/tweens.gd.csproj` (as the testbed does), or consume a locally built package:
@@ -212,10 +221,10 @@ Unity coroutine APIs, the editor inspector, component lookup, and Unity-specific
 
 ## Validation and known limits
 
-GitHub Actions builds and tests the solution, verifies the `tweens.gd` NuGet package,
-and uploads package artifacts. Version tags create GitHub releases with package and
-symbol downloads. Maintainer release instructions and NuGet trusted-publishing
-setup are kept locally in `docs-internal/RELEASING.md`.
+GitHub Actions builds and tests the solution, gates library coverage, verifies the
+`tweens.gd` NuGet package, and uploads package artifacts. Version tags create GitHub
+releases with package and symbol downloads. Maintainer release instructions and NuGet
+trusted-publishing setup are kept locally in `docs-internal/RELEASING.md`.
 
 Tests cover deterministic playback, easing and overshoot, callback mutation/faults, snapshots, async completion, main-thread continuation, node lifetime/pause, adapter families, the demo, and scheduler steady-state allocations. Material tests cover shared-resource ownership, disposal and all property/context overloads. Run `dotnet test testbed/testbed.tests/testbed.tests.csproj -c Release -p:RenderingTests=true` separately for shader contracts and rendered pixel checks (requires graphics/display). The desktop testbed has also been rendered with the OpenGL compatibility renderer. The library is packaged independently of its testbed and the gitignored Unity reference.
 

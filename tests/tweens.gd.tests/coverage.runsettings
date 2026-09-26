@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RunSettings>
+    <DataCollectionRunSettings>
+        <DataCollectors>
+            <DataCollector friendlyName="XPlat code coverage">
+                <Configuration>
+                    <Format>cobertura</Format>
+                    <Include>[tweens.gd]*</Include>
+                    <!-- Godot's source generators emit the engine glue for library nodes; the library's own
+                         Tweens.* definitions are generated too, but they are public API and stay measured. -->
+                    <ExcludeByFile>**/Godot.SourceGenerators/**/*.cs</ExcludeByFile>
+                    <SingleHit>false</SingleHit>
+                    <UseSourceLink>false</UseSourceLink>
+                </Configuration>
+            </DataCollector>
+        </DataCollectors>
+    </DataCollectionRunSettings>
+</RunSettings>

@@ -36,6 +36,7 @@
         <PackageReference Include="GodotSharp" Version="4.7.2" />
         <PackageReference Include="Godot.SourceGenerators" Version="4.7.2" PrivateAssets="all" />
         <InternalsVisibleTo Include="testbed.tests" />
+        <InternalsVisibleTo Include="tweens.gd.tests" />
         <None Update="README.md" Pack="true" PackagePath="/" />
         <None Include="../LICENSE" Pack="true" PackagePath="/" />
         <None Include="../THIRD-PARTY-NOTICES.md" Pack="true" PackagePath="/" />

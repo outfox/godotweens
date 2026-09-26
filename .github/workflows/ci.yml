@@ -52,8 +52,12 @@ jobs:
         run: ./.github/scripts/Test-ReleasePublishing.ps1
       - name: Build
         run: dotnet build tweens.gd.slnx -c Release --no-restore -p:ContinuousIntegrationBuild=true -p:Version=$env:PACKAGE_VERSION
+      - name: Build library lifecycle tests
+        run: dotnet build tests/tweens.gd.tests/tweens.gd.tests.csproj -c Release --no-restore -p:TestSuite=Lifecycle -p:ContinuousIntegrationBuild=true -p:Version=$env:PACKAGE_VERSION
       - name: Test
         run: dotnet test testbed/testbed.tests/testbed.tests.csproj -c Release --no-build --no-restore --logger 'trx;LogFileName=tests.trx' --results-directory artifacts/test-results
+      - name: Test library with coverage
+        run: ./tests/Measure-Coverage.ps1 -Configuration Release -NoBuild -MinimumLine 99 -MinimumBranch 95
       - name: Run headless testbed
         timeout-minutes: 2
         run: dotnet run --project testbed/testbed.2dog -c Release --no-build --no-restore -- --headless --quit-after 12
@@ -74,5 +78,8 @@ jobs:
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: test-results
-          path: artifacts/test-results/*.trx
+          path: |
+            artifacts/test-results/*.trx
+            artifacts/coverage/*.trx
+            artifacts/coverage/**/coverage.cobertura.xml
           if-no-files-found: ignore
