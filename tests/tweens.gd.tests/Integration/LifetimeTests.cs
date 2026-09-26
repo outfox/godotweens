@@ -258,7 +258,10 @@ public class LifetimeTests(HeadlessFixture godot)
     {
         using var scope = new SceneScope(godot);
         var tween = scope.Add(new Node2D()).TweenPositionX(10, 1, d => d.OnStart = _ => throw new FormatException("broken start"));
-        scope.Advance(0.5);
+        // The error log still records the report; only its console output is silenced.
+        Engine.PrintErrorMessages = false;
+        try { scope.Advance(0.5); }
+        finally { Engine.PrintErrorMessages = true; }
         await Assert.ThrowsAsync<FormatException>(() => tween.End);
         godot.Errors.Expect("broken start");
     }

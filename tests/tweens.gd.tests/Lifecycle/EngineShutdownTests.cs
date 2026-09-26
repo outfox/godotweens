@@ -15,10 +15,10 @@ public sealed class EngineLifecycleCollection;
 [Collection(nameof(EngineLifecycleCollection))]
 public class EngineShutdownTests
 {
-    /// <summary>Arranges on a fresh engine, shuts it down, then runs the returned verification.</summary>
+    /// <summary>Arranges on a fresh engine, shuts it down, then verifies. Godot must report no errors throughout.</summary>
     private static Task AfterShutdown(Func<Engine, Action> arrange) => GodotTestThread.Run(() =>
     {
-        var engine = new Engine("tweens.gd.tests", Engine.ResolveProjectDir(), "--headless");
+        var engine = new Engine("tweens.gd.tests", Engine.ResolveProjectDir(), "--headless") { CaptureErrors = true };
         Action verify;
         try
         {
@@ -33,6 +33,7 @@ public class EngineShutdownTests
             engine.Dispose();
         }
         verify();
+        Assert.Empty(engine.Errors.Drain());
         return ValueTask.FromResult(true);
     });
 
