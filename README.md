@@ -119,7 +119,7 @@ Create/control tweens on Godot's main thread. `End` is settled from that thread;
 | `PingPongInterval` | Wait at the far endpoint before returning. |
 | `RepeatInterval` | Wait between cycles, never after the final cycle. |
 | `Offset` | Starting seconds into the first forward leg, within `[0, Duration]`. Delay still comes first. |
-| `Ease` | All 31 upstream ease functions. Back/elastic overshoot remains unclamped. |
+| `Ease` | 33 built-in functions, including `SmoothStep` and `SmootherStep`. Back/elastic overshoot remains unclamped. |
 | `EaseFunction` / `Curve` | One custom source may override `Ease`; specifying both is rejected. Curve samples use normalized time 0–1. |
 | `ProcessMode` | `Process` by default; `Physics` opts into physics updates. |
 | `PauseMode` | `Bound` follows owner `CanProcess()`, `SceneTree` follows tree pause only, `Always` ignores both. Instance pause always wins. |

@@ -18,6 +18,8 @@ const bounceOut = (t: number) => {
 
 export const EASES = {
 	Linear: (t: number) => t,
+	SmoothStep: (t: number) => t * t * (3 - 2 * t),
+	SmootherStep: (t: number) => t * t * t * (t * (6 * t - 15) + 10),
 	SineIn: (t: number) => 1 - Math.cos((t * Math.PI) / 2),
 	SineOut: (t: number) => Math.sin((t * Math.PI) / 2),
 	SineInOut: (t: number) => -(Math.cos(Math.PI * t) - 1) / 2,

@@ -50,12 +50,22 @@ namespace tweens.gd {
         EaseType.BounceIn => BounceIn,
         EaseType.BounceOut => BounceOut,
         EaseType.BounceInOut => BounceInOut,
+        EaseType.SmoothStep => SmoothStep,
+        EaseType.SmootherStep => SmootherStep,
         _ => throw new NotImplementedException($"EaseType {easeType} not implemented"),
       };
     }
 
     static float Linear(float time) {
       return time;
+    }
+
+    static float SmoothStep(float time) {
+      return time * time * (3f - 2f * time);
+    }
+
+    static float SmootherStep(float time) {
+      return time * time * time * (time * (6f * time - 15f) + 10f);
     }
 
     static float SineIn(float time) {
